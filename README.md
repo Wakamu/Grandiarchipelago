@@ -44,9 +44,11 @@ flowchart LR
 | StoryEvents / progression logic | WIP |
 | AP network client | Stub |
 
-Sync catalog → APWorld after regenerating MDP data:
+Sync catalog / progression → APWorld after regenerating MDP data:
 
 ```powershell
+python tools/sync_progressions.py
 python tools/sync_apworld_from_mdp_catalog.py
+python build_grandia_apworld.py
 ```
 
