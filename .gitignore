@@ -1,0 +1,15 @@
+vendor/
+build/
+cmake-build-*/
+.vs/
+x64/
+Win32/
+*.user
+*.suo
+*.log
+client/build/
+dist/
+traces/
+**/__pycache__/
+*.apworld
+worlds/grandia/native/*.dll

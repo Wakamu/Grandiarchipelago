@@ -1,0 +1,8 @@
+# Local / temp junk — keep native/*.dll so packaging and Launcher Build APWorlds include it.
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+test/
+tests/
+*.dll.old

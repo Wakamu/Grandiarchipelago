@@ -1,0 +1,172 @@
+{
+  "start_maps": [
+    8192,
+    9232
+  ],
+  "events": [
+    {
+      "name": "(Parm) Intro Letter",
+      "id": 19,
+      "map": 8192,
+      "key": {
+        "name": "Key to Sult Ruins",
+        "unlocks_maps": [
+          9216,
+          9220,
+          9222,
+          10248,
+          10252,
+          10260,
+          13320,
+          13324,
+          13325,
+          13328,
+          13332,
+          13340,
+          13344,
+          13348,
+          15445,
+          16396
+        ]
+      }
+    },
+    {
+      "name": "(Sult Ruins) Boss Defeated",
+      "map": 9222,
+      "id": 32,
+      "gold": 30,
+      "blocks": [
+        9220,
+        9222
+      ]
+    },
+    {
+      "name": "(Leck Mines) Escape",
+      "map": 10260,
+      "id": 41,
+      "gold": 60,
+      "blocks": [
+        9232,
+        10248,
+        10252,
+        10260
+      ]
+    },
+    {
+      "name": "(Ghost Ship) Completed",
+      "map": 13348,
+      "id": 75,
+      "gold": 60,
+      "blocks": [
+        13320,
+        13324,
+        13325,
+        13328,
+        13332,
+        13340,
+        13344,
+        13348
+      ]
+    },
+    {
+      "name": "(New Parm) Membership Denied",
+      "map": 15445,
+      "id": 83,
+      "key": {
+        "name": "Key to Feena's House",
+        "unlocks_maps": [
+          16384,
+          23552,
+          15448,
+          23556
+        ]
+      }
+    },
+    {
+      "name": "(New Parm) Boss Defeated",
+      "map": 15448,
+      "id": 93,
+      "gold": 120
+    },
+    {
+      "name": "(Rangle Mountains) Night",
+      "map": 23556,
+      "id": 96,
+      "key": {
+        "name": "Key to Dom Ruins",
+        "unlocks_maps": [
+          17428,
+          17408,
+          17412,
+          17416,
+          17420,
+          16392,
+          19464,
+          19468,
+          19472,
+          20484,
+          18436,
+          22528,
+          22536
+        ]
+      }
+    },
+    {
+      "name": "(Military) Captured",
+      "map": 16392,
+      "id": 111,
+      "gold": 120,
+      "blocks": [
+        15445,
+        15448,
+        16384,
+        16396,
+        17428,
+        17408,
+        17412,
+        17416,
+        17420,
+        16392,
+        23552,
+        23556
+      ]
+    },
+    {
+      "name": "(Military) Board Train",
+      "map": 19464,
+      "id": 143,
+      "gold": 120,
+      "blocks": [
+        19464,
+        19468,
+        19472
+      ]
+    },
+    {
+      "name": "(Military) Train Escape",
+      "map": 18436,
+      "id": 148,
+      "gold": 120,
+      "blocks": [
+        20484
+      ]
+    },
+    {
+      "name": "(Luc Village) Defend Spirit Stone",
+      "map": 22536,
+      "id": 158,
+      "key": {
+        "name": "Key to East Misty",
+        "unlocks_maps": [
+          22537
+        ]
+      }
+    },
+    {
+      "name": "Temporary End",
+      "map": 22537,
+      "id": 159,
+      "finish": true
+    }
+  ]
+}

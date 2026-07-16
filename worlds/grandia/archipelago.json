@@ -1,0 +1,11 @@
+{
+  "game": "Grandia",
+  "authors": ["Grandiarchipelago"],
+  "world_version": "0.2.0",
+  "minimum_ap_version": "0.5.0",
+  "description": "Grandia HD Remaster Archipelago world (native Win32 client)",
+  "requires": [],
+  "provides": [],
+  "version": 1,
+  "compatible_version": 1
+}

@@ -1,0 +1,5 @@
+# Grandiarchipelago.dll is copied here by tools/build_grandia_apworld.py
+# and shipped inside grandia.apworld for the Launcher client to inject.
+*
+!.gitignore
+!README.txt

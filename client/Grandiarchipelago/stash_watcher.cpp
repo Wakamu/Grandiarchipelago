@@ -1,0 +1,148 @@
+#include "chest_pickup.h"
+#include "game_memory.h"
+#include "log.h"
+#include "save_sync.h"
+
+#include <Windows.h>
+
+#include <array>
+#include <atomic>
+#include <cstdio>
+
+namespace grandia_ap {
+
+namespace {
+
+constexpr int kStashByteCount = 512;
+constexpr int kStashFirstOffset = 8;
+
+std::atomic<bool> g_running{false};
+HANDLE g_thread = nullptr;
+std::array<uint8_t, kStashByteCount> g_last_bytes{};
+bool g_have_snapshot = false;
+unsigned last_hook_hits_logged = 0;
+DWORD last_hook_log_tick = 0;
+
+void ResnapshotStash(bool log_summary) {
+    const std::uintptr_t base = GetStashBase();
+    if (base == 0) {
+        return;
+    }
+
+    unsigned nonzero = 0;
+    for (int offset = 0; offset < kStashByteCount; ++offset) {
+        uint8_t value = 0;
+        if (ReadStashByteAtOffset(offset, &value)) {
+            g_last_bytes[static_cast<size_t>(offset)] = value;
+            if (value != 0) {
+                ++nonzero;
+            }
+        } else {
+            g_last_bytes[static_cast<size_t>(offset)] = 0;
+        }
+    }
+    g_have_snapshot = true;
+
+    if (log_summary) {
+        LogInfo("Stash snapshot at 0x%08X (%u non-zero bytes)", static_cast<unsigned>(base), nonzero);
+    }
+}
+
+void PollStashChanges() {
+    if (!HasStashBase()) {
+        return;
+    }
+
+    if (!g_have_snapshot) {
+        ResnapshotStash(false);
+        return;
+    }
+
+    for (int offset = kStashFirstOffset; offset < kStashByteCount; ++offset) {
+        uint8_t value = 0;
+        if (!ReadStashByteAtOffset(offset, &value)) {
+            continue;
+        }
+
+        const uint8_t previous = g_last_bytes[static_cast<size_t>(offset)];
+        if (value == previous) {
+            continue;
+        }
+
+        const int item_id = offset + 1;
+        LogInfo("Stash change offset=0x%03X item_id=%d qty %u -> %u", offset, item_id, previous, value);
+
+        g_last_bytes[static_cast<size_t>(offset)] = value;
+    }
+}
+
+void OnStashHookHit(unsigned hits) {
+    const std::uintptr_t eax = GetStashHookLastEax();
+    const DWORD now = GetTickCount();
+
+    if (hits != last_hook_hits_logged && (now - last_hook_log_tick > 2000)) {
+        LogDebug("Stash UI hook (hits=%u, eax=0x%08X)", hits, static_cast<unsigned>(eax));
+        last_hook_hits_logged = hits;
+        last_hook_log_tick = now;
+    }
+
+    if (AdoptStashBase(eax, "stash UI hook") && !g_have_snapshot) {
+        ResnapshotStash(true);
+    }
+}
+
+DWORD WINAPI WatcherThread(LPVOID) {
+    LogInfo("Stash watcher started — tracking stash quantities when base is resolved");
+
+    unsigned last_hook_hits = 0;
+    unsigned heartbeat = 0;
+
+    while (g_running.load()) {
+        ProcessChestPickupQueue();
+
+        const unsigned hits = GetStashHookHitCount();
+        if (hits != last_hook_hits) {
+            OnStashHookHit(hits);
+            last_hook_hits = hits;
+        }
+
+        if (!HasStashBase()) {
+            EnsureStashBaseResolved();
+        }
+
+        if (HasStashBase()) {
+            if (!g_have_snapshot) {
+                ResnapshotStash(true);
+            }
+            PollStashChanges();
+        } else if ((heartbeat++ % 40) == 0) {
+            LogInfo("Waiting for stash base (need in-game save loaded; hook hits: %u)...", hits);
+        }
+
+        Sleep(100);
+    }
+
+    return 0;
+}
+
+}  // namespace
+
+void StartStashWatcher() {
+    if (g_running.exchange(true)) {
+        return;
+    }
+    g_thread = CreateThread(nullptr, 0, WatcherThread, nullptr, 0, nullptr);
+}
+
+void StopStashWatcher() {
+    if (!g_running.exchange(false)) {
+        return;
+    }
+    if (g_thread) {
+        WaitForSingleObject(g_thread, 2000);
+        CloseHandle(g_thread);
+        g_thread = nullptr;
+    }
+}
+
+}  // namespace grandia_ap

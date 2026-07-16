@@ -1,0 +1,11 @@
+{
+  "Host": "localhost",
+  "Port": 38281,
+  "Slot": "Player",
+  "Password": "",
+  "Game": "Grandia",
+  "ProcessName": "grandia.exe",
+  "DllPath": "Grandiarchipelago.dll",
+  "PipeConnectTimeoutMs": 60000,
+  "ItemDeliveryDelayMs": 2500
+}

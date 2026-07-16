@@ -1,0 +1,7 @@
+name: Justin
+game: Grandia
+
+Grandia:
+  death_link: false
+  victory_condition: final_boss
+  starting_party: false
