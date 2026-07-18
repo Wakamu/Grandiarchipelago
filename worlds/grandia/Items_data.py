@@ -237,8 +237,6 @@ CHEST_ITEM_DATA: list[ChestItemEntry] = [
     {"name": "Torte's Whistle", "item_id": 424, "kind": "item", "classification": "filler", "gold_amount": 0},
     {"name": "Cone of Light", "item_id": 426, "kind": "item", "classification": "filler", "gold_amount": 0},
     {"name": "Miracle Drink", "item_id": 429, "kind": "item", "classification": "filler", "gold_amount": 0},
-    {"name": "Gold Key", "item_id": 430, "kind": "item", "classification": "filler", "gold_amount": 0},
-    {"name": "Soldier's Key", "item_id": 433, "kind": "item", "classification": "filler", "gold_amount": 0},
     {"name": "Health Weed", "item_id": 439, "kind": "item", "classification": "filler", "gold_amount": 0},
     {"name": "Snake Earrings", "item_id": 440, "kind": "item", "classification": "filler", "gold_amount": 0},
     {"name": "Expensive Jewel", "item_id": 442, "kind": "item", "classification": "filler", "gold_amount": 0},
@@ -259,7 +257,6 @@ CHEST_ITEM_DATA: list[ChestItemEntry] = [
     {"name": "Energy Charm", "item_id": 468, "kind": "item", "classification": "filler", "gold_amount": 0},
     {"name": "Astral Miracle", "item_id": 471, "kind": "item", "classification": "filler", "gold_amount": 0},
     {"name": "Ethereal Miracle", "item_id": 472, "kind": "item", "classification": "filler", "gold_amount": 0},
-    {"name": "Soldier's Soul", "item_id": 480, "kind": "item", "classification": "filler", "gold_amount": 0},
 ]
 
 # vanilla chest pool counts (name -> quantity to put in itempool)
@@ -317,7 +314,6 @@ CHEST_ITEM_POOL_COUNTS: dict[str, int] = {
     "Gold (360)": 4,
     "Gold (40)": 4,
     "Poison Antidote": 4,
-    "Soldier's Soul": 4,
     "All-Around Seed": 3,
     "Baobab Fruit": 3,
     "Blue Medicine": 3,
@@ -417,7 +413,6 @@ CHEST_ITEM_POOL_COUNTS: dict[str, int] = {
     "Gold (630)": 1,
     "Gold (930)": 1,
     "Gold (960)": 1,
-    "Gold Key": 1,
     "Gust Knife": 1,
     "Hail Bow": 1,
     "Hand Ax": 1,
@@ -476,7 +471,6 @@ CHEST_ITEM_POOL_COUNTS: dict[str, int] = {
     "Smoked Salmon": 1,
     "Snake Earrings": 1,
     "Snooze Scroll": 1,
-    "Soldier's Key": 1,
     "Soldier's Uniform": 1,
     "Sonic Belt": 1,
     "Sonic Walnut": 1,

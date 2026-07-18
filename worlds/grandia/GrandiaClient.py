@@ -12,7 +12,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional, Set
+from typing import List, Optional, Set
 
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from Utils import async_start
@@ -20,9 +20,16 @@ from Utils import async_start
 from .dll_inject import find_process_id, inject_dll
 from .game_pipe import GamePipe
 
+try:
+    from NetUtils import ItemClassification
+except ImportError:  # pragma: no cover
+    from BaseClasses import ItemClassification
+
 ITEM_DELIVERY_DELAY_S = 2.5
 PROCESS_NAME = "grandia.exe"
 POLL_S = 0.25
+# NetworkItem.flags bit for progression (includes progression_skip_balancing).
+_PROGRESSION_FLAG = int(ItemClassification.progression)
 
 
 def _package_native_dll_bytes() -> Optional[bytes]:
@@ -143,6 +150,8 @@ class GrandiaContext(CommonContext):
         self._delivery_open_at = 0.0
         self._forwarded_indexes: Set[int] = set()
         self._pending_sync: Optional[int] = None
+        self._pending_lockouts: List[tuple[int, List[int]]] = []
+        self._scouted_all = False
 
     def make_gui(self):
         ui = super().make_gui()
@@ -159,8 +168,72 @@ class GrandiaContext(CommonContext):
         if cmd == "Connected":
             logger.info("Connected to Archipelago as %s", self.auth)
             logger.info("Holding item delivery until the game sends SYNC from a loaded save.")
+            self._scouted_all = False
+            async_start(self._scout_missing_locations(), name="grandia-scout")
+        elif cmd == "LocationInfo":
+            # Scouts finished (or partial) — drain any lockouts waiting on item data.
+            async_start(self._drain_pending_lockouts(), name="grandia-lockout-drain")
         elif cmd == "RoomInfo":
             pass
+
+    async def _scout_missing_locations(self) -> None:
+        locs = [int(x) for x in self.missing_locations]
+        if not locs:
+            self._scouted_all = True
+            return
+        await self.send_msgs(
+            [{"cmd": "LocationScouts", "locations": locs, "create_as_hint": 0}]
+        )
+        self._scouted_all = True
+        logger.debug("Scouted %u missing locations for lockout progression filtering", len(locs))
+
+    @staticmethod
+    def _is_progression_flags(flags: int) -> bool:
+        return bool(int(flags) & _PROGRESSION_FLAG)
+
+    def _progression_locations(self, location_ids: List[int]) -> List[int]:
+        out: List[int] = []
+        for loc_id in location_ids:
+            if loc_id in self.locations_checked:
+                continue
+            info = self.locations_info.get(loc_id)
+            if info is None:
+                continue
+            if self._is_progression_flags(getattr(info, "flags", 0)):
+                out.append(loc_id)
+        return out
+
+    async def _handle_lockout(self, event_id: int, location_ids: List[int]) -> None:
+        if not location_ids:
+            return
+
+        missing_info = [lid for lid in location_ids if lid not in self.locations_info]
+        if missing_info:
+            self._pending_lockouts.append((event_id, location_ids))
+            await self.send_msgs(
+                [{"cmd": "LocationScouts", "locations": missing_info, "create_as_hint": 0}]
+            )
+            return
+
+        await self._apply_lockout_checks(event_id, location_ids)
+
+    async def _drain_pending_lockouts(self) -> None:
+        if not self._pending_lockouts:
+            return
+        pending = self._pending_lockouts
+        self._pending_lockouts = []
+        still_waiting: List[tuple[int, List[int]]] = []
+        for event_id, location_ids in pending:
+            if any(lid not in self.locations_info for lid in location_ids):
+                still_waiting.append((event_id, location_ids))
+                continue
+            await self._apply_lockout_checks(event_id, location_ids)
+        self._pending_lockouts.extend(still_waiting)
+
+    async def _apply_lockout_checks(self, event_id: int, location_ids: List[int]) -> None:
+        prog = self._progression_locations(location_ids)
+        if prog:
+            await self.check_locations(set(prog))
 
     def apply_sync(self, received_index: int) -> None:
         self._forwarded_indexes = {i for i in self._forwarded_indexes if i <= received_index}
@@ -192,11 +265,9 @@ class GrandiaContext(CommonContext):
             return
         if not self.pipe or not self.pipe.connected:
             return
-        name = self.item_names.lookup_in_game(item_id) if hasattr(self, "item_names") else str(item_id)
         self.pipe.send_line(f"ITEM 0x{item_id:X} INDEX {index}")
         self._forwarded_indexes.add(index)
         self.applied_index = index
-        logger.info("Forwarded item %s (0x%X) INDEX %s", name, item_id, index)
 
     def handle_pipe_line(self, line: str) -> None:
         if line.startswith("HELLO"):
@@ -225,9 +296,21 @@ class GrandiaContext(CommonContext):
                     logger.warning("Invalid CHECK line: %s", line)
                     return
             async_start(self.check_locations({location_id}), name="grandia-check")
-            logger.info("Reported location check: 0x%X", location_id)
             return
-        logger.info("Game pipe: %s", line)
+        if line.startswith("LOCKOUT "):
+            parts = line.split()
+            if len(parts) < 2:
+                logger.warning("Invalid LOCKOUT line: %s", line)
+                return
+            try:
+                event_id = int(parts[1], 16)
+                location_ids = [int(tok, 16) for tok in parts[2:]]
+            except ValueError:
+                logger.warning("Invalid LOCKOUT line: %s", line)
+                return
+            async_start(self._handle_lockout(event_id, location_ids), name="grandia-lockout")
+            return
+        logger.debug("Game pipe: %s", line)
 
 
 async def game_watcher(ctx: GrandiaContext) -> None:

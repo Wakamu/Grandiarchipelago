@@ -29,12 +29,17 @@ bool CallGameAddStashItem(int item_id, uint8_t quantity);
 bool HasStashUiManager();
 bool AddStashQuantity(int item_id, uint8_t delta);
 
+// CE: GoldPtr from GetGoldPtrAOB (ESI); party gold dword at GoldPtr+4. Cap 9999999.
+bool HasGoldBase();
 std::uintptr_t GetGoldBase();
 std::uintptr_t GetCharacterStatsBase();
+bool AddGoldAmount(unsigned amount);
+void FlushPendingGold();
 
 bool IsPartyInventoryWriteHookInstalled();
 bool IsChestFlagHookInstalled();
 bool IsAssignUiEntryHookInstalled();
+bool IsFieldGoldAddHookInstalled();
 std::uintptr_t GetGrandiaModuleBase();
 
 }  // namespace grandia_ap

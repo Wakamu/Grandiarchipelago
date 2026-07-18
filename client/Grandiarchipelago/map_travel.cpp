@@ -27,6 +27,7 @@ uint8_t g_hook_original[8]{};
 
 std::mutex g_lock;
 std::unordered_set<uint16_t> g_unlocked;
+std::unordered_set<uint16_t> g_owned_key_primaries;
 std::atomic<unsigned> g_trace_hits_left{48};
 std::atomic<uint16_t> g_last_deny_logged{0};
 
@@ -139,35 +140,91 @@ void UnlockMap(uint16_t map_id) {
     }
     {
         std::lock_guard<std::mutex> lock(g_lock);
-        g_unlocked.insert(map_id);
+        if (!g_unlocked.insert(map_id).second) {
+            return;
+        }
     }
     LogInfo("Map unlocked: 0x%04X", static_cast<unsigned>(map_id));
 }
 
-void UnlockKeyGroup(uint16_t primary_or_any_map) {
+bool OwnsAllKeysUpToLocked(unsigned value) {
     for (std::size_t g = 0; g < progressions::kKeyGroupCount; ++g) {
         const auto& group = progressions::kKeyGroups[g];
-        bool match = group.primary_map == primary_or_any_map;
-        if (!match) {
-            for (std::size_t i = 0; i < group.count; ++i) {
-                if (group.maps[i] == primary_or_any_map) {
-                    match = true;
-                    break;
-                }
-            }
-        }
-        if (!match) {
+        if (group.value > value) {
             continue;
         }
-        for (std::size_t i = 0; i < group.count; ++i) {
-            UnlockMap(group.maps[i]);
+        if (g_owned_key_primaries.find(group.primary_map) == g_owned_key_primaries.end()) {
+            return false;
         }
-        LogInfo("Key group unlocked (primary=0x%04X, %u maps)", static_cast<unsigned>(group.primary_map),
-                static_cast<unsigned>(group.count));
+    }
+    return true;
+}
+
+void UnlockMapsForSatisfiedKeys() {
+    struct PendingGroup {
+        uint16_t primary = 0;
+        unsigned value = 0;
+        unsigned count = 0;
+        unsigned newly = 0;
+    };
+    PendingGroup pending[64]{};
+    std::size_t pending_n = 0;
+
+    {
+        std::lock_guard<std::mutex> lock(g_lock);
+        for (std::size_t g = 0; g < progressions::kKeyGroupCount; ++g) {
+            const auto& group = progressions::kKeyGroups[g];
+            if (g_owned_key_primaries.find(group.primary_map) == g_owned_key_primaries.end()) {
+                continue;
+            }
+            if (!OwnsAllKeysUpToLocked(group.value)) {
+                continue;
+            }
+            unsigned newly = 0;
+            for (std::size_t i = 0; i < group.count; ++i) {
+                if (g_unlocked.insert(group.maps[i]).second) {
+                    ++newly;
+                }
+            }
+            if (newly > 0 && pending_n < 64) {
+                pending[pending_n++] = {group.primary_map, group.value,
+                                       static_cast<unsigned>(group.count), newly};
+            }
+        }
+    }
+
+    for (std::size_t i = 0; i < pending_n; ++i) {
+        LogInfo("Key group unlocked (primary=0x%04X value=%u, %u maps)",
+                static_cast<unsigned>(pending[i].primary), pending[i].value, pending[i].count);
+    }
+}
+
+const progressions::KeyUnlockGroup* FindKeyGroup(uint16_t primary_or_any_map) {
+    for (std::size_t g = 0; g < progressions::kKeyGroupCount; ++g) {
+        const auto& group = progressions::kKeyGroups[g];
+        if (group.primary_map == primary_or_any_map) {
+            return &group;
+        }
+        for (std::size_t i = 0; i < group.count; ++i) {
+            if (group.maps[i] == primary_or_any_map) {
+                return &group;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void UnlockKeyGroup(uint16_t primary_or_any_map) {
+    const auto* group = FindKeyGroup(primary_or_any_map);
+    if (!group) {
+        UnlockMap(primary_or_any_map);
         return;
     }
-    // Unknown primary: still unlock the single map id.
-    UnlockMap(primary_or_any_map);
+    {
+        std::lock_guard<std::mutex> lock(g_lock);
+        g_owned_key_primaries.insert(group->primary_map);
+    }
+    UnlockMapsForSatisfiedKeys();
 }
 
 bool AllowMapTravel(uint16_t map_id) {
@@ -197,7 +254,8 @@ bool TryHandleMapKeyItem(unsigned ap_item_id) {
     if (map_id == 0 || map_id > 0xFFFFu) {
         return false;
     }
-    // Item id = KEY_BASE + primary unlocks_maps[0]; unlock entire group.
+    // Item id = KEY_BASE + primary unlocks_maps[0].
+    // Maps unlock only once every key with value 1..N is owned (N = this key's value).
     UnlockKeyGroup(static_cast<uint16_t>(map_id));
     return true;
 }

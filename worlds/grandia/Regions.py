@@ -6,6 +6,7 @@ from .Keys_data import (
     FINISH_LOCATION_NAME,
     KEY_FOR_MAP,
     KEY_ITEM_DATA,
+    KEY_REQUIREMENTS,
     LOGIC_MAP_HEXES,
     START_MAP_HEXES,
     STORY_CHECK_DATA,
@@ -56,18 +57,19 @@ def create_regions(world: "GrandiaWorld") -> None:
         if mid not in map_regions:
             map_regions[mid] = Region(f"Map {mid}", player, world.multiworld)
 
-    def has_key(state: CollectionState, item_name: str) -> bool:
-        return state.has(item_name, player)
+    def has_keys(state: CollectionState, required: list[str]) -> bool:
+        return all(state.has(name, player) for name in required)
 
     for mid, region in map_regions.items():
         key_name = _key_for(mid)
         if mid in start_hexes:
             overworld.connect(region)
         elif key_name:
+            required = KEY_REQUIREMENTS[key_name]
             overworld.connect(
                 region,
                 f"Enter {region.name}",
-                lambda state, name=key_name: has_key(state, name),
+                lambda state, req=required: has_keys(state, req),
             )
         else:
             # In progressions (event / accessible / blocks) but no Key yet —

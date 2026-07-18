@@ -21,7 +21,7 @@ DWORD WINAPI MainThread(LPVOID) {
         grandia_ap::InstallHooks();
         grandia_ap::StartStashWatcher();
         grandia_ap::StartPipeBridge();
-        grandia_ap::LogInfo("Grandiarchipelago v0.0.25 ready (progressions.json keys + lockout sweep)");
+        grandia_ap::LogInfo("Grandiarchipelago v0.0.32 ready (fix field-gold trampoline resume)");
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         grandia_ap::LogWarn("MainThread crashed during init (exception=0x%08X)", GetExceptionCode());
     }

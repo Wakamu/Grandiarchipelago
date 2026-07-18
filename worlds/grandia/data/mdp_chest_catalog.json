@@ -4582,15 +4582,6 @@
         "gold_amount": 510
       },
       {
-        "event_id": "0x0B6C",
-        "event": 2924,
-        "kind": "item",
-        "item_id": 430,
-        "name": "Gold Key",
-        "sub_index": 33,
-        "file_offset": "0x1248C"
-      },
-      {
         "event_id": "0x0B6D",
         "event": 2925,
         "kind": "item",
@@ -7048,17 +7039,8 @@
     "area_name": "Soldier's Graveyard (B4 West)",
     "area_name_source": "scn",
     "mdp": "ac10.mdp",
-    "chest_count": 2,
+    "chest_count": 1,
     "chests": [
-      {
-        "event_id": "0x0CF6",
-        "event": 3318,
-        "kind": "item",
-        "item_id": 433,
-        "name": "Soldier's Key",
-        "sub_index": 10,
-        "file_offset": "0x7AE6"
-      },
       {
         "event_id": "0x0CF7",
         "event": 3319,
@@ -7080,7 +7062,7 @@
     "area_name": "Soldier's Graveyard (B4 East)",
     "area_name_source": "scn",
     "mdp": "ac14.mdp",
-    "chest_count": 8,
+    "chest_count": 4,
     "chests": [
       {
         "event_id": "0x0CF8",
@@ -7117,42 +7099,6 @@
         "name": "Godspeed Knife",
         "sub_index": 20,
         "file_offset": "0xBD64"
-      },
-      {
-        "event_id": "0x0CFC",
-        "event": 3324,
-        "kind": "item",
-        "item_id": 480,
-        "name": "Soldier's Soul",
-        "sub_index": 21,
-        "file_offset": "0xBD84"
-      },
-      {
-        "event_id": "0x0CFD",
-        "event": 3325,
-        "kind": "item",
-        "item_id": 480,
-        "name": "Soldier's Soul",
-        "sub_index": 22,
-        "file_offset": "0xBDA4"
-      },
-      {
-        "event_id": "0x0CFE",
-        "event": 3326,
-        "kind": "item",
-        "item_id": 480,
-        "name": "Soldier's Soul",
-        "sub_index": 23,
-        "file_offset": "0xBDC4"
-      },
-      {
-        "event_id": "0x0CFF",
-        "event": 3327,
-        "kind": "item",
-        "item_id": 480,
-        "name": "Soldier's Soul",
-        "sub_index": 17,
-        "file_offset": "0xBDE4"
       }
     ],
     "gold_small": 230,
@@ -8584,7 +8530,7 @@
   "BA10": {
     "map_id": 47632,
     "map_hex": "BA10",
-    "area_name": "Map BA10",
+    "area_name": "Grandeur - Control Room",
     "area_name_source": "fallback",
     "mdp": "ba10.mdp",
     "chest_count": 5,

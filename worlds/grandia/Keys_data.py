@@ -8,6 +8,7 @@ from typing import Optional, TypedDict
 
 class KeyItemEntry(TypedDict):
     item_name: str
+    value: int
     primary_map_id: int
     primary_map_hex: str
     unlocks_maps: list[int]
@@ -28,20 +29,32 @@ class StoryCheckEntry(TypedDict):
 
 GRANDIA_KEY_ITEM_BASE = 0x4752_3000
 
-START_MAP_IDS: list[int] = [8192, 9232]
-START_MAP_HEXES: list[str] = ['2000', '2410']
+START_MAP_IDS: list[int] = [9232]
+START_MAP_HEXES: list[str] = ['2410']
 
 KEY_ITEM_DATA: list[KeyItemEntry] = [
-    {'item_name': 'Key to Sult Ruins', 'primary_map_id': 9216, 'primary_map_hex': '2400', 'unlocks_maps': [9216, 9220, 9222, 10248, 10252, 10260, 13320, 13324, 13325, 13328, 13332, 13340, 13344, 13348, 15445, 16396], 'unlocks_map_hexes': ['2400', '2404', '2406', '2808', '280C', '2814', '3408', '340C', '340D', '3410', '3414', '341C', '3420', '3424', '3C55', '400C']},
-    {'item_name': "Key to Feena's House", 'primary_map_id': 16384, 'primary_map_hex': '4000', 'unlocks_maps': [16384, 23552, 15448, 23556], 'unlocks_map_hexes': ['4000', '5C00', '3C58', '5C04']},
-    {'item_name': 'Key to Dom Ruins', 'primary_map_id': 17428, 'primary_map_hex': '4414', 'unlocks_maps': [17428, 17408, 17412, 17416, 17420, 16392, 19464, 19468, 19472, 20484, 18436, 22528, 22536], 'unlocks_map_hexes': ['4414', '4400', '4404', '4408', '440C', '4008', '4C08', '4C0C', '4C10', '5004', '4804', '5800', '5808']},
-    {'item_name': 'Key to East Misty', 'primary_map_id': 22537, 'primary_map_hex': '5809', 'unlocks_maps': [22537], 'unlocks_map_hexes': ['5809']},
+    {'item_name': 'Key to Sult Ruins', 'value': 1, 'primary_map_id': 9216, 'primary_map_hex': '2400', 'unlocks_maps': [9216, 9220, 9222, 10248, 10252, 10260, 13320, 13324, 13325, 13328, 13332, 13340, 13344, 13348, 15445, 16396], 'unlocks_map_hexes': ['2400', '2404', '2406', '2808', '280C', '2814', '3408', '340C', '340D', '3410', '3414', '341C', '3420', '3424', '3C55', '400C']},
+    {'item_name': "Key to Feena's House", 'value': 2, 'primary_map_id': 16384, 'primary_map_hex': '4000', 'unlocks_maps': [16384, 23552, 15448, 23556], 'unlocks_map_hexes': ['4000', '5C00', '3C58', '5C04']},
+    {'item_name': 'Key to Dom Ruins', 'value': 3, 'primary_map_id': 17428, 'primary_map_hex': '4414', 'unlocks_maps': [17428, 17408, 17412, 17416, 17420, 16392, 19464, 19468, 19472, 20484, 18436, 22528, 22536], 'unlocks_map_hexes': ['4414', '4400', '4404', '4408', '440C', '4008', '4C08', '4C0C', '4C10', '5004', '4804', '5800', '5808']},
+    {'item_name': 'Key to East Misty', 'value': 4, 'primary_map_id': 18440, 'primary_map_hex': '4808', 'unlocks_maps': [18440, 18444, 18448, 24580, 24584, 24592, 24604, 24608, 25600, 25604, 25608, 25616], 'unlocks_map_hexes': ['4808', '480C', '4810', '6004', '6008', '6010', '601C', '6020', '6400', '6404', '6408', '6410']},
+    {'item_name': 'Key to Dight Village', 'value': 5, 'primary_map_id': 26624, 'primary_map_hex': '6800', 'unlocks_maps': [26624], 'unlocks_map_hexes': ['6800']},
+    {'item_name': 'Key to Mt. Typhoon', 'value': 6, 'primary_map_id': 27648, 'primary_map_hex': '6C00', 'unlocks_maps': [27648, 27652, 27656, 27660], 'unlocks_map_hexes': ['6C00', '6C04', '6C08', '6C0C']},
+    {'item_name': 'Key to Lama Mountains', 'value': 7, 'primary_map_id': 28672, 'primary_map_hex': '7000', 'unlocks_maps': [28672, 28676], 'unlocks_map_hexes': ['7000', '7004']},
+    {'item_name': 'Key to Gumbo', 'value': 8, 'primary_map_id': 29696, 'primary_map_hex': '7400', 'unlocks_maps': [29696, 30720, 30724, 30725, 30728, 30732, 31748, 31752, 31756, 31760, 31768, 31812], 'unlocks_map_hexes': ['7400', '7800', '7804', '7805', '7808', '780C', '7C04', '7C08', '7C0C', '7C10', '7C18', '7C44']},
+    {'item_name': 'Key to Vanishing Hill', 'value': 9, 'primary_map_id': 32776, 'primary_map_hex': '8008', 'unlocks_maps': [32776, 32772, 35840, 36864, 36868, 36872, 36876], 'unlocks_map_hexes': ['8008', '8004', '8C00', '9000', '9004', '9008', '900C']},
+    {'item_name': 'Key to Cafu', 'value': 10, 'primary_map_id': 37888, 'primary_map_hex': '9400', 'unlocks_maps': [37888], 'unlocks_map_hexes': ['9400']},
+    {'item_name': 'Key to Petrified Forest', 'value': 11, 'primary_map_id': 38400, 'primary_map_hex': '9600', 'unlocks_maps': [38400, 38404], 'unlocks_map_hexes': ['9600', '9604']},
+    {'item_name': 'Key to Tower of Doom', 'value': 12, 'primary_map_id': 38916, 'primary_map_hex': '9804', 'unlocks_maps': [38916, 38917, 38920, 38924, 38928], 'unlocks_map_hexes': ['9804', '9805', '9808', '980C', '9810']},
+    {'item_name': 'Key to Zil Desert', 'value': 13, 'primary_map_id': 39936, 'primary_map_hex': '9C00', 'unlocks_maps': [39936, 39940, 41988, 41996, 42000, 42004, 42008, 42012, 42016, 44036, 44040, 44044, 44048, 44052, 44056], 'unlocks_map_hexes': ['9C00', '9C04', 'A404', 'A40C', 'A410', 'A414', 'A418', 'A41C', 'A420', 'AC04', 'AC08', 'AC0C', 'AC10', 'AC14', 'AC18']},
+    {'item_name': 'Key to Zil Padon', 'value': 14, 'primary_map_id': 39941, 'primary_map_hex': '9C05', 'unlocks_maps': [39941, 39942, 39960, 39964, 46080, 46084, 46088, 46092, 46096, 46104, 46108, 46112, 46116, 46120, 46124, 51200, 51204], 'unlocks_map_hexes': ['9C05', '9C06', '9C18', '9C1C', 'B400', 'B404', 'B408', 'B40C', 'B410', 'B418', 'B41C', 'B420', 'B424', 'B428', 'B42C', 'C800', 'C804']},
+    {'item_name': 'Key to Abandoned Laine', 'value': 15, 'primary_map_id': 50176, 'primary_map_hex': 'C400', 'unlocks_maps': [50176, 50180, 50184, 47104, 47108, 47112, 47116, 47120, 47124, 47128, 47132, 47624, 47632, 48128, 48132, 49152], 'unlocks_map_hexes': ['C400', 'C404', 'C408', 'B800', 'B804', 'B808', 'B80C', 'B810', 'B814', 'B818', 'B81C', 'BA08', 'BA10', 'BC00', 'BC04', 'C000']},
+    {'item_name': 'Key to Luzet Mountains', 'value': 16, 'primary_map_id': 51712, 'primary_map_hex': 'CA00', 'unlocks_maps': [51712, 51716, 53248, 53256, 53260, 54272, 54276, 55304, 56322, 56324, 56328, 56332, 57348, 57350, 57352, 57360, 57372], 'unlocks_map_hexes': ['CA00', 'CA04', 'D000', 'D008', 'D00C', 'D400', 'D404', 'D808', 'DC02', 'DC04', 'DC08', 'DC0C', 'E004', 'E006', 'E008', 'E010', 'E01C']},
 ]
 
 STORY_CHECK_DATA: list[StoryCheckEntry] = [
-    {'event_id': 19, 'event_hex': '0x0013', 'ap_name': '(Parm) Intro Letter', 'map_id': 8192, 'map_hex': '2000', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Sult Ruins', 'blocks': []},
+    {'event_id': 19, 'event_hex': '0x0013', 'ap_name': '(Parm) Intro Letter', 'map_id': 9232, 'map_hex': '2410', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Sult Ruins', 'blocks': []},
     {'event_id': 32, 'event_hex': '0x0020', 'ap_name': '(Sult Ruins) Boss Defeated', 'map_id': 9222, 'map_hex': '2406', 'vanilla_gold': 30, 'is_finish': False, 'key_name': None, 'blocks': [9220, 9222]},
-    {'event_id': 41, 'event_hex': '0x0029', 'ap_name': '(Leck Mines) Escape', 'map_id': 10260, 'map_hex': '2814', 'vanilla_gold': 60, 'is_finish': False, 'key_name': None, 'blocks': [9232, 10248, 10252, 10260]},
+    {'event_id': 41, 'event_hex': '0x0029', 'ap_name': '(Leck Mines) Escape', 'map_id': 10260, 'map_hex': '2814', 'vanilla_gold': 60, 'is_finish': False, 'key_name': None, 'blocks': [9216, 9232, 10248, 10252, 10260]},
     {'event_id': 75, 'event_hex': '0x004B', 'ap_name': '(Ghost Ship) Completed', 'map_id': 13348, 'map_hex': '3424', 'vanilla_gold': 60, 'is_finish': False, 'key_name': None, 'blocks': [13320, 13324, 13325, 13328, 13332, 13340, 13344, 13348]},
     {'event_id': 83, 'event_hex': '0x0053', 'ap_name': '(New Parm) Membership Denied', 'map_id': 15445, 'map_hex': '3C55', 'vanilla_gold': None, 'is_finish': False, 'key_name': "Key to Feena's House", 'blocks': []},
     {'event_id': 93, 'event_hex': '0x005D', 'ap_name': '(New Parm) Boss Defeated', 'map_id': 15448, 'map_hex': '3C58', 'vanilla_gold': 120, 'is_finish': False, 'key_name': None, 'blocks': []},
@@ -50,17 +63,52 @@ STORY_CHECK_DATA: list[StoryCheckEntry] = [
     {'event_id': 143, 'event_hex': '0x008F', 'ap_name': '(Military) Board Train', 'map_id': 19464, 'map_hex': '4C08', 'vanilla_gold': 120, 'is_finish': False, 'key_name': None, 'blocks': [19464, 19468, 19472]},
     {'event_id': 148, 'event_hex': '0x0094', 'ap_name': '(Military) Train Escape', 'map_id': 18436, 'map_hex': '4804', 'vanilla_gold': 120, 'is_finish': False, 'key_name': None, 'blocks': [20484]},
     {'event_id': 158, 'event_hex': '0x009E', 'ap_name': '(Luc Village) Defend Spirit Stone', 'map_id': 22536, 'map_hex': '5808', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to East Misty', 'blocks': []},
-    {'event_id': 159, 'event_hex': '0x009F', 'ap_name': 'Temporary End', 'map_id': 22537, 'map_hex': '5809', 'vanilla_gold': None, 'is_finish': True, 'key_name': None, 'blocks': []},
+    {'event_id': 164, 'event_hex': '0x00A4', 'ap_name': '(End of the World) To the top!', 'map_id': 24608, 'map_hex': '6020', 'vanilla_gold': None, 'is_finish': False, 'key_name': None, 'blocks': [18436, 18440, 18444, 18448, 22528, 22536, 24580, 24584, 24592, 24604, 24608]},
+    {'event_id': 175, 'event_hex': '0x00AF', 'ap_name': '(Valley of the Flying Dragon) Gadwin', 'map_id': 25608, 'map_hex': '6408', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Dight Village', 'blocks': []},
+    {'event_id': 180, 'event_hex': '0x00B4', 'ap_name': '(Dight Village) Rain!', 'map_id': 26624, 'map_hex': '6800', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Mt. Typhoon', 'blocks': []},
+    {'event_id': 193, 'event_hex': '0x00C1', 'ap_name': '(Typhoon Tower) Destroyed', 'map_id': 27656, 'map_hex': '6C08', 'vanilla_gold': 390, 'is_finish': False, 'key_name': None, 'blocks': [27660, 27656]},
+    {'event_id': 184, 'event_hex': '0x00B8', 'ap_name': '(Dight Village) Spear of Heroes', 'map_id': 27652, 'map_hex': '6C04', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Lama Mountains', 'blocks': []},
+    {'event_id': 197, 'event_hex': '0x00C5', 'ap_name': '(Lama Mountains) Camp', 'map_id': 28676, 'map_hex': '7004', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Gumbo', 'blocks': []},
+    {'event_id': 209, 'event_hex': '0x00D1', 'ap_name': '(Volcano) Escape', 'map_id': 30728, 'map_hex': '7808', 'vanilla_gold': 390, 'is_finish': False, 'key_name': None, 'blocks': [30720, 30724, 30725, 30728, 30732]},
+    {'event_id': 254, 'event_hex': '0x00FE', 'ap_name': '(Twin Towers) Escape', 'map_id': 31768, 'map_hex': '7C18', 'vanilla_gold': 390, 'is_finish': False, 'key_name': None, 'blocks': [31768]},
+    {'event_id': 262, 'event_hex': '0x0106', 'ap_name': '(Dight) Sue is sick', 'map_id': 31812, 'map_hex': '7C44', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Vanishing Hill', 'blocks': []},
+    {'event_id': 280, 'event_hex': '0x0118', 'ap_name': '(Dight Village) Boat', 'map_id': 35840, 'map_hex': '8C00', 'vanilla_gold': 390, 'is_finish': False, 'key_name': None, 'blocks': [25600, 25604, 25608, 25616, 26624, 27648, 27652, 28672, 28676, 29696, 31748, 31752, 31756, 31760, 31812, 32772, 32776]},
+    {'event_id': 289, 'event_hex': '0x0121', 'ap_name': '(Pirate Island) Boss Defeated', 'map_id': 36864, 'map_hex': '9000', 'vanilla_gold': 390, 'is_finish': False, 'key_name': None, 'blocks': [35840]},
+    {'event_id': 298, 'event_hex': '0x012A', 'ap_name': '(Virgin Forest) Rapp', 'map_id': 36872, 'map_hex': '9008', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Cafu', 'blocks': [36864, 36868]},
+    {'event_id': 301, 'event_hex': '0x012D', 'ap_name': '(Cafu) Meet the Elder', 'map_id': 37888, 'map_hex': '9400', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Petrified Forest', 'blocks': []},
+    {'event_id': 304, 'event_hex': '0x0130', 'ap_name': '(Petrified Forest) Village', 'map_id': 38400, 'map_hex': '9600', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Tower of Doom', 'blocks': []},
+    {'event_id': 316, 'event_hex': '0x013C', 'ap_name': '(Tower of Doom) Gaia Defeated', 'map_id': 38928, 'map_hex': '9810', 'vanilla_gold': 600, 'is_finish': False, 'key_name': None, 'blocks': [36872, 36876]},
+    {'event_id': 332, 'event_hex': '0x014C', 'ap_name': '(Cafu) Under Attack', 'map_id': 38928, 'map_hex': '9810', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Zil Desert', 'blocks': []},
+    {'event_id': 344, 'event_hex': '0x0158', 'ap_name': '(Cafu) Aftermath', 'map_id': 38928, 'map_hex': '9810', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Zil Padon', 'blocks': [38916, 38917, 38920, 38924, 38928]},
+    {'event_id': 376, 'event_hex': '0x0178', 'ap_name': '(Laine) Meet the sages', 'map_id': 39942, 'map_hex': '9C06', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Abandoned Laine', 'blocks': []},
+    {'event_id': 418, 'event_hex': '0x01A2', 'ap_name': 'Grandeur - Hijack', 'map_id': 47624, 'map_hex': 'BA08', 'vanilla_gold': 1200, 'is_finish': False, 'key_name': None, 'blocks': [47104, 47108, 47112, 47116, 47120, 47124, 47128, 47132, 50176, 50180, 50184]},
+    {'event_id': 1878, 'event_hex': '0x0756', 'ap_name': 'Grandeur - Escape', 'map_id': 47632, 'map_hex': 'BA10', 'vanilla_gold': 1200, 'is_finish': False, 'key_name': None, 'blocks': [47624, 47632]},
+    {'event_id': 352, 'event_hex': '0x0160', 'ap_name': '(Alent) Fall', 'map_id': 49152, 'map_hex': 'C000', 'vanilla_gold': None, 'is_finish': False, 'key_name': 'Key to Luzet Mountains', 'blocks': []},
+    {'event_id': 428, 'event_hex': '0x01AC', 'ap_name': 'Baal - Defeated', 'map_id': 53260, 'map_hex': 'D00C', 'vanilla_gold': 6000, 'is_finish': False, 'key_name': None, 'blocks': [37888, 38400, 38404, 39936, 39940, 39941, 39942, 39960, 39964, 41988, 41996, 42000, 42004, 42008, 42012, 42016, 44036, 44040, 44044, 44048, 44052, 44056, 46080, 46084, 46088, 46092, 46096, 46104, 46108, 46112, 46116, 46120, 46124, 48128, 48132, 49152, 51200, 51204, 53248, 53256, 53260]},
+    {'event_id': 1910, 'event_hex': '0x0776', 'ap_name': "Leen's Sacrifice", 'map_id': 54276, 'map_hex': 'D404', 'vanilla_gold': 6000, 'is_finish': False, 'key_name': None, 'blocks': [51712, 51716]},
+    {'event_id': 446, 'event_hex': '0x01BE', 'ap_name': 'Portal of the Chosen One', 'map_id': 55304, 'map_hex': 'D808', 'vanilla_gold': 6000, 'is_finish': False, 'key_name': None, 'blocks': [54272, 54276]},
+    {'event_id': 1934, 'event_hex': '0x078E', 'ap_name': 'Sanctuary - Spirit Sword', 'map_id': 55304, 'map_hex': 'D808', 'vanilla_gold': 6000, 'is_finish': False, 'key_name': None, 'blocks': [55304]},
+    {'event_id': 356, 'event_hex': '0x0164', 'ap_name': 'Mullen - Defeated', 'map_id': 56332, 'map_hex': 'DC0C', 'vanilla_gold': 6000, 'is_finish': False, 'key_name': None, 'blocks': [56322, 56324, 56328, 56332]},
+    {'event_id': 437, 'event_hex': '0x01B5', 'ap_name': 'GameOver', 'map_id': 57372, 'map_hex': 'E01C', 'vanilla_gold': None, 'is_finish': True, 'key_name': None, 'blocks': []},
 ]
 
-FINISH_LOCATION_NAME: str = 'Temporary End'
-FINISH_EVENT_ID: int = 159
+FINISH_LOCATION_NAME: str = 'GameOver'
+FINISH_EVENT_ID: int = 437
 
 # map_hex → key item name (every map gated by that key).
 KEY_FOR_MAP: dict[str, str] = {}
 for _key in KEY_ITEM_DATA:
     for _hx in _key["unlocks_map_hexes"]:
         KEY_FOR_MAP[_hx] = _key["item_name"]
+
+# Key name → all key names with value <= this key's value (inclusive).
+# A key unlocks its maps only when the player has every name in this list.
+KEY_REQUIREMENTS: dict[str, list[str]] = {
+    _key["item_name"]: [
+        e["item_name"] for e in KEY_ITEM_DATA if e["value"] <= _key["value"]
+    ]
+    for _key in KEY_ITEM_DATA
+}
 
 # Primary hub hex → other unlocks (for optional parenting; all share same key rule).
 KEY_HUB_CHILDREN: dict[str, list[str]] = {

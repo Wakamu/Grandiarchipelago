@@ -1,6 +1,7 @@
 #include "hooks.h"
 
 #include "chest_pickup.h"
+#include "game_memory.h"
 #include "item_tracker.h"
 #include "log.h"
 #include "map_travel.h"
@@ -22,6 +23,11 @@ bool InstallHooks() {
         LogInfo("Assign UI hook active (+0x1DC100, suppress vanilla chest loot on AP location checks)");
     } else {
         LogWarn("Assign UI hook not installed — vanilla chest loot may enter party inventory");
+    }
+    if (IsFieldGoldAddHookInstalled()) {
+        LogInfo("Field gold suppress active (+0x7612E add [eax+4],edx — AP gold chests add 0)");
+    } else {
+        LogWarn("Field gold suppress not installed — vanilla gold chests may still grant gold");
     }
     if (IsSaveSyncHookInstalled()) {
         LogInfo("Save sync hooks active (fwrite +0x254E / fread +0x2673, GAP1 trailer)");

@@ -39,16 +39,17 @@ flowchart LR
 | Item pool filler/useful from vanilla chests | Done |
 | Chests event hooks | Done |
 | Story Event hooks | Done |
-| Gold hooks | WIP |
+| Gold hooks | Done |
 | Gate hooks | Done |
-| StoryEvents / progression logic | WIP |
-| AP network client | Stub |
+| StoryEvents / progression logic | Done (needs testing) |
+| AP network client | Done |
 
 Sync catalog / progression → APWorld after regenerating MDP data:
 
 ```powershell
 python tools/sync_progressions.py
 python tools/sync_apworld_from_mdp_catalog.py
+cmake --build client/build --config Release --target Grandiarchipelago
 python build_grandia_apworld.py
 ```
 

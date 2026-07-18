@@ -69,9 +69,6 @@ void PollStashChanges() {
             continue;
         }
 
-        const int item_id = offset + 1;
-        LogInfo("Stash change offset=0x%03X item_id=%d qty %u -> %u", offset, item_id, previous, value);
-
         g_last_bytes[static_cast<size_t>(offset)] = value;
     }
 }
@@ -99,6 +96,7 @@ DWORD WINAPI WatcherThread(LPVOID) {
 
     while (g_running.load()) {
         ProcessChestPickupQueue();
+        FlushPendingGold();
 
         const unsigned hits = GetStashHookHitCount();
         if (hits != last_hook_hits) {

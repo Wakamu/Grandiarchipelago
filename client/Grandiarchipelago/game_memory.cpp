@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,10 @@ uint8_t g_stash_hook_original[8]{};
 void* g_gold_hook_site = nullptr;
 uint8_t g_gold_hook_original[8]{};
 
+void* g_field_gold_hook_site = nullptr;
+uint8_t g_field_gold_hook_original[8]{};
+void* g_field_gold_trampoline_mem = nullptr;
+
 void* g_chest_flag_hook_site = nullptr;
 uint8_t g_chest_flag_hook_original[8]{};
 
@@ -33,8 +38,15 @@ constexpr std::uintptr_t kAssignUiEntryRva = 0x1DC100;
 constexpr size_t kAssignUiEntryPatchSize = 6;
 constexpr uint8_t kAssignUiEntryBytes[] = {0x55, 0x8B, 0xEC, 0x83, 0xE4, 0xF8};
 
-// Party inventory write RE: grandia.exe+0x1E0BFD (see docs/cheat_engine_re.md).
-constexpr std::uintptr_t kPartyInventoryWriteRva = 0x1E0BFD;
+// Field chest gold add: add [eax+4], edx ; call …  (grandia.exe+0x7612E / +0x76131).
+// JMP patch is 5 bytes and overlaps the CALL — trampoline must replay add+call and resume at +8.
+constexpr std::uintptr_t kFieldGoldAddRva = 0x7612Eu;
+constexpr size_t kFieldGoldAddInsnSize = 3;   // 01 50 04
+constexpr size_t kFieldGoldCallInsnSize = 5;  // E8 rel32
+constexpr size_t kFieldGoldStolenSize = kFieldGoldAddInsnSize + kFieldGoldCallInsnSize;
+constexpr size_t kFieldGoldPatchSize = 5;
+constexpr uint8_t kFieldGoldAddBytes[] = {0x01, 0x50, 0x04};
+constexpr uint8_t kFieldGoldCallOpcode = 0xE8;
 
 // Chest event flag write: mov byte ptr [edx+esi], al; mov eax, [global] — loot caller +0x53C45.
 // Steam build: +0x70505. Some builds place the same insn at +0x90505 (x32dbg RE).
@@ -71,7 +83,8 @@ constexpr uint8_t kStashDepositUiQtyCap = 0x63;               // game caps at 99
 
 extern "C" {
 void* g_ap_stash_return = nullptr;
-void* g_ap_gold_return = nullptr;
+void* g_ap_gold_trampoline = nullptr;
+void* g_ap_field_gold_trampoline = nullptr;
 std::uintptr_t g_ap_stash_base = 0;  // last eax from hook (may be UI scratch)
 std::uintptr_t g_ap_stash_persistent_base = 0;
 std::uintptr_t g_ap_gold_base = 0;
@@ -88,6 +101,8 @@ std::uintptr_t g_grandia_module_base = 0;
 
 extern "C" void ApChestEventNotify();
 extern "C" int ApAssignUiNotify();
+extern "C" int ApShouldSuppressFieldGold();
+extern "C" void ApOnGoldPtrCaptured();
 
 extern "C" {
 extern volatile std::uintptr_t g_ap_assign_return_addr;
@@ -164,9 +179,25 @@ extern "C" __declspec(naked) void ApAssignUiEntryDetour() {
     }
 }
 
+extern "C" __declspec(naked) void ApFieldGoldAddDetour() {
+    __asm {
+        pushad
+        call ApShouldSuppressFieldGold
+        test eax, eax
+        jz field_gold_keep
+        // Zero saved EDX in pushad frame so add [eax+4], edx adds 0.
+        mov dword ptr [esp+14h], 0
+    field_gold_keep:
+        popad
+        jmp dword ptr [g_ap_field_gold_trampoline]
+    }
+}
+
 #endif
 
 #if defined(_M_IX86)
+
+extern "C" void ApOnGoldPtrCaptured();
 
 extern "C" __declspec(naked) void ApStashDetour() {
     __asm {
@@ -184,12 +215,10 @@ extern "C" __declspec(naked) void ApGoldDetour() {
         mov dword ptr [g_ap_gold_base], esi
         lea eax, [esi+10Ch]
         mov dword ptr [g_ap_character_base], eax
-        push eax
-        movzx eax, byte ptr [esi+2]
-        pop eax
-        push 05h
-        mov al, byte ptr [esi+16h]
-        jmp dword ptr [g_ap_gold_return]
+        pushad
+        call ApOnGoldPtrCaptured
+        popad
+        jmp dword ptr [g_ap_gold_trampoline]
     }
 }
 
@@ -197,6 +226,14 @@ extern "C" __declspec(naked) void ApGoldDetour() {
 
 namespace grandia_ap {
 namespace {
+
+constexpr unsigned kGoldValueOffset = 4;
+constexpr unsigned kGoldMax = 9999999u;
+constexpr size_t kGoldHookPatchSize = 5;  // push 5; mov al,[esi+disp]
+
+std::mutex g_gold_mutex;
+unsigned g_pending_gold = 0;
+void* g_gold_trampoline_mem = nullptr;
 
 std::vector<int> ParsePattern(const char* pattern_text) {
     std::vector<int> bytes;
@@ -481,6 +518,118 @@ bool InstallStashHook(std::uintptr_t site) {
 #endif
 }
 
+bool InstallGoldHook(std::uintptr_t site) {
+#if !defined(_M_IX86)
+    LogWarn("Gold hook requires Win32 build");
+    return false;
+#else
+    if (!IsExecutableAddress(reinterpret_cast<void*>(site))) {
+        LogWarn("Refusing gold hook at non-executable address 0x%08X", static_cast<unsigned>(site));
+        return false;
+    }
+
+    const auto* bytes = reinterpret_cast<const uint8_t*>(site);
+    // GetGoldPtrAOB starts: push 5; mov al,[esi+disp8]
+    if (bytes[0] != 0x6A || bytes[1] != 0x05 || bytes[2] != 0x8A || bytes[3] != 0x46) {
+        LogWarn("Refusing gold hook — unexpected bytes at 0x%08X", static_cast<unsigned>(site));
+        return false;
+    }
+
+    g_gold_trampoline_mem = VirtualAlloc(nullptr, 32, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    if (!g_gold_trampoline_mem) {
+        LogWarn("Failed to allocate gold trampoline");
+        return false;
+    }
+
+    auto* tramp = reinterpret_cast<uint8_t*>(g_gold_trampoline_mem);
+    std::memcpy(tramp, bytes, kGoldHookPatchSize);
+    tramp[kGoldHookPatchSize] = 0xE9;
+    const auto resume = site + kGoldHookPatchSize;
+    const auto rel = static_cast<int32_t>(resume - (reinterpret_cast<std::uintptr_t>(tramp) + kGoldHookPatchSize + 5));
+    std::memcpy(tramp + kGoldHookPatchSize + 1, &rel, sizeof(rel));
+    g_ap_gold_trampoline = g_gold_trampoline_mem;
+
+    g_gold_hook_site = reinterpret_cast<void*>(site);
+    if (!WriteJump(g_gold_hook_site, reinterpret_cast<void*>(ApGoldDetour), g_gold_hook_original,
+                   kGoldHookPatchSize)) {
+        LogWarn("Failed to install GetGoldPtrAOB hook");
+        VirtualFree(g_gold_trampoline_mem, 0, MEM_RELEASE);
+        g_gold_trampoline_mem = nullptr;
+        g_ap_gold_trampoline = nullptr;
+        g_gold_hook_site = nullptr;
+        return false;
+    }
+
+    LogInfo("Installed GetGoldPtrAOB hook at 0x%08X (gold = [ESI]+4, cap %u)", static_cast<unsigned>(site),
+            kGoldMax);
+    return true;
+#endif
+}
+
+bool InstallFieldGoldAddHook(std::uintptr_t site) {
+#if !defined(_M_IX86)
+    LogWarn("Field gold suppress hook requires Win32 build");
+    return false;
+#else
+    if (!IsExecutableAddress(reinterpret_cast<void*>(site))) {
+        LogWarn("Refusing field gold hook at non-executable 0x%08X", static_cast<unsigned>(site));
+        return false;
+    }
+    const auto* bytes = reinterpret_cast<const uint8_t*>(site);
+    if (!BytesMatch(bytes, kFieldGoldAddBytes, sizeof(kFieldGoldAddBytes))) {
+        LogWarn("Field gold add bytes mismatch at 0x%08X (expected 01 50 04)", static_cast<unsigned>(site));
+        return false;
+    }
+    if (bytes[kFieldGoldAddInsnSize] != kFieldGoldCallOpcode) {
+        LogWarn("Field gold follow-up is not CALL at 0x%08X (expected E8 after add)",
+                static_cast<unsigned>(site + kFieldGoldAddInsnSize));
+        return false;
+    }
+
+    const auto call_site = site + kFieldGoldAddInsnSize;
+    const auto call_rel = *reinterpret_cast<const int32_t*>(bytes + kFieldGoldAddInsnSize + 1);
+    const auto call_abs = call_site + kFieldGoldCallInsnSize + call_rel;
+    const auto resume = site + kFieldGoldStolenSize;
+
+    g_field_gold_trampoline_mem = VirtualAlloc(nullptr, 32, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    if (!g_field_gold_trampoline_mem) {
+        LogWarn("Failed to allocate field-gold trampoline");
+        return false;
+    }
+
+    // Replay: add [eax+4],edx ; call <relocated> ; jmp site+8
+    auto* tramp = reinterpret_cast<uint8_t*>(g_field_gold_trampoline_mem);
+    const auto tramp_base = reinterpret_cast<std::uintptr_t>(tramp);
+    std::memcpy(tramp, bytes, kFieldGoldAddInsnSize);
+    tramp[kFieldGoldAddInsnSize] = kFieldGoldCallOpcode;
+    const auto tramp_call = tramp_base + kFieldGoldAddInsnSize;
+    const auto relocated_call_rel =
+        static_cast<int32_t>(call_abs - (tramp_call + kFieldGoldCallInsnSize));
+    std::memcpy(tramp + kFieldGoldAddInsnSize + 1, &relocated_call_rel, sizeof(relocated_call_rel));
+    tramp[kFieldGoldStolenSize] = 0xE9;
+    const auto jmp_rel = static_cast<int32_t>(resume - (tramp_base + kFieldGoldStolenSize + 5));
+    std::memcpy(tramp + kFieldGoldStolenSize + 1, &jmp_rel, sizeof(jmp_rel));
+    g_ap_field_gold_trampoline = g_field_gold_trampoline_mem;
+
+    g_field_gold_hook_site = reinterpret_cast<void*>(site);
+    if (!WriteJump(g_field_gold_hook_site, reinterpret_cast<void*>(ApFieldGoldAddDetour),
+                   g_field_gold_hook_original, kFieldGoldPatchSize)) {
+        LogWarn("Failed to install field gold add hook");
+        VirtualFree(g_field_gold_trampoline_mem, 0, MEM_RELEASE);
+        g_field_gold_trampoline_mem = nullptr;
+        g_ap_field_gold_trampoline = nullptr;
+        g_field_gold_hook_site = nullptr;
+        return false;
+    }
+
+    LogInfo(
+        "Installed field-chest gold suppress at grandia.exe+0x%X (add [eax+4],edx; call→0x%08X; resume=+0x%X)",
+        static_cast<unsigned>(kFieldGoldAddRva), static_cast<unsigned>(call_abs),
+        static_cast<unsigned>(kFieldGoldStolenSize));
+    return true;
+#endif
+}
+
 std::uintptr_t StashQuantityAddress(int item_id) {
     if (g_ap_stash_persistent_base == 0 || item_id <= 0) {
         return 0;
@@ -721,7 +870,11 @@ bool InitializeGameMemory() {
     LogPatternMatches("GetGoldPtrAOB", gold_exec, gold_image);
 
     if (!gold_exec.empty()) {
-        LogInfo("GetGoldPtrAOB executable at 0x%08X (hook skipped in v0.0.4)", static_cast<unsigned>(gold_exec[0]));
+        InstallGoldHook(gold_exec[0]);
+    } else if (!gold_image.empty()) {
+        LogWarn("GetGoldPtrAOB only found in non-executable memory — pattern may be wrong for this build");
+    } else {
+        LogWarn("GetGoldPtrAOB pattern not found — gold delivery disabled until pattern matches");
     }
 
     const std::uintptr_t chest_flag_site = ResolveChestFlagWriteSite(module);
@@ -743,8 +896,13 @@ bool InitializeGameMemory() {
     InstallSaveSyncHooks();
     InstallMapTravelHook();
 
+    if (g_grandia_module_base != 0) {
+        InstallFieldGoldAddHook(g_grandia_module_base + kFieldGoldAddRva);
+    }
+
     return !stash_exec.empty() || !gold_exec.empty() || g_chest_flag_hook_site != nullptr ||
-           g_assign_ui_hook_site != nullptr || IsSaveSyncHookInstalled() || IsMapTravelHookInstalled();
+           g_assign_ui_hook_site != nullptr || g_field_gold_hook_site != nullptr ||
+           IsSaveSyncHookInstalled() || IsMapTravelHookInstalled();
 }
 
 bool TryAdoptStashBaseFromGlobal() {
@@ -826,8 +984,22 @@ void ShutdownGameMemory() {
         g_stash_hook_site = nullptr;
     }
     if (g_gold_hook_site) {
-        RestoreBytes(g_gold_hook_site, g_gold_hook_original, 5);
+        RestoreBytes(g_gold_hook_site, g_gold_hook_original, kGoldHookPatchSize);
         g_gold_hook_site = nullptr;
+    }
+    if (g_gold_trampoline_mem) {
+        VirtualFree(g_gold_trampoline_mem, 0, MEM_RELEASE);
+        g_gold_trampoline_mem = nullptr;
+        g_ap_gold_trampoline = nullptr;
+    }
+    if (g_field_gold_hook_site) {
+        RestoreBytes(g_field_gold_hook_site, g_field_gold_hook_original, 5);
+        g_field_gold_hook_site = nullptr;
+    }
+    if (g_field_gold_trampoline_mem) {
+        VirtualFree(g_field_gold_trampoline_mem, 0, MEM_RELEASE);
+        g_field_gold_trampoline_mem = nullptr;
+        g_ap_field_gold_trampoline = nullptr;
     }
     if (g_chest_flag_hook_site) {
         RestoreBytes(g_chest_flag_hook_site, g_chest_flag_hook_original, 5);
@@ -846,6 +1018,8 @@ void ShutdownGameMemory() {
 bool IsChestFlagHookInstalled() { return g_chest_flag_hook_site != nullptr; }
 
 bool IsAssignUiEntryHookInstalled() { return g_assign_ui_hook_site != nullptr; }
+
+bool IsFieldGoldAddHookInstalled() { return g_field_gold_hook_site != nullptr; }
 
 bool IsPartyInventoryWriteHookInstalled() { return false; }
 
@@ -959,4 +1133,73 @@ bool AddStashQuantity(int item_id, uint8_t delta) {
     return CallGameAddStashItem(item_id, delta);
 }
 
+bool HasGoldBase() { return g_ap_gold_base != 0; }
+
+std::uintptr_t GetGoldBase() { return g_ap_gold_base; }
+
+std::uintptr_t GetCharacterStatsBase() { return g_ap_character_base; }
+
+bool ApplyGoldAmountLocked(unsigned amount) {
+    if (amount == 0) {
+        return true;
+    }
+    if (g_ap_gold_base == 0) {
+        return false;
+    }
+
+    const auto address = g_ap_gold_base + kGoldValueOffset;
+    uint32_t current = 0;
+    __try {
+        current = *reinterpret_cast<volatile uint32_t*>(address);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        LogWarn("Failed to read gold at 0x%08X", static_cast<unsigned>(address));
+        return false;
+    }
+
+    unsigned long long next = static_cast<unsigned long long>(current) + amount;
+    if (next > kGoldMax) {
+        next = kGoldMax;
+    }
+
+    DWORD old_protect = 0;
+    if (!VirtualProtect(reinterpret_cast<void*>(address), sizeof(uint32_t), PAGE_EXECUTE_READWRITE, &old_protect)) {
+        LogWarn("VirtualProtect failed for gold write at 0x%08X", static_cast<unsigned>(address));
+        return false;
+    }
+    *reinterpret_cast<volatile uint32_t*>(address) = static_cast<uint32_t>(next);
+    VirtualProtect(reinterpret_cast<void*>(address), sizeof(uint32_t), old_protect, &old_protect);
+
+    return true;
+}
+
+bool AddGoldAmount(unsigned amount) {
+    if (amount == 0) {
+        return true;
+    }
+
+    std::lock_guard<std::mutex> lock(g_gold_mutex);
+    if (g_ap_gold_base == 0) {
+        const unsigned long long queued = static_cast<unsigned long long>(g_pending_gold) + amount;
+        g_pending_gold = queued > kGoldMax ? kGoldMax : static_cast<unsigned>(queued);
+        LogInfo("Gold +%u queued (open Status/menu once so GetGoldPtrAOB captures GoldPtr; pending=%u)",
+                amount, g_pending_gold);
+        return true;
+    }
+    return ApplyGoldAmountLocked(amount);
+}
+
+void FlushPendingGold() {
+    std::lock_guard<std::mutex> lock(g_gold_mutex);
+    if (g_ap_gold_base == 0 || g_pending_gold == 0) {
+        return;
+    }
+    const unsigned amount = g_pending_gold;
+    g_pending_gold = 0;
+    ApplyGoldAmountLocked(amount);
+}
+
 }  // namespace grandia_ap
+
+extern "C" void ApOnGoldPtrCaptured() {
+    grandia_ap::FlushPendingGold();
+}

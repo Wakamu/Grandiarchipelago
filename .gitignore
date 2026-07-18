@@ -13,3 +13,4 @@ traces/
 **/__pycache__/
 *.apworld
 worlds/grandia/native/*.dll
+tools/progression_map_viewer.html

@@ -1,14 +1,14 @@
 {
   "start_maps": [
-    8192,
     9232
   ],
   "events": [
     {
       "name": "(Parm) Intro Letter",
       "id": 19,
-      "map": 8192,
+      "map": 9232,
       "key": {
+		"value": 1,
         "name": "Key to Sult Ruins",
         "unlocks_maps": [
           9216,
@@ -46,6 +46,7 @@
       "id": 41,
       "gold": 60,
       "blocks": [
+		9216,
         9232,
         10248,
         10252,
@@ -73,6 +74,7 @@
       "map": 15445,
       "id": 83,
       "key": {
+		"value": 2,
         "name": "Key to Feena's House",
         "unlocks_maps": [
           16384,
@@ -93,6 +95,7 @@
       "map": 23556,
       "id": 96,
       "key": {
+		"value": 3,
         "name": "Key to Dom Ruins",
         "unlocks_maps": [
           17428,
@@ -156,17 +159,485 @@
       "map": 22536,
       "id": 158,
       "key": {
+		"value": 4,
         "name": "Key to East Misty",
         "unlocks_maps": [
-          22537
+          18440,
+		  18444,
+		  18448,
+		  24580,
+		  24584,
+		  24592,
+		  24604,
+		  24608,
+		  25600,
+		  25604,
+		  25608,
+		  25616
         ]
       }
     },
     {
-      "name": "Temporary End",
-      "map": 22537,
-      "id": 159,
-      "finish": true
+      "name": "(End of the World) To the top!",
+      "map": 24608,
+      "id": 164,
+      "blocks": [
+		18436,
+	    18440,
+		18444,
+		18448,
+		22528,
+		22536,
+		24580,
+		24584,
+		24592,
+		24604,
+		24608
+	  ]
+    },
+    {
+      "name": "(Valley of the Flying Dragon) Gadwin",
+      "map": 25608,
+      "id": 175,
+      "key": {
+		"value": 5,
+        "name": "Key to Dight Village",
+        "unlocks_maps": [
+          26624
+        ]
+      }
+    },
+	{
+      "name": "(Dight Village) Rain!",
+      "map": 26624,
+      "id": 180,
+      "key": {
+		"value": 6,
+        "name": "Key to Mt. Typhoon",
+        "unlocks_maps": [
+          27648,
+		  27652,
+		  27656,
+		  27660
+        ]
+      }
+    },
+	{
+      "name": "(Typhoon Tower) Destroyed",
+      "map": 27656,
+      "id": 193,
+	  "gold": 390,
+	  "blocks": [
+		27660,
+		27656
+	  ]
+    },
+	{
+      "name": "(Dight Village) Spear of Heroes",
+      "map": 27652,
+      "id": 184,
+      "key": {
+		"value": 7,
+        "name": "Key to Lama Mountains",
+        "unlocks_maps": [
+          28672,
+		  28676
+        ]
+      }
+    },
+	{
+      "name": "(Lama Mountains) Camp",
+      "map": 28676,
+      "id": 197,
+      "key": {
+		"value": 8,
+        "name": "Key to Gumbo",
+        "unlocks_maps": [
+          29696,
+		  30720,
+		  30724,
+		  30725,
+		  30728,
+		  30732,
+		  31748,
+		  31752,
+		  31756,
+		  31760,
+		  31768,
+		  31812
+        ]
+      }
+    },
+	{
+      "name": "(Volcano) Escape",
+      "map": 30728,
+      "id": 209,
+	  "gold": 390,
+	  "blocks": [
+		30720,
+		30724,
+		30725,
+		30728,
+		30732
+	  ]
+    },
+	{
+      "name": "(Twin Towers) Escape",
+      "map": 31768,
+      "id": 254,
+	  "gold": 390,
+	  "blocks": [
+		31768
+	  ]
+    },
+	{
+      "name": "(Dight) Sue is sick",
+      "map": 31812,
+      "id": 262,
+      "key": {
+		"value": 9,
+        "name": "Key to Vanishing Hill",
+        "unlocks_maps": [
+          32776,
+		  32772,
+		  35840,
+		  36864,
+		  36868,
+		  36872,
+		  36876
+        ]
+      }
+    },
+	{
+      "name": "(Dight Village) Boat",
+      "map": 35840,
+      "id": 280,
+	  "gold": 390,
+	  "blocks": [
+		25600,
+		25604,
+		25608,
+		25616,
+		26624,
+		27648,
+		27652,
+		28672,
+		28676,
+		29696,
+		31748,
+		31752,
+		31756,
+		31760,
+		31812,
+		32772,
+		32776
+	  ]
+    },
+	{
+      "name": "(Pirate Island) Boss Defeated",
+      "map": 36864,
+      "id": 289,
+	  "gold": 390,
+	  "blocks": [
+		35840
+	  ]
+    },
+	{
+      "name": "(Virgin Forest) Rapp",
+      "map": 36872,
+      "id": 298,
+      "key": {
+		"value": 10,
+        "name": "Key to Cafu",
+        "unlocks_maps": [
+          37888
+        ]
+      },
+	  "blocks": [
+		36864,
+		36868
+	  ]
+    },
+	{
+      "name": "(Cafu) Meet the Elder",
+      "map": 37888,
+      "id": 301,
+      "key": {
+		"value": 11,
+        "name": "Key to Petrified Forest",
+        "unlocks_maps": [
+          38400,
+		  38404
+        ]
+      }
+    },
+	{
+      "name": "(Petrified Forest) Village",
+      "map": 38400,
+      "id": 304,
+      "key": {
+		"value": 12,
+        "name": "Key to Tower of Doom",
+        "unlocks_maps": [
+          38916,
+		  38917,
+		  38920,
+		  38924,
+		  38928
+        ]
+      }
+    },
+	{
+      "name": "(Tower of Doom) Gaia Defeated",
+      "map": 38928,
+      "id": 316,
+	  "gold": 600,
+	  "blocks": [
+		36872,
+		36876
+	  ]
+    },
+	{
+      "name": "(Cafu) Under Attack",
+      "map": 38928,
+      "id": 332,
+      "key": {
+		"value": 13,
+        "name": "Key to Zil Desert",
+        "unlocks_maps": [
+          39936,
+		  39940,
+		  41988,
+		  41996,
+		  42000,
+		  42004,
+		  42008,
+		  42012,
+		  42016,
+		  44036,
+		  44040,
+		  44044,
+		  44048,
+		  44052,
+		  44056
+        ]
+      }
+    },
+	{
+      "name": "(Cafu) Aftermath",
+      "map": 38928,
+      "id": 344,
+	  "key": {
+		"value": 14,
+        "name": "Key to Zil Padon",
+        "unlocks_maps": [
+          39941,
+		  39942,
+		  39960,
+		  39964,
+		  46080,
+		  46084,
+		  46088,
+		  46092,
+		  46096,
+		  46104,
+		  46108,
+		  46112,
+		  46116,
+		  46120,
+		  46124,
+		  51200,
+		  51204
+        ]
+      },
+	  "blocks": [
+		38916,
+		38917,
+		38920,
+		38924,
+		38928
+	  ]
+    },
+	{
+      "name": "(Laine) Meet the sages",
+      "map": 39942,
+      "id": 376,
+	  "key": {
+		"value": 15,
+        "name": "Key to Abandoned Laine",
+        "unlocks_maps": [
+          50176,
+		  50180,
+		  50184,
+		  47104,
+		  47108,
+		  47112,
+		  47116,
+		  47120,
+		  47124,
+		  47128,
+		  47132,
+		  47624,
+		  47632,
+		  48128,
+		  48132,
+		  49152
+        ]
+      }
+    },
+	{
+      "name": "Grandeur - Hijack",
+      "map": 47624,
+      "id": 418,
+	  "gold": 1200,
+	  "blocks": [
+		47104,
+		47108,
+		47112,
+		47116,
+		47120,
+		47124,
+		47128,
+		47132,
+		50176,
+		50180,
+		50184
+	  ]
+    },
+	{
+      "name": "Grandeur - Escape",
+      "map": 47632,
+      "id": 1878,
+	  "gold": 1200,
+	  "blocks": [
+		47624,
+		47632
+	  ]
+    },
+	{
+      "name": "(Alent) Fall",
+      "map": 49152,
+      "id": 352,
+	  "key": {
+		"value": 16,
+        "name": "Key to Luzet Mountains",
+        "unlocks_maps": [
+          51712,
+		  51716,
+		  53248,
+		  53256,
+		  53260,
+		  54272,
+		  54276,
+		  55304,
+		  56322,
+		  56324,
+		  56328,
+		  56332,
+		  57348,
+		  57350,
+		  57352,
+		  57360,
+		  57372
+        ]
+      }
+    },
+	{
+      "name": "Baal - Defeated",
+      "map": 53260,
+      "id": 428,
+	  "gold": 6000,
+	  "blocks": [
+		37888,
+		38400,
+		38404,
+		39936,
+		39940,
+		39941,
+		39942,
+		39960,
+		39964,
+		41988,
+		41996,
+		42000,
+		42004,
+		42008,
+		42012,
+		42016,
+		44036,
+		44040,
+		44044,
+		44048,
+		44052,
+		44056,
+		46080,
+		46084,
+		46088,
+		46092,
+		46096,
+		46104,
+		46108,
+		46112,
+		46116,
+		46120,
+		46124,
+		48128,
+		48132,
+		49152,
+		51200,
+		51204,
+		53248,
+		53256,
+		53260
+	  ]
+    },
+	{
+      "name": "Leen's Sacrifice",
+      "map": 54276,
+      "id": 1910,
+	  "gold": 6000,
+	  "blocks": [
+		51712,
+		51716
+	  ]
+    },
+	{
+      "name": "Portal of the Chosen One",
+      "map": 55304,
+      "id": 446,
+	  "gold": 6000,
+	  "blocks": [
+		54272,
+		54276
+	  ]
+    },
+	{
+      "name": "Sanctuary - Spirit Sword",
+      "map": 55304,
+      "id": 1934,
+	  "gold": 6000,
+	  "blocks": [
+		55304
+	  ]
+    },
+	{
+      "name": "Mullen - Defeated",
+      "map": 56332,
+      "id": 356,
+	  "gold": 6000,
+	  "blocks": [
+		56322,
+		56324,
+		56328,
+		56332
+	  ]
+    },
+	{
+      "name": "GameOver",
+      "map": 57372,
+      "id": 437,
+	  "finish": true
     }
+
   ]
 }

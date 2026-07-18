@@ -25,6 +25,7 @@ std::thread g_pipe_thread;
 HANDLE g_pipe = INVALID_HANDLE_VALUE;
 std::mutex g_io_mutex;
 std::queue<unsigned> g_pending_checks;
+std::queue<std::string> g_pending_lockouts;
 std::mutex g_check_mutex;
 std::mutex g_sync_mutex;
 bool g_have_sync = false;
@@ -179,28 +180,50 @@ void FlushPendingSyncLocked(HANDLE pipe) {
 void FlushPendingChecksLocked(HANDLE pipe) {
     FlushPendingSyncLocked(pipe);
 
-    std::queue<unsigned> local;
+    std::queue<unsigned> local_checks;
+    std::queue<std::string> local_lockouts;
     {
         std::lock_guard<std::mutex> lock(g_check_mutex);
-        local.swap(g_pending_checks);
+        local_checks.swap(g_pending_checks);
+        local_lockouts.swap(g_pending_lockouts);
     }
 
-    while (!local.empty()) {
-        const unsigned location_id = local.front();
-        local.pop();
+    while (!local_checks.empty()) {
+        const unsigned location_id = local_checks.front();
+        local_checks.pop();
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "CHECK %08X", location_id);
         if (!WriteLineLocked(pipe, buffer)) {
             LogWarn("Failed to send pending check 0x%08X", location_id);
             std::lock_guard<std::mutex> requeue_lock(g_check_mutex);
             g_pending_checks.push(location_id);
-            while (!local.empty()) {
-                g_pending_checks.push(local.front());
-                local.pop();
+            while (!local_checks.empty()) {
+                g_pending_checks.push(local_checks.front());
+                local_checks.pop();
             }
-            break;
+            while (!local_lockouts.empty()) {
+                g_pending_lockouts.push(local_lockouts.front());
+                local_lockouts.pop();
+            }
+            return;
         }
         LogInfo("Sent check to bridge: 0x%08X", location_id);
+    }
+
+    while (!local_lockouts.empty()) {
+        const std::string line = local_lockouts.front();
+        local_lockouts.pop();
+        if (!WriteLineLocked(pipe, line)) {
+            LogWarn("Failed to send pending lockout line");
+            std::lock_guard<std::mutex> requeue_lock(g_check_mutex);
+            g_pending_lockouts.push(line);
+            while (!local_lockouts.empty()) {
+                g_pending_lockouts.push(local_lockouts.front());
+                local_lockouts.pop();
+            }
+            return;
+        }
+        LogInfo("Sent lockout sweep request to bridge (%u chars)", static_cast<unsigned>(line.size()));
     }
 }
 
@@ -316,6 +339,14 @@ void StopPipeBridge() {
 void PipeEnqueueLocationCheck(unsigned location_id) {
     std::lock_guard<std::mutex> lock(g_check_mutex);
     g_pending_checks.push(location_id);
+}
+
+void PipeEnqueueLockoutMessage(const std::string& message) {
+    if (message.empty()) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(g_check_mutex);
+    g_pending_lockouts.push(message);
 }
 
 void PipeEnqueueSync(unsigned received_index, bool force) {

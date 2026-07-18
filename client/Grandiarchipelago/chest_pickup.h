@@ -20,4 +20,7 @@ void ProcessChestPickupQueue();
 // Returns 1 to skip assign UI, 0 to run vanilla handler.
 int TryInterceptChestAssignUi(std::uintptr_t return_addr, std::uintptr_t stack_pointer);
 
+// Returns 1 to zero the field-chest gold add at +0x7612E (AP gold chests).
+int TrySuppressVanillaFieldGold();
+
 }  // namespace grandia_ap

@@ -4,6 +4,7 @@
 #include "item_tracker.h"
 #include "location_ids.h"
 #include "log.h"
+#include "progressions_generated.h"
 
 #include <Windows.h>
 
@@ -14,8 +15,8 @@ namespace grandia_ap {
 
 namespace {
 
-// Log every flag-hook hit (before caller filter) for story/boss RE. Set false after cataloging callers.
-constexpr bool kLogAllEventFlagWrites = true;
+// Verbose RE logging of every flag-hook hit. Keep false for normal play.
+constexpr bool kLogAllEventFlagWrites = false;
 
 // Map-travel / init callers discovered via RE (Jul 2026) — suppressed in filtered trace.
 constexpr std::uintptr_t kNoiseFlagCallerRvas[] = {
@@ -42,8 +43,8 @@ constexpr std::uintptr_t kAssignUiReturnRva = 0x61E0Du;
 constexpr unsigned kBulkMapInitEventMin = 0x1D80u;
 constexpr unsigned kBulkMapInitEventMax = 0x1DFFu;
 
-// Story AP checks: sequential global progress ids (0x0010, 0x0011, … per dialogue beat).
-// Scene scaffolding fires every conversation — suppressed from logs, no AP check.
+// Legacy RE heuristic: early story progress flags clustered under 0x00FF.
+// AP story checks are no longer limited to this range — see IsStoryEventEligible.
 constexpr unsigned kStoryProgressEventMax = 0x00FFu;
 
 constexpr unsigned kStorySceneNoiseEventIds[] = {
@@ -72,6 +73,9 @@ bool g_chest_queue_ready = false;
 std::vector<ChestEventWork> g_chest_queue;
 // Set by chest flag hook (+53C45 loot caller); consumed once at +1DC100 assign UI entry.
 volatile unsigned g_pending_chest_assign_event_id = 0;
+// Set with pending for AP field chests; consumed by +0x7612E gold-add suppress (gold chests)
+// or cleared when assign UI intercepts (item chests).
+volatile unsigned g_suppress_field_gold_event_id = 0;
 
 const char* KnownChestLabel(unsigned event_id) {
     switch (event_id) {
@@ -169,7 +173,8 @@ bool IsStoryEventEligible(unsigned event_id, unsigned mask) {
     if (IsBulkMapInitEventId(event_id)) {
         return false;
     }
-    return IsStoryProgressEventId(event_id);
+    // progressions.json story ids routinely exceed 0x00FF — allowlist is source of truth.
+    return progressions::IsApCheckEvent(static_cast<uint16_t>(event_id));
 }
 
 std::uintptr_t CallerRva(std::uintptr_t caller) {
@@ -299,6 +304,11 @@ void QueueChestEventPickup(unsigned event_id, unsigned flag_offset, unsigned fla
         return;
     }
 
+    // Only locations defined by progressions + MDP catalog (logic-scoped) become AP checks.
+    if (!progressions::IsApCheckEvent(static_cast<uint16_t>(event_id))) {
+        return;
+    }
+
     if (is_chest) {
         if (!kLogAllEventFlagWrites) {
             if (known) {
@@ -322,6 +332,7 @@ void QueueChestEventPickup(unsigned event_id, unsigned flag_offset, unsigned fla
         }
 
         g_pending_chest_assign_event_id = event_id;
+        g_suppress_field_gold_event_id = event_id;
     } else {
         LogInfo("Story AP check queued: event=0x%04X caller=+0x%X (%s) -> location=0x%08X", event_id,
                 static_cast<unsigned>(caller_rva), ClassifyFlagCallerRva(caller_rva),
@@ -356,20 +367,20 @@ int TryInterceptChestAssignUi(std::uintptr_t return_addr, std::uintptr_t /*stack
         return 0;
     }
 
-    const int vanilla_item_hint = VanillaItemIdForChestEvent(event_id);
-    const char* known = KnownChestLabel(event_id);
-    if (known) {
-        LogInfo(
-            "Skipped vanilla assign UI: event=0x%04X (%s) vanilla_item=%d — AP location check (received "
-            "items come from server, not vanilla chest loot)",
-            event_id, known, vanilla_item_hint);
-    } else {
-        LogInfo(
-            "Skipped vanilla assign UI: event=0x%04X — AP location check (vanilla item unmapped; received "
-            "items come from server)",
-            event_id);
-    }
+    g_suppress_field_gold_event_id = 0;
+    return 1;
+}
 
+int TrySuppressVanillaFieldGold() {
+    const unsigned event_id = g_suppress_field_gold_event_id;
+    if (event_id == 0) {
+        return 0;
+    }
+    g_suppress_field_gold_event_id = 0;
+    // Also clear assign pending — gold chests never hit assign UI.
+    if (g_pending_chest_assign_event_id == event_id) {
+        g_pending_chest_assign_event_id = 0;
+    }
     return 1;
 }
 
@@ -416,4 +427,8 @@ extern "C" void ApChestEventNotify() {
 
 extern "C" int ApAssignUiNotify() {
     return grandia_ap::TryInterceptChestAssignUi(g_ap_assign_return_addr, g_ap_assign_stack_pointer);
+}
+
+extern "C" int ApShouldSuppressFieldGold() {
+    return grandia_ap::TrySuppressVanillaFieldGold();
 }

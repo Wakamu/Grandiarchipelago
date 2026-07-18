@@ -6,10 +6,13 @@
 #include "location_labels.h"
 #include "log.h"
 #include "map_travel.h"
+#include "pipe_bridge.h"
 #include "progressions_generated.h"
 
 #include <Windows.h>
 
+#include <cstdio>
+#include <string>
 #include <unordered_set>
 
 namespace grandia_ap {
@@ -18,9 +21,8 @@ namespace {
 ItemTracker g_tracker;
 std::unordered_set<unsigned> g_sent_checks;
 thread_local bool g_ap_delivering = false;
-thread_local bool g_in_lockout_sweep = false;
 
-void SweepLockoutChests(unsigned lockout_event_id);
+void RequestLockoutProgressionSweep(unsigned lockout_event_id);
 }  // namespace
 
 void SetApDelivering(bool delivering) { g_ap_delivering = delivering; }
@@ -64,13 +66,12 @@ void ItemTracker::OnChestEventChecked(unsigned event_id, const char* context) {
     if (event_id == 0 || event_id > 0xFFFFu) {
         return;
     }
+    if (!progressions::IsApCheckEvent(static_cast<uint16_t>(event_id))) {
+        return;
+    }
 
     const unsigned location_id = LocationIdForChestEvent(event_id);
     if (WasCheckSent(location_id)) {
-        if (!g_in_lockout_sweep) {
-            LogInfo("Event 0x%04X already checked (location=0x%08X ctx=%s)", event_id, location_id,
-                    context ? context : "");
-        }
         return;
     }
 
@@ -78,10 +79,7 @@ void ItemTracker::OnChestEventChecked(unsigned event_id, const char* context) {
     LogInfo("Location check: event=0x%04X location=0x%08X ctx=%s", event_id, location_id,
             context ? context : "");
     GetApSession().EnqueueLocationCheck(location_id);
-
-    if (!g_in_lockout_sweep) {
-        SweepLockoutChests(event_id);
-    }
+    RequestLockoutProgressionSweep(event_id);
 }
 
 void ItemTracker::OnItemAcquired(int item_slot_id, const char* context) {
@@ -96,32 +94,55 @@ void ItemTracker::EnqueueReceivedItem(unsigned ap_item_id, const char* item_name
     }
 
     constexpr unsigned kItemBase = 0x47520000u;
+    // Must match tools/sync_apworld_from_mdp_catalog.py GOLD_AP_ID_BASE.
+    constexpr unsigned kGoldHelperIdBase = 0x1000u;
     if (ap_item_id <= kItemBase) {
         return;
     }
-    const int slot_id = static_cast<int>(ap_item_id - kItemBase);
+    const unsigned slot_id = ap_item_id - kItemBase;
+    if (slot_id >= kGoldHelperIdBase) {
+        const unsigned amount = slot_id - kGoldHelperIdBase;
+        if (!AddGoldAmount(amount)) {
+            LogWarn("Could not deliver gold +%u", amount);
+        }
+        return;
+    }
+
     SetApDelivering(true);
-    if (!AddStashQuantity(slot_id, 1)) {
-        LogWarn("Could not deliver item slot=%d — stash base not resolved (load a save in-game)", slot_id);
+    if (!AddStashQuantity(static_cast<int>(slot_id), 1)) {
+        LogWarn("Could not deliver item slot=%u — stash base not resolved (load a save in-game)", slot_id);
     }
     SetApDelivering(false);
 }
 
 namespace {
 
-void SweepLockoutChests(unsigned lockout_event_id) {
+void RequestLockoutProgressionSweep(unsigned lockout_event_id) {
     for (std::size_t i = 0; i < progressions::kAreaLockoutCount; ++i) {
         const auto& lo = progressions::kAreaLockouts[i];
         if (lo.event_id != static_cast<uint16_t>(lockout_event_id)) {
             continue;
         }
-        LogInfo("Area lockout 0x%04X — sweeping %u chest events", lockout_event_id,
-                static_cast<unsigned>(lo.sweep_count));
-        g_in_lockout_sweep = true;
+        // Client decides which of these hold progression items in this seed.
+        std::string line;
+        line.reserve(16 + lo.sweep_count * 9);
+        char head[32];
+        snprintf(head, sizeof(head), "LOCKOUT %04X", lockout_event_id);
+        line = head;
+        unsigned pending = 0;
         for (std::size_t s = 0; s < lo.sweep_count; ++s) {
-            GetItemTracker().OnChestEventChecked(lo.sweep_events[s], "lockout-sweep");
+            const unsigned location_id = LocationIdForChestEvent(lo.sweep_events[s]);
+            if (g_sent_checks.find(location_id) != g_sent_checks.end()) {
+                continue;
+            }
+            char tok[16];
+            snprintf(tok, sizeof(tok), " %08X", location_id);
+            line += tok;
+            ++pending;
         }
-        g_in_lockout_sweep = false;
+        LogInfo("Area lockout 0x%04X — requesting progression sweep (%u unchecked chests)",
+                lockout_event_id, pending);
+        PipeEnqueueLockoutMessage(line);
         return;
     }
 }
