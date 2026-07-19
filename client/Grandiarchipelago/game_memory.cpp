@@ -3,6 +3,7 @@
 #include "log.h"
 #include "map_travel.h"
 #include "save_sync.h"
+#include "xp_multiplier.h"
 
 #include <Windows.h>
 
@@ -898,11 +899,12 @@ bool InitializeGameMemory() {
 
     if (g_grandia_module_base != 0) {
         InstallFieldGoldAddHook(g_grandia_module_base + kFieldGoldAddRva);
+        InstallXpMultiplierHooks();
     }
 
     return !stash_exec.empty() || !gold_exec.empty() || g_chest_flag_hook_site != nullptr ||
            g_assign_ui_hook_site != nullptr || g_field_gold_hook_site != nullptr ||
-           IsSaveSyncHookInstalled() || IsMapTravelHookInstalled();
+           IsSaveSyncHookInstalled() || IsMapTravelHookInstalled() || IsXpMultiplierHookInstalled();
 }
 
 bool TryAdoptStashBaseFromGlobal() {
@@ -977,6 +979,7 @@ bool EnsureStashBaseResolved() {
 
 void ShutdownGameMemory() {
 #if defined(_M_IX86)
+    RemoveXpMultiplierHooks();
     RemoveMapTravelHook();
     RemoveSaveSyncHooks();
     if (g_stash_hook_site) {

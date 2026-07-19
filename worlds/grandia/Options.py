@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 
-from Options import DefaultOnToggle, PerGameCommonOptions
+from Options import DefaultOnToggle, PerGameCommonOptions, Range
 
 
 class IncludeGoldChests(DefaultOnToggle):
-    """Include gold chest / gold bag pickups as Archipelago locations.
+    """Include gold chest / gold bag pickups as Archipelago locations and items.
 
-    When disabled, those pickups stay vanilla (you receive the gold in-game)
-    and are not shuffled into the multiworld.
+    When disabled, those pickups stay vanilla (you receive the gold in-game),
+    they are omitted from the location pool, and Gold filler items are not
+    placed in other chests.
     """
 
     display_name = "Include Gold Chests"
@@ -43,9 +44,48 @@ class IncludeTowerOfTemptation(DefaultOnToggle):
     display_name = "Include Tower of Temptation"
 
 
+class MagicXpMultiplier(Range):
+    """Multiply magic XP gained in battle (Fire/Wind/Water/Earth).
+
+    1 is vanilla. Applies when a character earns magic XP from casting.
+    """
+
+    display_name = "Magic XP Multiplier"
+    range_start = 1
+    range_end = 10
+    default = 1
+
+
+class SkillXpMultiplier(Range):
+    """Multiply weapon/skill XP gained in battle (Sword, Mace, Bow, etc.).
+
+    1 is vanilla. Applies when a character earns weapon-skill XP from attacking.
+    """
+
+    display_name = "Skill XP Multiplier"
+    range_start = 1
+    range_end = 10
+    default = 1
+
+
+class LevelXpMultiplier(Range):
+    """Multiply character level XP gained from battle.
+
+    1 is vanilla. Applies to the EXP added to each party member after combat.
+    """
+
+    display_name = "Level XP Multiplier"
+    range_start = 1
+    range_end = 10
+    default = 1
+
+
 @dataclass
 class GrandiaOptions(PerGameCommonOptions):
     include_gold_chests: IncludeGoldChests
     include_soldiers_graveyard: IncludeSoldiersGraveyard
     include_castle_of_dreams: IncludeCastleOfDreams
     include_tower_of_temptation: IncludeTowerOfTemptation
+    magic_xp_multiplier: MagicXpMultiplier
+    skill_xp_multiplier: SkillXpMultiplier
+    level_xp_multiplier: LevelXpMultiplier

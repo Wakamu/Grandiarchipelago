@@ -5,6 +5,7 @@
 #include "item_tracker.h"
 #include "log.h"
 #include "save_sync.h"
+#include "xp_multiplier.h"
 
 #include <Windows.h>
 
@@ -206,6 +207,36 @@ void HandleBridgeLine(const std::string& line) {
         }
         const unsigned value = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
         SetIncludeTowerOfTemptation(value != 0);
+        return;
+    }
+
+    if (line.rfind("CONFIG magic_xp_multiplier ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG magic_xp_multiplier ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        const unsigned value = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        SetMagicXpMultiplier(value);
+        return;
+    }
+
+    if (line.rfind("CONFIG skill_xp_multiplier ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG skill_xp_multiplier ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        const unsigned value = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        SetSkillXpMultiplier(value);
+        return;
+    }
+
+    if (line.rfind("CONFIG level_xp_multiplier ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG level_xp_multiplier ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        const unsigned value = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        SetLevelXpMultiplier(value);
         return;
     }
 

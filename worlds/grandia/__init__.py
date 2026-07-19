@@ -6,11 +6,12 @@ from .Items import (
     GrandiaItem,
     classification_table,
     item_name_groups,
-    item_pool_counts,
     item_table,
 )
-from .Keys_data import FINISH_LOCATION_NAME
+from .Keys_data import FINISH_LOCATION_NAME, KEY_ITEM_DATA, LOGIC_MAP_HEXES
 from .Locations import GrandiaLocation, location_table
+from .Locations_data import CHEST_LOCATION_DATA
+from .OptionalDungeons_data import excluded_optional_dungeon_hexes
 from .Options import GrandiaOptions
 from .Regions import create_regions
 from .Rules import set_rules
@@ -84,8 +85,8 @@ class GrandiaWorld(World):
 
     required_client_version = (0, 5, 0)
 
-    data_version = 7
-    required_data_version = 7
+    data_version = 8
+    required_data_version = 8
 
     def create_regions(self) -> None:
         create_regions(self)
@@ -97,13 +98,18 @@ class GrandiaWorld(World):
     def create_location(self, name: str) -> GrandiaLocation:
         return GrandiaLocation(self.player, name, location_table[name])
 
-    def create_items(self) -> None:
-        # Partial progression: location count << full chest catalog.
-        # Always keep world-map Keys in the pool; fill the rest with filler.
-        # (Truncating the old full catalog pool was dropping Keys and breaking
-        # accessibility.)
-        from .Keys_data import KEY_ITEM_DATA
+    def get_filler_item_name(self) -> str:
+        if "Herbs" in item_table:
+            return "Herbs"
+        return next(iter(item_table))
 
+    def create_items(self) -> None:
+        """Shuffle vanilla chest loot + world-map keys into the included locations.
+
+        Each included chest contributes its vanilla item. Keys are always added.
+        Story checks add locations without chest loot, so a small amount of filler
+        pads the pool to match location count. Gold items follow include_gold_chests.
+        """
         locked_names = {"Victory"}
         if FINISH_LOCATION_NAME:
             locked_names.add(FINISH_LOCATION_NAME)
@@ -114,17 +120,42 @@ class GrandiaWorld(World):
             if not getattr(location, "locked", False) and location.name not in locked_names
         )
 
-        pool: list[GrandiaItem] = [
-            self.create_item(entry["item_name"]) for entry in KEY_ITEM_DATA
-        ]
+        include_gold = bool(self.options.include_gold_chests.value)
+        excluded = excluded_optional_dungeon_hexes(self.options)
+        logic_hexes = {h.upper() for h in LOGIC_MAP_HEXES}
+        key_names = {entry["item_name"] for entry in KEY_ITEM_DATA}
 
-        filler_cycle = [
-            name
-            for name in ("Herbs", "Gold (10)", "Gold (30)", "Gold (90)", "Gold (60)")
-            if name in item_table
-        ]
-        if not filler_cycle:
-            filler_cycle = ["Herbs"] if "Herbs" in item_table else list(item_table)[:1]
+        pool: list[GrandiaItem] = []
+
+        for entry in CHEST_LOCATION_DATA:
+            mid = entry["map_hex"].upper()
+            if mid not in logic_hexes or mid in excluded:
+                continue
+            if entry.get("vanilla_kind") == "gold" and not include_gold:
+                continue
+            name = entry["vanilla_name"]
+            if name not in item_table:
+                continue
+            pool.append(self.create_item(name))
+
+        for entry in KEY_ITEM_DATA:
+            pool.append(self.create_item(entry["item_name"]))
+
+        filler_cycle = [self.get_filler_item_name()]
+        if include_gold:
+            for name in ("Gold (10)", "Gold (30)", "Gold (60)", "Gold (90)"):
+                if name in item_table:
+                    filler_cycle.append(name)
+        else:
+            for name in (
+                "Would Salve",
+                "Poison Antidote",
+                "Blue Medicine",
+                "Yellow Medicine",
+                "Hand Grenade",
+            ):
+                if name in item_table and name not in filler_cycle:
+                    filler_cycle.append(name)
 
         i = 0
         while len(pool) < location_count:
@@ -132,12 +163,22 @@ class GrandiaWorld(World):
             i += 1
 
         if len(pool) > location_count:
-            # Never drop Keys — trim filler only.
-            keys = {e["item_name"] for e in KEY_ITEM_DATA}
-            kept_keys = [it for it in pool if it.name in keys]
-            filler = [it for it in pool if it.name not in keys]
-            need = location_count - len(kept_keys)
-            pool = kept_keys + filler[: max(0, need)]
+            keys = [item for item in pool if item.name in key_names]
+            rest = [item for item in pool if item.name not in key_names]
+
+            def keep_priority(item: GrandiaItem) -> int:
+                # Lower = keep preferentially when trimming.
+                if item.classification == ItemClassification.progression:
+                    return 0
+                if item.classification == ItemClassification.useful:
+                    return 1
+                if item.name.startswith("Gold ("):
+                    return 3
+                return 2
+
+            rest.sort(key=keep_priority)
+            need = location_count - len(keys)
+            pool = keys + rest[: max(0, need)]
 
         self.multiworld.itempool += pool
 
@@ -155,5 +196,8 @@ class GrandiaWorld(World):
             "include_soldiers_graveyard": bool(self.options.include_soldiers_graveyard.value),
             "include_castle_of_dreams": bool(self.options.include_castle_of_dreams.value),
             "include_tower_of_temptation": bool(self.options.include_tower_of_temptation.value),
+            "magic_xp_multiplier": int(self.options.magic_xp_multiplier.value),
+            "skill_xp_multiplier": int(self.options.skill_xp_multiplier.value),
+            "level_xp_multiplier": int(self.options.level_xp_multiplier.value),
             "data_version": self.data_version,
         }

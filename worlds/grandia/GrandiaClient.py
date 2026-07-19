@@ -180,6 +180,7 @@ class GrandiaContext(CommonContext):
         self._pending_sync: Optional[int] = None
         self._pending_lockouts: List[tuple[int, List[int]]] = []
         self._scouted_all = False
+        self.slot_data: dict = {}
 
     def make_gui(self):
         ui = super().make_gui()
@@ -194,7 +195,19 @@ class GrandiaContext(CommonContext):
 
     def on_package(self, cmd: str, args: dict) -> None:
         if cmd == "Connected":
+            # CommonClient does not assign this; worlds must read it from Connected.
+            self.slot_data = args.get("slot_data") or {}
             logger.info("Connected to Archipelago as %s", self.auth)
+            if isinstance(self.slot_data, dict) and self.slot_data:
+                logger.info(
+                    "slot_data: %s",
+                    " ".join(f"{k}={self.slot_data[k]!r}" for k in sorted(self.slot_data)),
+                )
+            else:
+                logger.warning(
+                    "Connected with empty slot_data — regenerate the seed with the current Grandia world, "
+                    "or the room was created before these options existed."
+                )
             logger.info("Holding item delivery until the game sends SYNC from a loaded save.")
             self._scouted_all = False
             async_start(self._scout_missing_locations(), name="grandia-scout")
@@ -205,6 +218,7 @@ class GrandiaContext(CommonContext):
             async_start(self._drain_pending_lockouts(), name="grandia-lockout-drain")
         elif cmd == "RoomInfo":
             pass
+        super().on_package(cmd, args)
 
     def _push_runtime_config(self) -> None:
         if not self.pipe or not self.pipe.connected:
@@ -219,11 +233,23 @@ class GrandiaContext(CommonContext):
             except (TypeError, ValueError):
                 return 1 if slot_data[key] else 0
 
+        def _int(key: str, default: int = 1, lo: int = 1, hi: int = 100) -> int:
+            if not isinstance(slot_data, dict) or key not in slot_data:
+                return default
+            try:
+                value = int(slot_data[key])
+            except (TypeError, ValueError):
+                return default
+            return max(lo, min(hi, value))
+
         flags = {
             "include_gold_chests": _flag("include_gold_chests"),
             "include_soldiers_graveyard": _flag("include_soldiers_graveyard"),
             "include_castle_of_dreams": _flag("include_castle_of_dreams"),
             "include_tower_of_temptation": _flag("include_tower_of_temptation"),
+            "magic_xp_multiplier": _int("magic_xp_multiplier"),
+            "skill_xp_multiplier": _int("skill_xp_multiplier"),
+            "level_xp_multiplier": _int("level_xp_multiplier"),
         }
         for key, value in flags.items():
             self.pipe.send_line(f"CONFIG {key} {value}")

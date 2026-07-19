@@ -25,7 +25,7 @@ DWORD WINAPI MainThread(LPVOID) {
         }
         grandia_ap::StartStashWatcher();
         grandia_ap::StartPipeBridge();
-        grandia_ap::LogInfo("Grandiarchipelago v0.0.44 ready (optional dungeon options)");
+        grandia_ap::LogInfo("Grandiarchipelago v0.0.56 ready (removed F8 field debug cursor)");
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         grandia_ap::LogWarn("MainThread crashed during init (exception=0x%08X)", GetExceptionCode());
     }

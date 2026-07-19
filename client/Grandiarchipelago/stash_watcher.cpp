@@ -1,4 +1,5 @@
 #include "chest_pickup.h"
+#include "debug_mode.h"
 #include "game_memory.h"
 #include "log.h"
 #include "save_sync.h"
@@ -97,6 +98,7 @@ DWORD WINAPI WatcherThread(LPVOID) {
     while (g_running.load()) {
         ProcessChestPickupQueue();
         FlushPendingGold();
+        PollDebugModeHotkey();
 
         const unsigned hits = GetStashHookHitCount();
         if (hits != last_hook_hits) {

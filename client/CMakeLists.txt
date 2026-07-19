@@ -22,6 +22,8 @@ add_library(Grandiarchipelago SHARED
     Grandiarchipelago/save_sync.cpp
     Grandiarchipelago/map_travel.cpp
     Grandiarchipelago/d3d_overlay.cpp
+    Grandiarchipelago/debug_mode.cpp
+    Grandiarchipelago/xp_multiplier.cpp
 )
 
 target_link_libraries(Grandiarchipelago PRIVATE

@@ -7,6 +7,7 @@
 #include "log.h"
 #include "map_travel.h"
 #include "save_sync.h"
+#include "xp_multiplier.h"
 
 namespace grandia_ap {
 
@@ -30,6 +31,11 @@ bool InstallHooks() {
     } else {
         LogWarn("Field gold suppress not installed — vanilla gold chests may still grant gold");
     }
+    if (IsXpMultiplierHookInstalled()) {
+        LogInfo("XP multipliers active (magic +0xA4E96, skill +0xA4FA7, level-fight +0x1387C3)");
+    } else {
+        LogWarn("XP multiplier hooks not installed — magic/skill/level XP stay vanilla");
+    }
     if (IsSaveSyncHookInstalled()) {
         LogInfo("Save sync hooks active (fwrite +0x254E / fread +0x2673, GAP1 trailer)");
     } else {
@@ -47,6 +53,7 @@ bool InstallHooks() {
 }
 
 void RemoveHooks() {
+    RemoveXpMultiplierHooks();
     RemoveMapTravelHook();
     RemoveSaveSyncHooks();
 }
