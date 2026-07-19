@@ -45,11 +45,6 @@ Client commands:
 | `/attach` | Force re-inject / re-attach |
 | `/sync` | Show SYNC / applied item index |
 
-## Alternate: standalone WinForms bridge
-
-`Grandiarchipelago.Bridge.exe` (C#) can still connect + inject on its own without the
-Launcher. Prefer the Launcher client for the normal Archipelago UI (chat, messages, URI links).
-
 ## Verify game bitness
 
 In Task Manager → Details, `grandia.exe` should show **32-bit**.
@@ -62,4 +57,3 @@ In Task Manager → Details, `grandia.exe` should show **32-bit**.
 | Launcher Grandia Client (`CommonClient`) | Working |
 | Win32 injectable DLL | Working |
 | Save SYNC / item redelivery gate | Working |
-| Standalone C# Bridge UI | Optional |

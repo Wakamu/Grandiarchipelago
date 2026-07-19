@@ -1,5 +1,6 @@
 #include "map_travel.h"
 
+#include "d3d_overlay.h"
 #include "game_memory.h"
 #include "log.h"
 #include "progressions_generated.h"
@@ -7,6 +8,7 @@
 #include <Windows.h>
 
 #include <atomic>
+#include <cstdio>
 #include <cstring>
 #include <mutex>
 #include <unordered_set>
@@ -30,6 +32,8 @@ std::unordered_set<uint16_t> g_unlocked;
 std::unordered_set<uint16_t> g_owned_key_primaries;
 std::atomic<unsigned> g_trace_hits_left{48};
 std::atomic<uint16_t> g_last_deny_logged{0};
+std::atomic<uint16_t> g_last_deny_toast_map{0};
+std::atomic<DWORD> g_last_deny_toast_tick{0};
 
 bool WriteJump(void* site, void* destination, uint8_t* original_out, size_t patch_size) {
     DWORD old_protect = 0;
@@ -227,6 +231,40 @@ void UnlockKeyGroup(uint16_t primary_or_any_map) {
     UnlockMapsForSatisfiedKeys();
 }
 
+const progressions::KeyUnlockGroup* FindKeyGroup(uint16_t primary_or_any_map);
+
+void ToastMissingKeyForMap(uint16_t map_id) {
+    const char* missing_name = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_lock);
+        const auto* dest = FindKeyGroup(map_id);
+        const unsigned need_value = dest ? dest->value : 0xFFFFFFFFu;
+        for (std::size_t g = 0; g < progressions::kKeyGroupCount; ++g) {
+            const auto& group = progressions::kKeyGroups[g];
+            if (group.value > need_value) {
+                continue;
+            }
+            if (g_owned_key_primaries.find(group.primary_map) == g_owned_key_primaries.end()) {
+                missing_name = group.name;
+                break;  // lowest-value missing prerequisite
+            }
+        }
+        if (!missing_name && dest) {
+            missing_name = dest->name;
+        }
+    }
+
+    char buf[160];
+    if (missing_name && missing_name[0]) {
+        snprintf(buf, sizeof(buf), "Need %s to travel here", missing_name);
+    } else {
+        snprintf(buf, sizeof(buf), "Need a world map key to travel here (0x%04X)",
+                 static_cast<unsigned>(map_id));
+    }
+    // Plum — same as progression item toasts.
+    ShowD3dOverlayToast(buf, 5000, 0xDDA0DD);
+}
+
 bool AllowMapTravel(uint16_t map_id) {
     const bool gated = IsMapGated(map_id);
     unsigned left = g_trace_hits_left.load();
@@ -242,6 +280,15 @@ bool AllowMapTravel(uint16_t map_id) {
     }
     if (g_last_deny_logged.exchange(map_id) != map_id) {
         LogWarn("World-map DENY (need key) 0x%04X", static_cast<unsigned>(map_id));
+    }
+    const DWORD now = GetTickCount();
+    const uint16_t prev_map = g_last_deny_toast_map.load();
+    const DWORD prev_tick = g_last_deny_toast_tick.load();
+    // Avoid stacking identical toasts if confirm re-fires; allow repeat after 2.5s.
+    if (prev_map != map_id || now - prev_tick >= 2500) {
+        g_last_deny_toast_map.store(map_id);
+        g_last_deny_toast_tick.store(now);
+        ToastMissingKeyForMap(map_id);
     }
     return false;
 }

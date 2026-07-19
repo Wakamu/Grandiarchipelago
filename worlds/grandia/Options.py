@@ -1,26 +1,51 @@
 from dataclasses import dataclass
 
-from Options import Choice, DeathLink, DefaultOnToggle, Toggle, PerGameCommonOptions
+from Options import DefaultOnToggle, PerGameCommonOptions
 
 
-class VictoryCondition(Choice):
-    """When the Grandia player is considered to have won the multiworld."""
+class IncludeGoldChests(DefaultOnToggle):
+    """Include gold chest / gold bag pickups as Archipelago locations.
 
-    display_name = "Victory Condition"
-    option_final_boss = 0
-    option_credits = 1
-    default = 0
+    When disabled, those pickups stay vanilla (you receive the gold in-game)
+    and are not shuffled into the multiworld.
+    """
+
+    display_name = "Include Gold Chests"
 
 
-class StartingParty(Toggle):
-    """If enabled, starting character equipment slots may be checked locations."""
+class IncludeSoldiersGraveyard(DefaultOnToggle):
+    """Include Soldier's Graveyard chest pickups as Archipelago locations.
 
-    display_name = "Randomize Starting Equipment"
-    default = False
+    When disabled, that optional dungeon keeps vanilla loot and is omitted
+    from the multiworld location pool.
+    """
+
+    display_name = "Include Soldier's Graveyard"
+
+
+class IncludeCastleOfDreams(DefaultOnToggle):
+    """Include Castle of Dreams chest pickups as Archipelago locations.
+
+    When disabled, that optional dungeon keeps vanilla loot and is omitted
+    from the multiworld location pool.
+    """
+
+    display_name = "Include Castle of Dreams"
+
+
+class IncludeTowerOfTemptation(DefaultOnToggle):
+    """Include Tower of Temptation chest pickups as Archipelago locations.
+
+    When disabled, that optional dungeon keeps vanilla loot and is omitted
+    from the multiworld location pool.
+    """
+
+    display_name = "Include Tower of Temptation"
 
 
 @dataclass
 class GrandiaOptions(PerGameCommonOptions):
-    death_link: DeathLink
-    victory_condition: VictoryCondition
-    starting_party: StartingParty
+    include_gold_chests: IncludeGoldChests
+    include_soldiers_graveyard: IncludeSoldiersGraveyard
+    include_castle_of_dreams: IncludeCastleOfDreams
+    include_tower_of_temptation: IncludeTowerOfTemptation

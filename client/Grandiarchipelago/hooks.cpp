@@ -1,6 +1,7 @@
 #include "hooks.h"
 
 #include "chest_pickup.h"
+#include "d3d_overlay.h"
 #include "game_memory.h"
 #include "item_tracker.h"
 #include "log.h"
@@ -38,6 +39,9 @@ bool InstallHooks() {
         LogInfo("World-map gate active (+0x58491 confirm FSM; Key base 0x47523000)");
     } else {
         LogWarn("World-map gate not installed — world-map keys inactive");
+    }
+    if (IsD3dOverlayInstalled()) {
+        LogInfo("D3D11 Present overlay active (GDI toast top-left)");
     }
     return true;
 }

@@ -132,6 +132,34 @@ class GrandiaCommandProcessor(ClientCommandProcessor):
         )
         return True
 
+    def _cmd_toast(self, *parts: str) -> bool:
+        """Send overlay text to the game. Usage: /toast [#RRGGBB] Hello world"""
+        assert isinstance(self.ctx, GrandiaContext)
+        tokens = list(parts)
+        color = None
+        if tokens and tokens[0].startswith("#") and len(tokens[0]) == 7:
+            color = tokens.pop(0)
+        text = " ".join(tokens).strip()
+        if not text:
+            self.output("Usage: /toast [#RRGGBB] <message>")
+            return False
+        if not self.ctx.pipe or not self.ctx.pipe.connected:
+            self.output("Game pipe is not connected.")
+            return False
+        self.ctx._send_toast(text, color)
+        self.output(f"Toast sent: {text}" + (f" ({color})" if color else ""))
+        return True
+
+    def _cmd_toast_clear(self) -> bool:
+        """Clear the in-game overlay toast."""
+        assert isinstance(self.ctx, GrandiaContext)
+        if not self.ctx.pipe or not self.ctx.pipe.connected:
+            self.output("Game pipe is not connected.")
+            return False
+        self.ctx.pipe.send_line("TOAST_CLEAR")
+        self.output("Toast cleared.")
+        return True
+
 
 class GrandiaContext(CommonContext):
     game = "Grandia"
@@ -170,11 +198,116 @@ class GrandiaContext(CommonContext):
             logger.info("Holding item delivery until the game sends SYNC from a loaded save.")
             self._scouted_all = False
             async_start(self._scout_missing_locations(), name="grandia-scout")
+            self._send_toast(f"Connected as {self.auth}", "#FFFF00")
+            self._push_runtime_config()
         elif cmd == "LocationInfo":
             # Scouts finished (or partial) — drain any lockouts waiting on item data.
             async_start(self._drain_pending_lockouts(), name="grandia-lockout-drain")
         elif cmd == "RoomInfo":
             pass
+
+    def _push_runtime_config(self) -> None:
+        if not self.pipe or not self.pipe.connected:
+            return
+        slot_data = getattr(self, "slot_data", None) or {}
+
+        def _flag(key: str, default: int = 1) -> int:
+            if not isinstance(slot_data, dict) or key not in slot_data:
+                return default
+            try:
+                return 1 if int(slot_data[key]) else 0
+            except (TypeError, ValueError):
+                return 1 if slot_data[key] else 0
+
+        flags = {
+            "include_gold_chests": _flag("include_gold_chests"),
+            "include_soldiers_graveyard": _flag("include_soldiers_graveyard"),
+            "include_castle_of_dreams": _flag("include_castle_of_dreams"),
+            "include_tower_of_temptation": _flag("include_tower_of_temptation"),
+        }
+        for key, value in flags.items():
+            self.pipe.send_line(f"CONFIG {key} {value}")
+        logger.info("Pushed CONFIG %s", " ".join(f"{k}={v}" for k, v in flags.items()))
+
+    def on_print_json(self, args: dict) -> None:
+        super().on_print_json(args)
+        self._toast_from_print_json(args)
+
+    def _send_toast(self, message: str, color_hex: Optional[str] = None) -> None:
+        if not self.pipe or not self.pipe.connected:
+            return
+        cleaned = " ".join(str(message).replace("\r", " ").replace("\n", " ").split())
+        if not cleaned:
+            return
+        if len(cleaned) > 120:
+            cleaned = cleaned[:117] + "..."
+        if color_hex:
+            hex_part = color_hex.strip()
+            if not hex_part.startswith("#"):
+                hex_part = f"#{hex_part}"
+            self.pipe.send_line(f"TOAST {hex_part} {cleaned}")
+        else:
+            self.pipe.send_line(f"TOAST {cleaned}")
+
+    @staticmethod
+    def _color_hex_for_item_flags(flags: int) -> str:
+        # Match Archipelago.MultiClient.Net Models.Color (dark client palette).
+        if flags & int(ItemClassification.trap):
+            return "#FA8072"  # Salmon
+        if flags & int(ItemClassification.progression):
+            return "#DDA0DD"  # Plum
+        if flags & int(ItemClassification.useful):
+            return "#6A5ACD"  # SlateBlue
+        return "#FFFFFF"  # White (filler / default)
+
+    def _toast_from_print_json(self, args: dict) -> None:
+        if args.get("type") != "ItemSend":
+            return
+        if self.is_uninteresting_item_send(args):
+            return
+
+        item = args.get("item")
+        receiving = args.get("receiving")
+        if item is None or receiving is None:
+            return
+
+        try:
+            sender_slot = int(item.player)
+            item_id = int(item.item)
+            recv_slot = int(receiving)
+            flags = int(getattr(item, "flags", 0) or 0)
+        except (AttributeError, TypeError, ValueError):
+            return
+
+        # NetworkItem.item is an id in the *receiver's* game, not the finder's.
+        item_name = self._item_name_for_send(item_id, recv_slot)
+        color = self._color_hex_for_item_flags(flags)
+
+        sender_name = self.player_names.get(sender_slot, f"Player {sender_slot}")
+        recv_name = self.player_names.get(recv_slot, f"Player {recv_slot}")
+
+        if self.slot_concerns_self(recv_slot) and self.slot_concerns_self(sender_slot):
+            self._send_toast(f"Found {item_name}", color)
+        elif self.slot_concerns_self(recv_slot):
+            self._send_toast(f"Received {item_name} from {sender_name}", color)
+        elif self.slot_concerns_self(sender_slot):
+            self._send_toast(f"Sent {item_name} to {recv_name}", color)
+    def _item_name_for_send(self, item_id: int, recv_slot: int) -> str:
+        try:
+            name = self.item_names.lookup_in_slot(item_id, recv_slot)
+            if name and str(name).lower() not in ("unknown item", "unknown"):
+                return str(name)
+        except Exception:
+            pass
+        try:
+            info = self.slot_info.get(recv_slot)
+            if info is not None:
+                name = self.item_names.lookup_in_game(item_id, info.game)
+                if name and str(name).lower() not in ("unknown item", "unknown"):
+                    return str(name)
+        except Exception:
+            pass
+        return f"Item 0x{item_id:X}"
 
     async def _scout_missing_locations(self) -> None:
         locs = [int(x) for x in self.missing_locations]
@@ -273,6 +406,7 @@ class GrandiaContext(CommonContext):
         if line.startswith("HELLO"):
             logger.info("Game said: %s", line)
             self.pipe and self.pipe.send_line("CONNECTED")
+            self._push_runtime_config()
             return
         if line.startswith("SYNC "):
             token = line[5:].strip()
@@ -314,12 +448,14 @@ class GrandiaContext(CommonContext):
 
 
 async def game_watcher(ctx: GrandiaContext) -> None:
-    logger.info("Game watcher started — launch Grandia past the Steam menu.")
+    logger.info("Game watcher started — connect to Archipelago, then launch Grandia past the Steam menu.")
     if not ctx.dll_path:
         logger.error(
             "Grandiarchipelago.dll not found. Set GRANDIA_AP_DLL or place the DLL next to "
             "Archipelago / in client/build/Release."
         )
+
+    waiting_for_slot_logged = False
 
     while not ctx.exit_event.is_set():
         try:
@@ -353,6 +489,15 @@ async def game_watcher(ctx: GrandiaContext) -> None:
                     ctx.hook_injected = False
                 await asyncio.sleep(POLL_S)
                 continue
+
+            # Do not inject until we are connected to an AP slot.
+            if not getattr(ctx, "slot", None):
+                if not waiting_for_slot_logged:
+                    logger.info("Waiting for Archipelago slot connection before injecting…")
+                    waiting_for_slot_logged = True
+                await asyncio.sleep(1.0)
+                continue
+            waiting_for_slot_logged = False
 
             if not ctx.dll_path:
                 await asyncio.sleep(2.0)

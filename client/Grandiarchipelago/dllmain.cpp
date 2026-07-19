@@ -1,4 +1,5 @@
 #include "ap_session.h"
+#include "d3d_overlay.h"
 #include "game_memory.h"
 #include "hooks.h"
 #include "log.h"
@@ -19,9 +20,12 @@ DWORD WINAPI MainThread(LPVOID) {
         }
 
         grandia_ap::InstallHooks();
+        if (!grandia_ap::InstallD3dOverlay()) {
+            grandia_ap::LogWarn("D3D11 overlay test not installed");
+        }
         grandia_ap::StartStashWatcher();
         grandia_ap::StartPipeBridge();
-        grandia_ap::LogInfo("Grandiarchipelago v0.0.32 ready (fix field-gold trampoline resume)");
+        grandia_ap::LogInfo("Grandiarchipelago v0.0.44 ready (optional dungeon options)");
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         grandia_ap::LogWarn("MainThread crashed during init (exception=0x%08X)", GetExceptionCode());
     }
@@ -43,6 +47,7 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID) {
         case DLL_PROCESS_DETACH:
             grandia_ap::StopPipeBridge();
             grandia_ap::StopStashWatcher();
+            grandia_ap::ShutdownD3dOverlay();
             grandia_ap::RemoveHooks();
             grandia_ap::ShutdownGameMemory();
             grandia_ap::LogInfo("DllMain PROCESS_DETACH");

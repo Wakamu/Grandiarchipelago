@@ -1,5 +1,7 @@
 #include "pipe_bridge.h"
 
+#include "chest_pickup.h"
+#include "d3d_overlay.h"
 #include "item_tracker.h"
 #include "log.h"
 #include "save_sync.h"
@@ -9,6 +11,7 @@
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -131,8 +134,83 @@ void HandleBridgeLine(const std::string& line) {
         return;
     }
 
+    if (line.rfind("TOAST ", 0) == 0) {
+        const char* rest = line.c_str() + 6;
+        while (*rest == ' ') {
+            ++rest;
+        }
+        unsigned rgb = 0xFFE528;
+        if (rest[0] == '#' && std::strlen(rest) >= 7) {
+            char hex[7] = {};
+            std::memcpy(hex, rest + 1, 6);
+            char* end = nullptr;
+            const unsigned long parsed = std::strtoul(hex, &end, 16);
+            if (end && end == hex + 6) {
+                rgb = static_cast<unsigned>(parsed);
+                rest += 7;
+                while (*rest == ' ') {
+                    ++rest;
+                }
+            }
+        }
+        if (*rest) {
+            ShowD3dOverlayToast(rest, 6000, rgb);
+        }
+        return;
+    }
+
+    if (line == "TOAST_CLEAR") {
+        ClearD3dOverlayToast();
+        return;
+    }
+
     if (line == "CONNECTED") {
         LogInfo("Archipelago bridge connected to server");
+        return;
+    }
+
+    if (line.rfind("CONFIG include_gold_chests ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG include_gold_chests ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        const unsigned value = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        SetIncludeGoldChests(value != 0);
+        return;
+    }
+
+    if (line.rfind("CONFIG include_soldiers_graveyard ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG include_soldiers_graveyard ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        const unsigned value = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        SetIncludeSoldiersGraveyard(value != 0);
+        return;
+    }
+
+    if (line.rfind("CONFIG include_castle_of_dreams ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG include_castle_of_dreams ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        const unsigned value = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        SetIncludeCastleOfDreams(value != 0);
+        return;
+    }
+
+    if (line.rfind("CONFIG include_tower_of_temptation ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG include_tower_of_temptation ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        const unsigned value = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        SetIncludeTowerOfTemptation(value != 0);
+        return;
+    }
+
+    if (line.rfind("CONFIG ", 0) == 0) {
+        LogWarn("Unrecognized CONFIG line: %s", line.c_str());
         return;
     }
 

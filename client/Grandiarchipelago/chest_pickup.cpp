@@ -8,6 +8,7 @@
 
 #include <Windows.h>
 
+#include <atomic>
 #include <cstdint>
 #include <vector>
 
@@ -76,6 +77,10 @@ volatile unsigned g_pending_chest_assign_event_id = 0;
 // Set with pending for AP field chests; consumed by +0x7612E gold-add suppress (gold chests)
 // or cleared when assign UI intercepts (item chests).
 volatile unsigned g_suppress_field_gold_event_id = 0;
+std::atomic<bool> g_include_gold_chests{true};
+std::atomic<bool> g_include_soldiers_graveyard{true};
+std::atomic<bool> g_include_castle_of_dreams{true};
+std::atomic<bool> g_include_tower_of_temptation{true};
 
 const char* KnownChestLabel(unsigned event_id) {
     switch (event_id) {
@@ -309,6 +314,17 @@ void QueueChestEventPickup(unsigned event_id, unsigned flag_offset, unsigned fla
         return;
     }
 
+    // Optional: leave vanilla gold pickups alone when include_gold_chests is off.
+    if (is_chest && progressions::IsGoldChestEvent(static_cast<uint16_t>(event_id)) &&
+        !IncludeGoldChests()) {
+        return;
+    }
+
+    // Optional dungeons: leave vanilla when the matching include_* option is off.
+    if (is_chest && IsExcludedOptionalDungeonEvent(static_cast<uint16_t>(event_id))) {
+        return;
+    }
+
     if (is_chest) {
         if (!kLogAllEventFlagWrites) {
             if (known) {
@@ -399,6 +415,55 @@ void ProcessChestPickupQueue() {
         const char* context = IsStoryFlagCaller(work.caller) ? "story-event" : "chest-event";
         GetItemTracker().OnChestEventChecked(work.event_id, context);
     }
+}
+
+void SetIncludeGoldChests(bool include) {
+    g_include_gold_chests.store(include);
+    LogInfo("CONFIG include_gold_chests=%d", include ? 1 : 0);
+}
+
+bool IncludeGoldChests() {
+    return g_include_gold_chests.load();
+}
+
+void SetIncludeSoldiersGraveyard(bool include) {
+    g_include_soldiers_graveyard.store(include);
+    LogInfo("CONFIG include_soldiers_graveyard=%d", include ? 1 : 0);
+}
+
+bool IncludeSoldiersGraveyard() {
+    return g_include_soldiers_graveyard.load();
+}
+
+void SetIncludeCastleOfDreams(bool include) {
+    g_include_castle_of_dreams.store(include);
+    LogInfo("CONFIG include_castle_of_dreams=%d", include ? 1 : 0);
+}
+
+bool IncludeCastleOfDreams() {
+    return g_include_castle_of_dreams.load();
+}
+
+void SetIncludeTowerOfTemptation(bool include) {
+    g_include_tower_of_temptation.store(include);
+    LogInfo("CONFIG include_tower_of_temptation=%d", include ? 1 : 0);
+}
+
+bool IncludeTowerOfTemptation() {
+    return g_include_tower_of_temptation.load();
+}
+
+bool IsExcludedOptionalDungeonEvent(uint16_t event_id) {
+    if (progressions::IsSoldiersGraveyardEvent(event_id) && !IncludeSoldiersGraveyard()) {
+        return true;
+    }
+    if (progressions::IsCastleOfDreamsEvent(event_id) && !IncludeCastleOfDreams()) {
+        return true;
+    }
+    if (progressions::IsTowerOfTemptationEvent(event_id) && !IncludeTowerOfTemptation()) {
+        return true;
+    }
+    return false;
 }
 
 }  // namespace grandia_ap

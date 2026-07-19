@@ -13,6 +13,7 @@ from .Keys_data import (
 )
 from .Locations import GrandiaLocation, location_table
 from .Locations_data import CHEST_LOCATION_DATA
+from .OptionalDungeons_data import excluded_optional_dungeon_hexes
 
 if TYPE_CHECKING:
     from . import GrandiaWorld
@@ -76,10 +77,17 @@ def create_regions(world: "GrandiaWorld") -> None:
             # treat as open for the partial logic tree (story routing TBD).
             overworld.connect(region)
 
+    include_gold = bool(world.options.include_gold_chests)
+    excluded_dungeons = excluded_optional_dungeon_hexes(world.options)
+
     locs_by_map: dict[str, dict[str, int]] = {}
     for entry in CHEST_LOCATION_DATA:
         mid = entry["map_hex"].upper()
         if mid not in logic_hexes:
+            continue
+        if mid in excluded_dungeons:
+            continue
+        if entry.get("vanilla_kind") == "gold" and not include_gold:
             continue
         locs_by_map.setdefault(mid, {})[entry["ap_name"]] = location_table[entry["ap_name"]]
 
@@ -88,6 +96,8 @@ def create_regions(world: "GrandiaWorld") -> None:
 
     for entry in STORY_CHECK_DATA:
         mid = entry["map_hex"].upper()
+        if mid in excluded_dungeons:
+            continue
         name = entry["ap_name"]
         map_regions[mid].add_locations({name: location_table[name]}, GrandiaLocation)
 

@@ -151,7 +151,9 @@ class GrandiaWorld(World):
 
     def fill_slot_data(self) -> dict:
         return {
-            "death_link": self.options.death_link.value,
-            "victory_location": self.options.victory_condition.value,
+            "include_gold_chests": bool(self.options.include_gold_chests.value),
+            "include_soldiers_graveyard": bool(self.options.include_soldiers_graveyard.value),
+            "include_castle_of_dreams": bool(self.options.include_castle_of_dreams.value),
+            "include_tower_of_temptation": bool(self.options.include_tower_of_temptation.value),
             "data_version": self.data_version,
         }

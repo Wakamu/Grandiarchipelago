@@ -1,6 +1,7 @@
 #include "item_tracker.h"
 
 #include "ap_session.h"
+#include "chest_pickup.h"
 #include "game_memory.h"
 #include "location_ids.h"
 #include "location_labels.h"
@@ -131,7 +132,14 @@ void RequestLockoutProgressionSweep(unsigned lockout_event_id) {
         line = head;
         unsigned pending = 0;
         for (std::size_t s = 0; s < lo.sweep_count; ++s) {
-            const unsigned location_id = LocationIdForChestEvent(lo.sweep_events[s]);
+            const uint16_t sweep_eid = lo.sweep_events[s];
+            if (!IncludeGoldChests() && progressions::IsGoldChestEvent(sweep_eid)) {
+                continue;
+            }
+            if (IsExcludedOptionalDungeonEvent(sweep_eid)) {
+                continue;
+            }
+            const unsigned location_id = LocationIdForChestEvent(sweep_eid);
             if (g_sent_checks.find(location_id) != g_sent_checks.end()) {
                 continue;
             }

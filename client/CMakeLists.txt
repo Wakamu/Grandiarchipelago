@@ -21,6 +21,13 @@ add_library(Grandiarchipelago SHARED
     Grandiarchipelago/stash_watcher.cpp
     Grandiarchipelago/save_sync.cpp
     Grandiarchipelago/map_travel.cpp
+    Grandiarchipelago/d3d_overlay.cpp
+)
+
+target_link_libraries(Grandiarchipelago PRIVATE
+    d3d11
+    dxgi
+    gdi32
 )
 
 target_include_directories(Grandiarchipelago PRIVATE

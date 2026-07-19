@@ -23,17 +23,53 @@ def map_id_to_hex(map_id: int) -> str:
     return f"{map_id:04X}"
 
 
-def load_chest_events_by_map() -> dict[str, list[int]]:
-    """Parse CHEST_LOCATION_DATA without importing the package."""
+def load_chest_events_by_map() -> tuple[dict[str, list[int]], list[int]]:
+    """Parse CHEST_LOCATION_DATA without importing the package.
+
+    Returns (events_by_map_hex, sorted gold chest event ids).
+    """
     text = LOCATIONS_DATA.read_text(encoding="utf-8")
     by_map: dict[str, list[int]] = {}
+    gold_events: set[int] = set()
     for m in re.finditer(
-        r'\{"event_id":\s*(\d+),\s*"event_hex":\s*"[^"]+",\s*"ap_name":\s*"[^"]+",\s*"map_hex":\s*"([^"]+)"',
+        r'\{"event_id":\s*(\d+),\s*"event_hex":\s*"[^"]+",\s*"ap_name":\s*"[^"]+",\s*"map_hex":\s*"([^"]+)",'
+        r'\s*"area_name":\s*"[^"]*",\s*"vanilla_kind":\s*"([^"]+)"',
         text,
     ):
-        eid, mhex = int(m.group(1)), m.group(2).upper()
+        eid, mhex, kind = int(m.group(1)), m.group(2).upper(), m.group(3)
         by_map.setdefault(mhex, []).append(eid)
-    return by_map
+        if kind == "gold":
+            gold_events.add(eid)
+    return by_map, sorted(gold_events)
+
+
+def events_on_map_ids(by_map: dict[str, list[int]], map_ids: list[int]) -> list[int]:
+    hexes = {f"{m:04X}" for m in map_ids}
+    out: set[int] = set()
+    for mhex, eids in by_map.items():
+        if mhex in hexes:
+            out.update(eids)
+    return sorted(out)
+
+
+# Keep in sync with worlds/grandia/OptionalDungeons_data.py
+OPTIONAL_DUNGEONS: list[tuple[str, str, list[int]]] = [
+    (
+        "SoldiersGraveyard",
+        "soldiers_graveyard",
+        [44036, 44040, 44044, 44048, 44052, 44056],
+    ),
+    (
+        "CastleOfDreams",
+        "castle_of_dreams",
+        [41988, 41996, 42000, 42004, 42008, 42012, 42016],
+    ),
+    (
+        "TowerOfTemptation",
+        "tower_of_temptation",
+        [46080, 46084, 46088, 46092, 46096, 46104, 46108, 46112, 46116, 46120, 46124],
+    ),
+]
 
 
 def main() -> None:
@@ -100,7 +136,7 @@ def main() -> None:
             )
         story.append(entry)
 
-    chests_by_map = load_chest_events_by_map()
+    chests_by_map, gold_event_list = load_chest_events_by_map()
     for lo in lockouts:
         sweep: list[int] = []
         for mhex in lo["blocks_hex"]:
@@ -238,6 +274,7 @@ def main() -> None:
         "struct KeyUnlockGroup {",
         "  uint16_t primary_map;",
         "  unsigned value;",
+        "  const char* name;",
         "  const uint16_t* maps;",
         "  std::size_t count;",
         "};",
@@ -245,8 +282,9 @@ def main() -> None:
         "constexpr KeyUnlockGroup kKeyGroups[] = {",
     ]
     for i, k in enumerate(keys):
+        name = str(k["item_name"]).replace("\\", "\\\\").replace('"', '\\"')
         h.append(
-            f"  {{ 0x{k['primary_map_id']:04X}u, {int(k['value'])}u, kKey{i}Maps, "
+            f'  {{ 0x{k["primary_map_id"]:04X}u, {int(k["value"])}u, "{name}", kKey{i}Maps, '
             f"sizeof(kKey{i}Maps) / sizeof(kKey{i}Maps[0]) }},"
         )
     h += [
@@ -289,13 +327,12 @@ def main() -> None:
         "};",
         f"constexpr std::size_t kApCheckEventCount = {len(known_event_list)};",
         "",
-        "inline bool IsApCheckEvent(uint16_t event_id) {",
-        "  // kApCheckEvents is sorted ascending.",
+        "inline bool ContainsSortedEvent(const uint16_t* events, std::size_t count, uint16_t event_id) {",
         "  std::size_t lo = 0;",
-        "  std::size_t hi = kApCheckEventCount;",
+        "  std::size_t hi = count;",
         "  while (lo < hi) {",
         "    const std::size_t mid = lo + (hi - lo) / 2;",
-        "    const uint16_t v = kApCheckEvents[mid];",
+        "    const uint16_t v = events[mid];",
         "    if (v == event_id) {",
         "      return true;",
         "    }",
@@ -308,6 +345,43 @@ def main() -> None:
         "  return false;",
         "}",
         "",
+        "inline bool IsApCheckEvent(uint16_t event_id) {",
+        "  return ContainsSortedEvent(kApCheckEvents, kApCheckEventCount, event_id);",
+        "}",
+        "",
+        # Gold chests (vanilla_kind == gold) — optional via slot_data include_gold_chests.
+        "constexpr uint16_t kGoldChestEvents[] = {",
+        "  "
+        + ", ".join(f"0x{e:04X}u" for e in gold_event_list)
+        + ("," if gold_event_list else ""),
+        "};",
+        f"constexpr std::size_t kGoldChestEventCount = {len(gold_event_list)};",
+        "",
+        "inline bool IsGoldChestEvent(uint16_t event_id) {",
+        "  return ContainsSortedEvent(kGoldChestEvents, kGoldChestEventCount, event_id);",
+        "}",
+        "",
+    ]
+
+    dungeon_counts: list[str] = []
+    for camel, _snake, map_ids in OPTIONAL_DUNGEONS:
+        eids = events_on_map_ids(chests_by_map, map_ids)
+        dungeon_counts.append(f"{camel}={len(eids)}")
+        h += [
+            f"constexpr uint16_t k{camel}Events[] = {{",
+            "  "
+            + ", ".join(f"0x{e:04X}u" for e in eids)
+            + ("," if eids else ""),
+            "};",
+            f"constexpr std::size_t k{camel}EventCount = {len(eids)};",
+            "",
+            f"inline bool Is{camel}Event(uint16_t event_id) {{",
+            f"  return ContainsSortedEvent(k{camel}Events, k{camel}EventCount, event_id);",
+            "}",
+            "",
+        ]
+
+    h += [
         "}  // namespace progressions",
         "}  // namespace grandia_ap",
         "",
@@ -321,7 +395,8 @@ def main() -> None:
     print(f"Wrote {DLL_HEADER_OUT.relative_to(REPO)}")
     print(
         f"Keys={len(keys)} story={len(story)} gated_maps={len(gated)} "
-        f"lockouts={len(lockouts)} ap_checks={len(known_event_list)}"
+        f"lockouts={len(lockouts)} ap_checks={len(known_event_list)} "
+        f"gold_chests={len(gold_event_list)} " + " ".join(dungeon_counts)
     )
     for lo in lockouts:
         print(f"  lockout 0x{lo['event_id']:04X}: sweep {len(lo['sweep_event_ids'])} chests")

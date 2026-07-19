@@ -23,4 +23,15 @@ int TryInterceptChestAssignUi(std::uintptr_t return_addr, std::uintptr_t stack_p
 // Returns 1 to zero the field-chest gold add at +0x7612E (AP gold chests).
 int TrySuppressVanillaFieldGold();
 
+// Runtime options from slot_data (CONFIG …). Defaults match DefaultOnToggle.
+void SetIncludeGoldChests(bool include);
+bool IncludeGoldChests();
+void SetIncludeSoldiersGraveyard(bool include);
+bool IncludeSoldiersGraveyard();
+void SetIncludeCastleOfDreams(bool include);
+bool IncludeCastleOfDreams();
+void SetIncludeTowerOfTemptation(bool include);
+bool IncludeTowerOfTemptation();
+bool IsExcludedOptionalDungeonEvent(uint16_t event_id);
+
 }  // namespace grandia_ap
