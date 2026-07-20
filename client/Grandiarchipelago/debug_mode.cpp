@@ -39,6 +39,15 @@ bool EdgePress(int vk, bool& was_down) {
 
 }  // namespace
 
+bool IsDebugModeEnabled() {
+    const std::uintptr_t base = GetGrandiaModuleBase();
+    if (base == 0) {
+        return false;
+    }
+    const auto* flag = reinterpret_cast<const volatile unsigned*>(base + kDebugFlagRva);
+    return *flag == kDebugFlagOn;
+}
+
 void PollDebugModeHotkey() {
     if (!EdgePress(static_cast<int>(DebugHotkeyVk()), g_debug_hotkey_was_down)) {
         return;

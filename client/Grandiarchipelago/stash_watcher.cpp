@@ -2,7 +2,9 @@
 #include "debug_mode.h"
 #include "game_memory.h"
 #include "log.h"
+#include "movie_skip.h"
 #include "save_sync.h"
+#include "speed_turbo.h"
 
 #include <Windows.h>
 
@@ -99,6 +101,8 @@ DWORD WINAPI WatcherThread(LPVOID) {
         ProcessChestPickupQueue();
         FlushPendingGold();
         PollDebugModeHotkey();
+        PollMovieSkipHotkey();
+        PollSpeedTurboHotkey();
 
         const unsigned hits = GetStashHookHitCount();
         if (hits != last_hook_hits) {

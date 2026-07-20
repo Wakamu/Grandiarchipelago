@@ -24,12 +24,15 @@ add_library(Grandiarchipelago SHARED
     Grandiarchipelago/d3d_overlay.cpp
     Grandiarchipelago/debug_mode.cpp
     Grandiarchipelago/xp_multiplier.cpp
+    Grandiarchipelago/speed_turbo.cpp
+    Grandiarchipelago/movie_skip.cpp
 )
 
 target_link_libraries(Grandiarchipelago PRIVATE
     d3d11
     dxgi
     gdi32
+    Xinput9_1_0
 )
 
 target_include_directories(Grandiarchipelago PRIVATE

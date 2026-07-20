@@ -2,7 +2,9 @@
 #include "game_memory.h"
 #include "log.h"
 #include "map_travel.h"
+#include "movie_skip.h"
 #include "save_sync.h"
+#include "speed_turbo.h"
 #include "xp_multiplier.h"
 
 #include <Windows.h>
@@ -979,6 +981,8 @@ bool EnsureStashBaseResolved() {
 
 void ShutdownGameMemory() {
 #if defined(_M_IX86)
+    RemoveMovieSkipHook();
+    RemoveSpeedTurbo();
     RemoveXpMultiplierHooks();
     RemoveMapTravelHook();
     RemoveSaveSyncHooks();

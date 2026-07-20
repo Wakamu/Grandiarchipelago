@@ -6,12 +6,24 @@
 #include "item_tracker.h"
 #include "log.h"
 #include "map_travel.h"
+#include "movie_skip.h"
 #include "save_sync.h"
+#include "speed_turbo.h"
 #include "xp_multiplier.h"
 
 namespace grandia_ap {
 
 bool InstallHooks() {
+    if (!InstallSpeedTurbo()) {
+        LogWarn("Speed turbo not installed — Select/RCtrl 2x unavailable");
+    } else {
+        LogInfo("Speed turbo active — Select toggles / RCtrl holds 2x");
+    }
+    if (!InstallMovieSkipHook()) {
+        LogWarn("Movie skip not installed — cinematics stay unskippable");
+    } else {
+        LogInfo("Movie skip active — Select/Backspace skips MP4 cinematics");
+    }
     if (IsChestPickupHookInstalled()) {
         LogInfo("Chest event hook active (flag write AOB / +0x70505, loot +0x53C45, story +0x6F03F/+0x7CB4F)");
         if (IsEventFlagTraceEnabled()) {
@@ -53,6 +65,8 @@ bool InstallHooks() {
 }
 
 void RemoveHooks() {
+    RemoveMovieSkipHook();
+    RemoveSpeedTurbo();
     RemoveXpMultiplierHooks();
     RemoveMapTravelHook();
     RemoveSaveSyncHooks();

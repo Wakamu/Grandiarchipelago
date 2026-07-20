@@ -4,6 +4,18 @@ Live **Archipelago multiworld** for **Grandia HD Remaster (PC)**.
 
 Grandiarchipelago hooks the running **32-bit native** game and sends/receives checks over the AP server.
 
+## How to use
+
+- Install the latest release's APWorld
+- Launch the Grandia Client from the Archipelago Launcher
+- Connect to your slot
+- Launch the Game
+
+**Shortcuts:**
+
+Right Ctrl (Keyboard) / Select (Controller) : Toggle SpeedHack
+Backspace (Keyboard) / Select (Controller) : Skip current video cinematic
+
 ## Engine facts (important)
 
 Grandia HD Remaster is a native port (Sickhead Games) built from PlayStation source code, using **SDL + Direct3D**.
