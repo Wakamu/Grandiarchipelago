@@ -19,6 +19,9 @@ bool IsMapUnlocked(uint16_t map_id);
 bool IsMapGated(uint16_t map_id);
 bool AllowMapTravel(uint16_t map_id);
 
+// Drop runtime unlocks (call on save SYNC before bridge re-applies keys).
+void ClearMapKeyState();
+
 // True if ap_item_id is a Key-to-Map progression item (not a stash row).
 bool TryHandleMapKeyItem(unsigned ap_item_id);
 

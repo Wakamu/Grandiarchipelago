@@ -151,6 +151,18 @@ void UnlockMap(uint16_t map_id) {
     LogInfo("Map unlocked: 0x%04X", static_cast<unsigned>(map_id));
 }
 
+void ClearMapKeyState() {
+    std::lock_guard<std::mutex> lock(g_lock);
+    const auto n_maps = g_unlocked.size();
+    const auto n_keys = g_owned_key_primaries.size();
+    g_unlocked.clear();
+    g_owned_key_primaries.clear();
+    if (n_maps != 0 || n_keys != 0) {
+        LogInfo("Cleared map-key state (%zu unlocks, %zu key primaries) for save SYNC", n_maps,
+                n_keys);
+    }
+}
+
 bool OwnsAllKeysUpToLocked(unsigned value) {
     for (std::size_t g = 0; g < progressions::kKeyGroupCount; ++g) {
         const auto& group = progressions::kKeyGroups[g];

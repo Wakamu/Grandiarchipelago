@@ -28,8 +28,14 @@ except ImportError:  # pragma: no cover
 ITEM_DELIVERY_DELAY_S = 2.5
 PROCESS_NAME = "grandia.exe"
 POLL_S = 0.25
+# Fake AP progression ids: Key to <Map> = 0x47523000 + map_id (not stash rows).
+MAP_KEY_ITEM_BASE = 0x47523000
 # NetworkItem.flags bit for progression (includes progression_skip_balancing).
 _PROGRESSION_FLAG = int(ItemClassification.progression)
+
+
+def _is_map_key_item(item_id: int) -> bool:
+    return item_id >= MAP_KEY_ITEM_BASE
 
 
 def _package_native_dll_bytes() -> Optional[bytes]:
@@ -402,11 +408,37 @@ class GrandiaContext(CommonContext):
         self._pending_sync = received_index
         self._delivery_open_at = time.monotonic() + ITEM_DELIVERY_DELAY_S
         logger.info(
-            "Save SYNC received_index=%s — delivering Index > %s after %.1fs",
+            "Save SYNC received_index=%s — re-applying map keys + Index > %s after %.1fs",
             received_index,
             received_index,
             ITEM_DELIVERY_DELAY_S,
         )
+
+    def reapply_map_keys(self) -> None:
+        """Map keys are runtime-only in the DLL. After save load, SYNC clears them and
+        catch-up only forwards Index > watermark — re-send every key already counted in
+        the save as ITEM without INDEX (must not rewrite GAP1 received_index).
+        Newer keys (Index > watermark) are delivered by catch-up as usual.
+        """
+        if not self.pipe or not self.pipe.connected:
+            return
+        # Index N ↔ items_received[N - 1]; only re-apply Index ≤ applied_index.
+        limit = min(self.applied_index, len(self.items_received))
+        sent = 0
+        for i in range(limit):
+            item = self.items_received[i]
+            item_id = int(item.item)
+            if not _is_map_key_item(item_id):
+                continue
+            self.pipe.send_line(f"ITEM 0x{item_id:X}")
+            logger.info("Re-applied map key after load: 0x%X", item_id)
+            sent += 1
+        if sent:
+            logger.info(
+                "Re-applied %s map key(s) from items_received (Index ≤ %s).",
+                sent,
+                self.applied_index,
+            )
 
     def catch_up_items(self) -> None:
         if not self.pipe or not self.pipe.connected or not self.delivery_open:
@@ -497,7 +529,8 @@ async def game_watcher(ctx: GrandiaContext) -> None:
                 if time.monotonic() >= ctx._delivery_open_at:
                     ctx.delivery_open = True
                     ctx._pending_sync = None
-                    logger.info("Post-load delay done — catching up AP items.")
+                    logger.info("Post-load delay done — re-applying map keys and catching up AP items.")
+                    ctx.reapply_map_keys()
                     ctx.catch_up_items()
 
             # Live items after delivery is open

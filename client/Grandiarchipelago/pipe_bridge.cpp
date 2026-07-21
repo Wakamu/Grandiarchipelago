@@ -4,6 +4,7 @@
 #include "d3d_overlay.h"
 #include "item_tracker.h"
 #include "log.h"
+#include "map_travel.h"
 #include "save_sync.h"
 #include "xp_multiplier.h"
 
@@ -279,6 +280,8 @@ void FlushPendingSyncLocked(HANDLE pipe) {
         return;
     }
     LogInfo("Sent SYNC to bridge: received_index=%u", index);
+    // Keys live only in DLL memory — wipe before bridge re-applies from AllItemsReceived.
+    ClearMapKeyState();
     {
         std::lock_guard<std::mutex> lock(g_sync_mutex);
         g_sync_sent = true;

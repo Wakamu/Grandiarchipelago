@@ -496,6 +496,10 @@ void OnSaveSyncStashBecameReady() {
 }
 
 void SetSaveSyncReceivedIndex(uint32_t received_index) {
+    // Monotonic: never roll the watermark back (e.g. mis-ordered ITEM INDEX).
+    if (g_trailer_present && received_index < g_trailer.received_index) {
+        return;
+    }
     g_trailer.received_index = received_index;
     g_trailer_dirty = true;
     g_trailer_present = true;
