@@ -13,4 +13,6 @@ traces/
 **/__pycache__/
 *.apworld
 worlds/grandia/native/*.dll
+# Staged at build time from data/redux_spike (SHOP.BIN + changed MDPs).
+worlds/grandia/native/redux_content/
 tools/progression_map_viewer.html

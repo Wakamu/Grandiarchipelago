@@ -1,7 +1,6 @@
 #include "speed_turbo.h"
 
 #include "d3d_overlay.h"
-#include "debug_mode.h"
 #include "game_memory.h"
 #include "log.h"
 #include "movie_skip.h"
@@ -51,7 +50,7 @@ DWORD g_last_fake_tgt = 0;
 
 std::atomic<bool> g_turbo_active{false};
 bool g_toggle_on = false;
-bool g_select_was_down = false;
+bool g_turbo_combo_was_down = false;
 bool g_installed = false;
 
 struct IatPatch {
@@ -338,8 +337,8 @@ bool InstallSpeedTurbo() {
 
     g_installed = true;
     g_toggle_on = false;
-    g_select_was_down = false;
-    LogInfo("Speed turbo ready — Select toggles / RCtrl holds %.0fx (%d IAT hooks)",
+    g_turbo_combo_was_down = false;
+    LogInfo("Speed turbo ready — Select+L1 toggles / RCtrl holds %.0fx (%d IAT hooks)",
             kTurboMultiplier, total);
     return true;
 #endif
@@ -352,7 +351,7 @@ void RemoveSpeedTurbo() {
     }
     g_turbo_active.store(false);
     g_toggle_on = false;
-    g_select_was_down = false;
+    g_turbo_combo_was_down = false;
 
     for (auto it = g_patches.rbegin(); it != g_patches.rend(); ++it) {
         if (!it->slot) {
@@ -377,13 +376,14 @@ bool IsSpeedTurboInstalled() {
     return g_installed;
 }
 
-bool GamepadSelectDown() {
+bool GamepadSelectL1Down() {
     for (DWORD i = 0; i < XUSER_MAX_COUNT; ++i) {
         XINPUT_STATE state{};
         if (XInputGetState(i, &state) != ERROR_SUCCESS) {
             continue;
         }
-        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) {
+        const WORD buttons = state.Gamepad.wButtons;
+        if ((buttons & XINPUT_GAMEPAD_BACK) && (buttons & XINPUT_GAMEPAD_LEFT_SHOULDER)) {
             return true;
         }
     }
@@ -395,14 +395,14 @@ void PollSpeedTurboHotkey() {
         return;
     }
 
-    // Select/Back toggles latched turbo; skipped while debug owns Select (9999) or a movie is up.
-    const bool select_down = GamepadSelectDown();
-    if (!IsDebugModeEnabled() && !IsMoviePlaying()) {
-        if (select_down && !g_select_was_down) {
+    // Select+L1 toggles latched turbo; skipped while a movie is up (Select alone skips movies).
+    const bool combo_down = GamepadSelectL1Down();
+    if (!IsMoviePlaying()) {
+        if (combo_down && !g_turbo_combo_was_down) {
             g_toggle_on = !g_toggle_on;
         }
     }
-    g_select_was_down = select_down;
+    g_turbo_combo_was_down = combo_down;
 
     const bool held = (GetAsyncKeyState(kHoldVk) & 0x8000) != 0;
     const bool active = g_toggle_on || held;

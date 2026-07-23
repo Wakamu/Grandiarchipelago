@@ -1,28 +1,39 @@
 #include "hooks.h"
 
 #include "chest_pickup.h"
+#include "debug_mode.h"
 #include "d3d_overlay.h"
 #include "game_memory.h"
 #include "item_tracker.h"
 #include "log.h"
+#include "map_overview.h"
 #include "map_travel.h"
+#include "m_dat_balance.h"
 #include "movie_skip.h"
 #include "save_sync.h"
 #include "speed_turbo.h"
+#include "windt_balance.h"
+#include "shop_balance.h"
 #include "xp_multiplier.h"
 
 namespace grandia_ap {
 
 bool InstallHooks() {
     if (!InstallSpeedTurbo()) {
-        LogWarn("Speed turbo not installed — Select/RCtrl 2x unavailable");
+        LogWarn("Speed turbo not installed — Select+L1 / RCtrl 2x unavailable");
     } else {
-        LogInfo("Speed turbo active — Select toggles / RCtrl holds 2x");
+        LogInfo("Speed turbo active — Select+L1 toggles / RCtrl holds 2x");
     }
     if (!InstallMovieSkipHook()) {
         LogWarn("Movie skip not installed — cinematics stay unskippable");
     } else {
         LogInfo("Movie skip active — Select/Backspace skips MP4 cinematics");
+    }
+    if (!InstallDebugOverlayHook()) {
+        LogWarn("Debug overlay not installed");
+    }
+    if (!InstallMapOverviewHook()) {
+        LogWarn("Map overview not installed — F4 bird view unavailable");
     }
     if (IsChestPickupHookInstalled()) {
         LogInfo("Chest event hook active (flag write AOB / +0x70505, loot +0x53C45, story +0x6F03F/+0x7CB4F)");
@@ -48,8 +59,17 @@ bool InstallHooks() {
     } else {
         LogWarn("XP multiplier hooks not installed — magic/skill/level XP stay vanilla");
     }
+    if (!IsMdatBalanceHookInstalled()) {
+        LogWarn("M_DAT balance not ready");
+    }
+    if (!InstallWindtSec3Hooks()) {
+        LogWarn("WINDT sec3 finalize hooks not installed — shop may bake vanilla prices");
+    }
+    if (!InstallShopBalanceHooks()) {
+        LogWarn("SHOP balance fopen hook not installed — shop stock stays vanilla");
+    }
     if (IsSaveSyncHookInstalled()) {
-        LogInfo("Save sync hooks active (fwrite +0x254E / fread +0x2673, GAP1 trailer)");
+        LogInfo("Save sync hooks active (confirm-UI gate + fopen backstop / GAP1 trailer)");
     } else {
         LogWarn("Save sync hooks not installed — AP trailer will not persist on save");
     }
@@ -65,6 +85,11 @@ bool InstallHooks() {
 }
 
 void RemoveHooks() {
+    RemoveShopBalanceHooks();
+    RemoveWindtSec3Hooks();
+    RemoveMdatBalanceHook();
+    RemoveMapOverviewHook();
+    RemoveDebugOverlayHook();
     RemoveMovieSkipHook();
     RemoveSpeedTurbo();
     RemoveXpMultiplierHooks();

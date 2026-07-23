@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import DefaultOnToggle, PerGameCommonOptions, Range
+from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range
 
 
 class IncludeGoldChests(DefaultOnToggle):
@@ -80,6 +80,20 @@ class LevelXpMultiplier(Range):
     default = 1
 
 
+class GameplayBalance(Choice):
+    """Grandia Remastered Redux gameplay tables (enemies, items, shops, names).
+
+    Vanilla uses stock HD Remaster data. Redux applies bundled content overlays
+    at runtime (M_DAT enemies, WINDT prices/stats, shop stock, item names, etc.).
+    Requires vanilla game files on disk — do not also install the Redux file pack.
+    """
+
+    display_name = "Gameplay Balance"
+    option_vanilla = 0
+    option_redux = 1
+    default = 0
+
+
 @dataclass
 class GrandiaOptions(PerGameCommonOptions):
     include_gold_chests: IncludeGoldChests
@@ -89,3 +103,4 @@ class GrandiaOptions(PerGameCommonOptions):
     magic_xp_multiplier: MagicXpMultiplier
     skill_xp_multiplier: SkillXpMultiplier
     level_xp_multiplier: LevelXpMultiplier
+    gameplay_balance: GameplayBalance

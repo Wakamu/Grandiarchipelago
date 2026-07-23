@@ -34,30 +34,78 @@ MAP_KEY_ITEM_BASE = 0x47523000
 _PROGRESSION_FLAG = int(ItemClassification.progression)
 
 
+def _fnv1a32(data: bytes) -> int:
+    h = 2166136261
+    for b in data:
+        h ^= b
+        h = (h * 16777619) & 0xFFFFFFFF
+    return h if h != 0 else 1
+
+
+def compute_seed_hash(seed_name: str, slot: int) -> int:
+    """Match Bridge ComputeSeedHash: FNV-1a of UTF-8 'seed\\0slot' (never 0)."""
+    return _fnv1a32(f"{seed_name}\0{slot}".encode("utf-8"))
+
+
 def _is_map_key_item(item_id: int) -> bool:
     return item_id >= MAP_KEY_ITEM_BASE
 
 
-def _package_native_dll_bytes() -> Optional[bytes]:
-    """Read bundled native/Grandiarchipelago.dll from the installed world (folder or .apworld)."""
-    # Filesystem next to this module (source tree or extracted world folder).
-    fs_path = Path(__file__).resolve().parent / "native" / "Grandiarchipelago.dll"
+def _package_native_bytes(rel_posix: str) -> Optional[bytes]:
+    """Read a file under native/ from the installed world (folder or .apworld)."""
+    fs_path = Path(__file__).resolve().parent / Path(*rel_posix.split("/"))
     if fs_path.is_file():
         return fs_path.read_bytes()
 
     try:
         from importlib.resources import files
 
-        resource = files(__package__).joinpath("native/Grandiarchipelago.dll")
+        resource = files(__package__).joinpath(rel_posix)
         return resource.read_bytes()
     except Exception:
         return None
+
+
+def _package_native_dll_bytes() -> Optional[bytes]:
+    """Read bundled native/Grandiarchipelago.dll from the installed world (folder or .apworld)."""
+    return _package_native_bytes("native/Grandiarchipelago.dll")
+
+
+def _cache_native_dir() -> Path:
+    try:
+        from Utils import user_path
+
+        return Path(user_path("Grandia", "native"))
+    except Exception:
+        return Path.home() / "Archipelago" / "Grandia" / "native"
+
+
+def _extract_native_file(rel_posix: str, dest: Path, label: str) -> bool:
+    """Write packaged native/* bytes to dest when missing or hash-stale."""
+    import hashlib
+
+    data = _package_native_bytes(rel_posix)
+    if data is None:
+        return False
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256(data).hexdigest()
+    marker = Path(str(dest) + ".sha256")
+    if (
+        not dest.is_file()
+        or not marker.is_file()
+        or marker.read_text(encoding="utf-8").strip() != digest
+    ):
+        dest.write_bytes(data)
+        marker.write_text(digest + "\n", encoding="utf-8")
+        logger.info("Extracted bundled %s to %s", label, dest)
+    return True
 
 
 def _ensure_bundled_dll() -> Optional[Path]:
     """
     Prefer the DLL shipped inside the APWorld. LoadLibrary needs a real file path,
     so when the world is a .apworld zip we extract to the Archipelago user cache.
+    Also extracts Redux FIELD overlays (SHOP.BIN + map MDPs) beside the DLL.
     """
     data = _package_native_dll_bytes()
     if data is None:
@@ -76,19 +124,53 @@ def _ensure_bundled_dll() -> Optional[Path]:
         except OSError:
             pass
 
-    try:
-        from Utils import user_path
-
-        cache_dir = Path(user_path("Grandia", "native"))
-    except Exception:
-        cache_dir = Path.home() / "Archipelago" / "Grandia" / "native"
-
+    cache_dir = _cache_native_dir()
     cache_dir.mkdir(parents=True, exist_ok=True)
     dest = cache_dir / "Grandiarchipelago.dll"
-    if not dest.is_file() or dest.stat().st_size != len(data):
-        dest.write_bytes(data)
-        logger.info("Extracted bundled inject DLL to %s", dest)
+    if not _extract_native_file("native/Grandiarchipelago.dll", dest, "inject DLL"):
+        return None
+    _extract_redux_content(cache_dir)
     return dest.resolve()
+
+
+def _extract_redux_content(cache_dir: Path) -> None:
+    """Extract packaged redux_content overlays (FIELD/BIN/BATLE/TEXT) next to the DLL."""
+    import json
+
+    root = cache_dir / "redux_content"
+    names: list[str] = []
+    man_bytes = _package_native_bytes("native/redux_content/manifest.json")
+    if man_bytes:
+        try:
+            names = list(json.loads(man_bytes.decode("utf-8")).get("files") or [])
+        except Exception:
+            names = []
+        _extract_native_file(
+            "native/redux_content/manifest.json",
+            root / "manifest.json",
+            "Redux overlay manifest",
+        )
+    if not names:
+        # Fallback: minimum set for Parm shop + MCHAR.
+        names = [
+            "FIELD/SHOP.BIN",
+            "FIELD/204C.MDP",
+            "FIELD/WINDT.BIN",
+            "BIN/MCHAR.DAT",
+            "BATLE/M_DAT.BIN",
+            "TEXT/EN/TEXT1.BIN",
+            "TEXT/EN/strings.txt",
+        ]
+    for rel in names:
+        rel = rel.replace("\\", "/").lstrip("/")
+        # Legacy manifests listed bare FIELD basenames only.
+        if "/" not in rel:
+            rel = f"FIELD/{rel}"
+        _extract_native_file(
+            f"native/redux_content/{rel}",
+            root / Path(*rel.split("/")),
+            f"Redux {rel}",
+        )
 
 
 def _resolve_dll_path() -> Optional[Path]:
@@ -98,12 +180,22 @@ def _resolve_dll_path() -> Optional[Path]:
         if p.is_file():
             return p.resolve()
 
+    # Prefer a local Win32 build when developing from the repo tree.
+    build_dll = (
+        Path(__file__).resolve().parents[2]
+        / "client"
+        / "build"
+        / "Release"
+        / "Grandiarchipelago.dll"
+    )
+    if build_dll.is_file():
+        return build_dll.resolve()
+
     bundled = _ensure_bundled_dll()
     if bundled is not None:
         return bundled
 
     candidates = [
-        Path(__file__).resolve().parents[2] / "client" / "build" / "Release" / "Grandiarchipelago.dll",
         Path.cwd() / "Grandiarchipelago.dll",
     ]
     try:
@@ -125,6 +217,8 @@ class GrandiaCommandProcessor(ClientCommandProcessor):
         """Force re-attach / re-inject into grandia.exe."""
         assert isinstance(self.ctx, GrandiaContext)
         self.ctx.request_reattach = True
+        self.ctx._awaiting_launch = True
+        self.ctx._logged_skip_running = False
         self.output("Will re-attach to grandia.exe on the next watcher tick.")
         return True
 
@@ -178,15 +272,40 @@ class GrandiaContext(CommonContext):
         self.dll_path: Optional[Path] = _resolve_dll_path()
         self.hook_injected = False
         self.request_reattach = False
+        # Inject only after we've seen grandia.exe absent (or /attach). Pre-existing
+        # processes are ignored until relaunch.
+        self._awaiting_launch = False
+        self._injected_pid: Optional[int] = None
+        self._logged_skip_running = False
         self.last_sync_index: Optional[int] = None
         self.applied_index = 0
         self.delivery_open = False
+        self.save_bound = False
+        self.expected_seed_hash = 0
         self._delivery_open_at = 0.0
         self._forwarded_indexes: Set[int] = set()
         self._pending_sync: Optional[int] = None
         self._pending_lockouts: List[tuple[int, List[int]]] = []
         self._scouted_all = False
         self.slot_data: dict = {}
+
+    def _refresh_seed_hash(self, seed_name: Optional[str] = None, slot: Optional[int] = None) -> None:
+        """Recompute save-binding hash from room seed + slot number."""
+        if seed_name is None:
+            seed_name = getattr(self, "seed_name", None) or ""
+        if slot is None:
+            slot = int(getattr(self, "slot", 0) or 0)
+        slot = int(slot or 0)
+        if slot <= 0:
+            self.expected_seed_hash = 0
+            return
+        self.expected_seed_hash = compute_seed_hash(str(seed_name or ""), slot)
+        logger.info(
+            "Save binding seed_hash=0x%08X (seed=%r, slot=%s)",
+            self.expected_seed_hash,
+            seed_name or "",
+            slot,
+        )
 
     def make_gui(self):
         ui = super().make_gui()
@@ -200,6 +319,13 @@ class GrandiaContext(CommonContext):
         await self.send_connect()
 
     def on_package(self, cmd: str, args: dict) -> None:
+        # Capture RoomInfo seed before Connected can race (CommonClient calls
+        # server_auth during RoomInfo *before* on_package(RoomInfo)).
+        if cmd == "RoomInfo":
+            seed_name = args.get("seed_name")
+            if seed_name:
+                self.seed_name = seed_name
+
         if cmd == "Connected":
             # CommonClient does not assign this; worlds must read it from Connected.
             self.slot_data = args.get("slot_data") or {}
@@ -214,7 +340,14 @@ class GrandiaContext(CommonContext):
                     "Connected with empty slot_data — regenerate the seed with the current Grandia world, "
                     "or the room was created before these options existed."
                 )
-            logger.info("Holding item delivery until the game sends SYNC from a loaded save.")
+            logger.info(
+                "Holding item delivery until a save bound to this seed/slot is loaded (or first-bound)."
+            )
+            # CommonClient sets self.slot before on_package; prefer packet field anyway.
+            seed_name = getattr(self, "seed_name", None) or ""
+            slot = int(args.get("slot") or getattr(self, "slot", 0) or 0)
+            self._refresh_seed_hash(seed_name, slot)
+            self.save_bound = False
             self._scouted_all = False
             async_start(self._scout_missing_locations(), name="grandia-scout")
             self._send_toast(f"Connected as {self.auth}", "#FFFF00")
@@ -223,8 +356,17 @@ class GrandiaContext(CommonContext):
             # Scouts finished (or partial) — drain any lockouts waiting on item data.
             async_start(self._drain_pending_lockouts(), name="grandia-lockout-drain")
         elif cmd == "RoomInfo":
-            pass
+            seed_name = getattr(self, "seed_name", None) or args.get("seed_name") or ""
+            # RoomInfo often arrives before Connected; hash is finalized on Connected.
+            # If Connected already ran (auth race), refresh so HELLO/CONFIG can stamp.
+            if getattr(self, "slot", None):
+                self._refresh_seed_hash(seed_name, int(self.slot))
+                self._push_runtime_config()
         super().on_package(cmd, args)
+        # After CommonClient assigns self.slot, ensure hash is non-zero.
+        if cmd == "Connected" and not self.expected_seed_hash:
+            self._refresh_seed_hash()
+            self._push_runtime_config()
 
     def _push_runtime_config(self) -> None:
         if not self.pipe or not self.pipe.connected:
@@ -256,7 +398,15 @@ class GrandiaContext(CommonContext):
             "magic_xp_multiplier": _int("magic_xp_multiplier"),
             "skill_xp_multiplier": _int("skill_xp_multiplier"),
             "level_xp_multiplier": _int("level_xp_multiplier"),
+            "gameplay_balance": _int(
+                "gameplay_balance",
+                default=_int("enemy_data_pack", default=0, lo=0, hi=1),
+                lo=0,
+                hi=1,
+            ),
         }
+        if self.expected_seed_hash:
+            flags["seed_hash"] = self.expected_seed_hash
         for key, value in flags.items():
             self.pipe.send_line(f"CONFIG {key} {value}")
         logger.info("Pushed CONFIG %s", " ".join(f"{k}={v}" for k, v in flags.items()))
@@ -400,7 +550,49 @@ class GrandiaContext(CommonContext):
         if prog:
             await self.check_locations(set(prog))
 
-    def apply_sync(self, received_index: int) -> None:
+    def apply_sync(self, received_index: int, save_seed_hash: int = 0, has_trailer: bool = False) -> None:
+        if not self.expected_seed_hash:
+            logger.warning("Save SYNC ignored — not connected to an AP room yet.")
+            self._send_toast("Connect to Archipelago before loading a save", "#FA8072")
+            return
+
+        if not has_trailer and save_seed_hash == 0:
+            self.save_bound = False
+            self.delivery_open = False
+            self._pending_sync = None
+            logger.warning(
+                "Save SYNC rejected — vanilla save (no GAP1, received_index=%s). "
+                "Start a New Game while connected, then Save to bind this slot.",
+                received_index,
+            )
+            self._send_toast("Vanilla save — New Game + Save required for AP", "#FA8072")
+            return
+
+        if has_trailer and save_seed_hash == 0:
+            self.save_bound = False
+            self.delivery_open = False
+            self._pending_sync = None
+            logger.warning(
+                "Save SYNC rejected — legacy GAP1 (seed=0, received_index=%s). "
+                "Start a New Game while connected, then Save to bind this slot.",
+                received_index,
+            )
+            self._send_toast("Legacy AP save — New Game + Save required for AP", "#FA8072")
+            return
+
+        if save_seed_hash != self.expected_seed_hash:
+            self.save_bound = False
+            self.delivery_open = False
+            self._pending_sync = None
+            logger.warning(
+                "Save SYNC rejected — seed mismatch save=0x%08X expected=0x%08X",
+                save_seed_hash,
+                self.expected_seed_hash,
+            )
+            self._send_toast("Save belongs to a different AP seed/slot", "#FA8072")
+            return
+
+        self.save_bound = True
         self._forwarded_indexes = {i for i in self._forwarded_indexes if i <= received_index}
         self.applied_index = received_index
         self.last_sync_index = received_index
@@ -408,7 +600,8 @@ class GrandiaContext(CommonContext):
         self._pending_sync = received_index
         self._delivery_open_at = time.monotonic() + ITEM_DELIVERY_DELAY_S
         logger.info(
-            "Save SYNC received_index=%s — re-applying map keys + Index > %s after %.1fs",
+            "Save SYNC OK seed=0x%08X received_index=%s — re-applying map keys + Index > %s after %.1fs",
+            save_seed_hash,
             received_index,
             received_index,
             ITEM_DELIVERY_DELAY_S,
@@ -467,17 +660,35 @@ class GrandiaContext(CommonContext):
             self._push_runtime_config()
             return
         if line.startswith("SYNC "):
-            token = line[5:].strip()
+            parts = line[5:].split()
+            if not parts:
+                logger.warning("Invalid SYNC line: %s", line)
+                return
             try:
-                index = int(token)
+                index = int(parts[0])
             except ValueError:
                 logger.warning("Invalid SYNC line: %s", line)
                 return
             if index < 0:
                 return
-            self.apply_sync(index)
+            save_seed = 0
+            has_trailer = False
+            if len(parts) >= 2:
+                try:
+                    save_seed = int(parts[1], 0)
+                except ValueError:
+                    save_seed = 0
+            if len(parts) >= 3:
+                try:
+                    has_trailer = int(parts[2], 0) != 0
+                except ValueError:
+                    has_trailer = False
+            self.apply_sync(index, save_seed, has_trailer)
             return
         if line.startswith("CHECK "):
+            if not self.save_bound:
+                logger.warning("Ignored check — save not bound to this AP seed/slot: %s", line)
+                return
             token = line[6:].strip().replace("0x", "").replace("0X", "")
             try:
                 location_id = int(token, 16)
@@ -490,6 +701,8 @@ class GrandiaContext(CommonContext):
             async_start(self.check_locations({location_id}), name="grandia-check")
             return
         if line.startswith("LOCKOUT "):
+            if not self.save_bound:
+                return
             parts = line.split()
             if len(parts) < 2:
                 logger.warning("Invalid LOCKOUT line: %s", line)
@@ -520,10 +733,14 @@ async def game_watcher(ctx: GrandiaContext) -> None:
             if ctx.request_reattach:
                 ctx.request_reattach = False
                 ctx.hook_injected = False
+                ctx._injected_pid = None
+                ctx._awaiting_launch = True
+                ctx._logged_skip_running = False
                 if ctx.pipe:
                     ctx.pipe.close()
                     ctx.pipe = None
                 ctx.delivery_open = False
+                ctx.save_bound = False
 
             if ctx._pending_sync is not None and not ctx.delivery_open:
                 if time.monotonic() >= ctx._delivery_open_at:
@@ -564,16 +781,36 @@ async def game_watcher(ctx: GrandiaContext) -> None:
 
             pid = find_process_id(PROCESS_NAME)
             if not pid:
+                # Process gone → next appearance is a real launch.
+                ctx._awaiting_launch = True
+                ctx._injected_pid = None
+                ctx.hook_injected = False
+                ctx._logged_skip_running = False
                 await asyncio.sleep(1.0)
                 continue
 
             if not ctx.hook_injected:
-                logger.info("Found %s (pid %s) — injecting…", PROCESS_NAME, pid)
-                if inject_dll(pid, ctx.dll_path):
-                    ctx.hook_injected = True
-                else:
-                    await asyncio.sleep(2.0)
+                # Same PID we already injected: reconnect pipe only (DLL still loaded).
+                if ctx._injected_pid == pid:
+                    logger.info("Reconnecting pipe to already-injected %s (pid %s)…", PROCESS_NAME, pid)
+                elif not ctx._awaiting_launch:
+                    if not ctx._logged_skip_running:
+                        logger.info(
+                            "%s already running (pid %s) — waiting for relaunch or /attach",
+                            PROCESS_NAME,
+                            pid,
+                        )
+                        ctx._logged_skip_running = True
+                    await asyncio.sleep(POLL_S)
                     continue
+                else:
+                    logger.info("Found new %s (pid %s) — injecting…", PROCESS_NAME, pid)
+                    if not inject_dll(pid, ctx.dll_path):
+                        await asyncio.sleep(2.0)
+                        continue
+                    ctx._injected_pid = pid
+                    ctx._awaiting_launch = False
+                ctx.hook_injected = True
 
             pipe = GamePipe()
             if not pipe.connect(timeout_ms=60000):
@@ -581,7 +818,9 @@ async def game_watcher(ctx: GrandiaContext) -> None:
                 await asyncio.sleep(2.0)
                 continue
             ctx.pipe = pipe
-            # Drain HELLO
+            # Ensure seed_hash reaches the DLL even if HELLO raced ahead of Connected.
+            ctx._push_runtime_config()
+            # Drain HELLO / early lines
             await asyncio.sleep(0.2)
             while True:
                 line = pipe.poll_line()
@@ -601,6 +840,19 @@ async def game_watcher(ctx: GrandiaContext) -> None:
 
 
 async def main(args) -> None:
+    # CommonClient runs server_auth during RoomInfo *before* on_package(RoomInfo),
+    # so Connected can race with an empty seed_name. Capture seed as soon as RoomInfo arrives.
+    import CommonClient as _cc
+
+    _orig_process = _cc.process_server_cmd
+
+    async def _process_server_cmd(ctx, cmd_args: dict):
+        if cmd_args.get("cmd") == "RoomInfo" and cmd_args.get("seed_name"):
+            ctx.seed_name = cmd_args["seed_name"]
+        await _orig_process(ctx, cmd_args)
+
+    _cc.process_server_cmd = _process_server_cmd
+
     ctx = GrandiaContext(args.connect, args.password)
     if getattr(args, "name", None):
         ctx.auth = args.name

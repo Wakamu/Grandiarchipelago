@@ -23,9 +23,13 @@ add_library(Grandiarchipelago SHARED
     Grandiarchipelago/map_travel.cpp
     Grandiarchipelago/d3d_overlay.cpp
     Grandiarchipelago/debug_mode.cpp
+    Grandiarchipelago/map_overview.cpp
     Grandiarchipelago/xp_multiplier.cpp
     Grandiarchipelago/speed_turbo.cpp
     Grandiarchipelago/movie_skip.cpp
+    Grandiarchipelago/m_dat_balance.cpp
+    Grandiarchipelago/windt_balance.cpp
+    Grandiarchipelago/shop_balance.cpp
 )
 
 target_link_libraries(Grandiarchipelago PRIVATE
@@ -57,4 +61,24 @@ endif()
 install(TARGETS Grandiarchipelago GrandiaLauncher
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION bin
+)
+
+# Keep worlds/grandia/native in sync for Archipelago Launcher / apworld packaging.
+# Redux shop stock lives in map MDPs (e.g. 204C.MDP) + SHOP.BIN — stage via Python.
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(NOT Python3_EXECUTABLE)
+    set(Python3_EXECUTABLE "python")
+endif()
+set(_STAGE_REDUX "${CMAKE_SOURCE_DIR}/../tools/stage_redux_field_overlays.py")
+add_custom_command(TARGET Grandiarchipelago POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+            "${CMAKE_SOURCE_DIR}/../worlds/grandia/native"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:Grandiarchipelago>"
+            "${CMAKE_SOURCE_DIR}/../worlds/grandia/native/Grandiarchipelago.dll"
+    COMMAND "${Python3_EXECUTABLE}" "${_STAGE_REDUX}"
+            --dest "${CMAKE_SOURCE_DIR}/../worlds/grandia/native/redux_content"
+    COMMAND "${Python3_EXECUTABLE}" "${_STAGE_REDUX}"
+            --dest "$<TARGET_FILE_DIR:Grandiarchipelago>/redux_content"
+    COMMENT "Copy Grandiarchipelago.dll + stage Redux FIELD overlays (SHOP.BIN + MDPs)"
 )

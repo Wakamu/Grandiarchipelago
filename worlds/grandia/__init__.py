@@ -199,5 +199,6 @@ class GrandiaWorld(World):
             "magic_xp_multiplier": int(self.options.magic_xp_multiplier.value),
             "skill_xp_multiplier": int(self.options.skill_xp_multiplier.value),
             "level_xp_multiplier": int(self.options.level_xp_multiplier.value),
+            "gameplay_balance": int(self.options.gameplay_balance.value),
             "data_version": self.data_version,
         }

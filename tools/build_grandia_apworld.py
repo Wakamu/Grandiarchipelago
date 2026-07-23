@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Build grandia.apworld with the Win32 inject DLL bundled under native/.
+"""Build grandia.apworld with the Win32 inject DLL + Redux content overlays under native/.
 
 Usage (from repo root):
   python tools/build_grandia_apworld.py
@@ -9,7 +8,8 @@ Usage (from repo root):
 
 Install: copy the .apworld into Archipelago's ``lib/worlds`` or ``custom_worlds`` /
 user worlds folder. The Launcher "Grandia Client" extracts/uses
-``native/Grandiarchipelago.dll`` from the package for injection.
+``native/Grandiarchipelago.dll`` and ``native/redux_content/`` (FIELD MDPs/SHOP,
+BIN/MCHAR.DAT, BATLE BBGs, TEXT/EN SCNs) when ``gameplay_balance=redux``.
 """
 
 from __future__ import annotations
@@ -27,6 +27,14 @@ WORLD_DIR = REPO_ROOT / "worlds" / "grandia"
 NATIVE_DIR = WORLD_DIR / "native"
 DEFAULT_DLL = REPO_ROOT / "client" / "build" / "Release" / "Grandiarchipelago.dll"
 DEFAULT_OUT = REPO_ROOT / "dist" / "grandia.apworld"
+NATIVE_REDUX_REL = Path("native/redux_content")
+NATIVE_SHOP_REL = NATIVE_REDUX_REL / "FIELD" / "SHOP.BIN"
+NATIVE_PARM_MDP_REL = NATIVE_REDUX_REL / "FIELD" / "204C.MDP"
+NATIVE_WINDT_REL = NATIVE_REDUX_REL / "FIELD" / "WINDT.BIN"
+NATIVE_MCHAR_REL = NATIVE_REDUX_REL / "BIN" / "MCHAR.DAT"
+NATIVE_MDAT_REL = NATIVE_REDUX_REL / "BATLE" / "M_DAT.BIN"
+NATIVE_TEXT1_REL = NATIVE_REDUX_REL / "TEXT" / "EN" / "TEXT1.BIN"
+NATIVE_MANIFEST_REL = NATIVE_REDUX_REL / "manifest.json"
 
 # Match Archipelago APContainer packaging scheme (Files.py); Build APWorlds sets these.
 APCONTAINER_VERSION = 7
@@ -95,6 +103,24 @@ def stage_dll(dll_path: Path) -> Path:
     return dest
 
 
+def stage_redux_overlays() -> Path:
+    """Diff-copy Redux content overlays into native/redux_content/."""
+    script = REPO_ROOT / "tools" / "stage_redux_field_overlays.py"
+    dest = WORLD_DIR / NATIVE_REDUX_REL
+    subprocess.check_call([sys.executable, str(script), "--dest", str(dest)])
+    for rel, label in (
+        (NATIVE_SHOP_REL, "SHOP.BIN"),
+        (NATIVE_PARM_MDP_REL, "204C.MDP"),
+        (NATIVE_WINDT_REL, "WINDT.BIN"),
+        (NATIVE_MCHAR_REL, "MCHAR.DAT"),
+        (NATIVE_MDAT_REL, "M_DAT.BIN"),
+        (NATIVE_TEXT1_REL, "TEXT1.BIN"),
+    ):
+        if not (WORLD_DIR / rel).is_file():
+            raise SystemExit(f"Redux {label} missing after stage: {WORLD_DIR / rel}")
+    return dest
+
+
 def collect_files(world_dir: Path) -> list[tuple[Path, str]]:
     """Return (absolute path, zip arcname under grandia/)."""
     patterns = parse_apignore(world_dir)
@@ -129,10 +155,25 @@ def write_manifest(world_dir: Path) -> dict:
 
 def build_apworld(dll_path: Path, out_path: Path) -> Path:
     stage_dll(dll_path)
+    stage_redux_overlays()
     files = collect_files(WORLD_DIR)
     dll_rel = "grandia/native/Grandiarchipelago.dll"
-    if not any(arc == dll_rel for _, arc in files):
-        raise SystemExit("native/Grandiarchipelago.dll was not staged into the world folder")
+    shop_rel = f"grandia/{NATIVE_SHOP_REL.as_posix()}"
+    parm_rel = f"grandia/{NATIVE_PARM_MDP_REL.as_posix()}"
+    mchar_rel = f"grandia/{NATIVE_MCHAR_REL.as_posix()}"
+    redux_manifest_rel = f"grandia/{NATIVE_MANIFEST_REL.as_posix()}"
+    required_arcs = {
+        dll_rel: "native/Grandiarchipelago.dll",
+        shop_rel: "native/redux_content/FIELD/SHOP.BIN",
+        parm_rel: "native/redux_content/FIELD/204C.MDP",
+        f"grandia/{NATIVE_WINDT_REL.as_posix()}": "native/redux_content/FIELD/WINDT.BIN",
+        mchar_rel: "native/redux_content/BIN/MCHAR.DAT",
+        f"grandia/{NATIVE_MDAT_REL.as_posix()}": "native/redux_content/BATLE/M_DAT.BIN",
+        f"grandia/{NATIVE_TEXT1_REL.as_posix()}": "native/redux_content/TEXT/EN/TEXT1.BIN",
+    }
+    for arc, label in required_arcs.items():
+        if not any(a == arc for _, a in files):
+            raise SystemExit(f"{label} was not staged into the world folder")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     if out_path.exists():
@@ -147,15 +188,26 @@ def build_apworld(dll_path: Path, out_path: Path) -> Path:
             else:
                 zf.write(abs_path, arcname)
 
-    # Sanity: zip layout + dll present
+    # Sanity: zip layout + dll + Redux overlays present
     with zipfile.ZipFile(out_path, "r") as zf:
         names = zf.namelist()
         if "grandia/__init__.py" not in names:
             raise SystemExit("Invalid apworld: missing grandia/__init__.py")
-        if dll_rel not in names:
-            raise SystemExit("Invalid apworld: missing bundled DLL")
+        for arc, label in required_arcs.items():
+            if arc not in names:
+                raise SystemExit(f"Invalid apworld: missing {label}")
+        prefix = "grandia/native/redux_content/"
+        field_n = sum(1 for n in names if n.startswith(prefix + "FIELD/"))
+        batle_n = sum(1 for n in names if n.startswith(prefix + "BATLE/"))
+        text_n = sum(1 for n in names if n.startswith(prefix + "TEXT/"))
         print(f"Packaged {len(names)} files")
         print(f"  DLL in zip: {dll_rel} ({zf.getinfo(dll_rel).file_size} bytes)")
+        print(f"  SHOP: {shop_rel} ({zf.getinfo(shop_rel).file_size} bytes)")
+        print(f"  Parm MDP: {parm_rel} ({zf.getinfo(parm_rel).file_size} bytes)")
+        print(f"  MCHAR: {mchar_rel} ({zf.getinfo(mchar_rel).file_size} bytes)")
+        print(f"  Redux overlays: FIELD={field_n} BATLE={batle_n} TEXT={text_n}")
+        if redux_manifest_rel in names:
+            print(f"  Redux manifest: {redux_manifest_rel}")
 
     print(f"Wrote {out_path.resolve()}")
     return out_path

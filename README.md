@@ -11,10 +11,21 @@ Grandiarchipelago hooks the running **32-bit native** game and sends/receives ch
 - Connect to your slot
 - Launch the Game
 
-**Shortcuts:**
+**Quality of life Shortcuts:**
 
-Right Ctrl (Keyboard) / Select (Controller) : Toggle SpeedHack
+Right Ctrl (Keyboard) / Select + L1 (Controller) : Toggle SpeedHack
+F8 (Keyboard) / Select + R1 (Controller) : Toggle enemy encounters ON/OFF
 Backspace (Keyboard) / Select (Controller) : Skip current video cinematic
+
+## Yaml Options
+
+- include_soldiers_graveyard : Include Soldier's Graveyard chest pickups as Archipelago locations.
+- include_castle_of_dreams : Include Castle of Dreams chest pickups as Archipelago locations.
+- include_tower_of_temptation : Include Tower of Temptation chest pickups as Archipelago locations.
+- magic_xp_multiplier
+- skill_xp_multiplier
+- level_xp_multiplier
+- gameplay_balance : Choose between the Vanilla or Redux gameplay tables (stats, enemies, items, shops, names).
 
 ## Engine facts (important)
 
@@ -55,6 +66,7 @@ flowchart LR
 | Gate hooks | Done |
 | StoryEvents / progression logic | Done (needs testing) |
 | AP network client | Done |
+| On the fly Redux | Done |
 
 Sync catalog / progression → APWorld after regenerating MDP data:
 
@@ -65,3 +77,6 @@ cmake --build client/build --config Release --target Grandiarchipelago
 python build_grandia_apworld.py
 ```
 
+# Credits
+
+JBDCE : Grandia Remastered Redux (https://github.com/JBDCE/grandiaRemasteredRedux)

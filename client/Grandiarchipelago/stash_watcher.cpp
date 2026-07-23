@@ -1,10 +1,13 @@
 #include "chest_pickup.h"
 #include "debug_mode.h"
+#include "map_overview.h"
 #include "game_memory.h"
 #include "log.h"
+#include "m_dat_balance.h"
 #include "movie_skip.h"
 #include "save_sync.h"
 #include "speed_turbo.h"
+#include "windt_balance.h"
 
 #include <Windows.h>
 
@@ -23,8 +26,6 @@ std::atomic<bool> g_running{false};
 HANDLE g_thread = nullptr;
 std::array<uint8_t, kStashByteCount> g_last_bytes{};
 bool g_have_snapshot = false;
-unsigned last_hook_hits_logged = 0;
-DWORD last_hook_log_tick = 0;
 
 void ResnapshotStash(bool log_summary) {
     const std::uintptr_t base = GetStashBase();
@@ -76,15 +77,8 @@ void PollStashChanges() {
     }
 }
 
-void OnStashHookHit(unsigned hits) {
+void OnStashHookHit(unsigned /*hits*/) {
     const std::uintptr_t eax = GetStashHookLastEax();
-    const DWORD now = GetTickCount();
-
-    if (hits != last_hook_hits_logged && (now - last_hook_log_tick > 2000)) {
-        LogDebug("Stash UI hook (hits=%u, eax=0x%08X)", hits, static_cast<unsigned>(eax));
-        last_hook_hits_logged = hits;
-        last_hook_log_tick = now;
-    }
 
     if (AdoptStashBase(eax, "stash UI hook") && !g_have_snapshot) {
         ResnapshotStash(true);
@@ -101,8 +95,15 @@ DWORD WINAPI WatcherThread(LPVOID) {
         ProcessChestPickupQueue();
         FlushPendingGold();
         PollDebugModeHotkey();
+        PollMapOverviewHotkey();
         PollMovieSkipHotkey();
         PollSpeedTurboHotkey();
+
+        // File-overlay Redux: WINDT reloads already come from redux_content via fopen.
+        // Only poll until first healthy spot-check (finalize/sell hooks re-check on use).
+        if (GetGameplayBalance() == 1 && !IsWindtSec3ReduxApplied()) {
+            TryApplyWindtSec3Redux();
+        }
 
         const unsigned hits = GetStashHookHitCount();
         if (hits != last_hook_hits) {

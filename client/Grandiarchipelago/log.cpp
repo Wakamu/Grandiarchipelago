@@ -1,5 +1,7 @@
 #include "log.h"
 
+#include "debug_mode.h"
+
 #include <Windows.h>
 
 #include <cstdio>
@@ -89,6 +91,9 @@ void LogWarn(const char* fmt, ...) {
 }
 
 void LogDebug(const char* fmt, ...) {
+    if (!IsDebugModeEnabled()) {
+        return;
+    }
     va_list args;
     va_start(args, fmt);
     LogV("DEBUG", fmt, args);

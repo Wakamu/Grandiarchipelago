@@ -5,6 +5,7 @@
 #include "item_tracker.h"
 #include "log.h"
 #include "map_travel.h"
+#include "m_dat_balance.h"
 #include "save_sync.h"
 #include "xp_multiplier.h"
 
@@ -35,9 +36,13 @@ std::mutex g_check_mutex;
 std::mutex g_sync_mutex;
 bool g_have_sync = false;
 unsigned g_pending_sync_index = 0;
+unsigned g_pending_sync_seed = 0;
+unsigned g_pending_sync_has_trailer = 0;
 bool g_sync_dirty = false;
 bool g_sync_sent = false;
 unsigned g_last_sent_sync_index = 0;
+unsigned g_last_sent_sync_seed = 0;
+unsigned g_last_sent_sync_has_trailer = 0;
 
 bool WriteLineLocked(HANDLE pipe, const std::string& line) {
     std::string payload = line;
@@ -241,6 +246,41 @@ void HandleBridgeLine(const std::string& line) {
         return;
     }
 
+    auto apply_balance = [](const char* key, const char* rest) {
+        while (*rest == ' ') {
+            ++rest;
+        }
+        unsigned pack = 0;
+        if (_stricmp(rest, "redux") == 0) {
+            pack = 1;
+        } else if (_stricmp(rest, "vanilla") == 0) {
+            pack = 0;
+        } else {
+            pack = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        }
+        SetGameplayBalance(pack);
+        (void)key;
+    };
+
+    if (line.rfind("CONFIG gameplay_balance ", 0) == 0) {
+        apply_balance("gameplay_balance", line.c_str() + std::strlen("CONFIG gameplay_balance "));
+        return;
+    }
+    if (line.rfind("CONFIG enemy_data_pack ", 0) == 0) {
+        apply_balance("enemy_data_pack", line.c_str() + std::strlen("CONFIG enemy_data_pack "));
+        return;
+    }
+
+    if (line.rfind("CONFIG seed_hash ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG seed_hash ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        const unsigned hash = static_cast<unsigned>(std::strtoul(rest, nullptr, 0));
+        SetSaveSyncExpectedSeedHash(hash);
+        return;
+    }
+
     if (line.rfind("CONFIG ", 0) == 0) {
         LogWarn("Unrecognized CONFIG line: %s", line.c_str());
         return;
@@ -258,11 +298,15 @@ void HandleBridgeLine(const std::string& line) {
 
 void FlushPendingSyncLocked(HANDLE pipe) {
     unsigned index = 0;
+    unsigned seed = 0;
+    unsigned has_trailer = 0;
     bool send = false;
     {
         std::lock_guard<std::mutex> lock(g_sync_mutex);
         if (g_have_sync && g_sync_dirty) {
             index = g_pending_sync_index;
+            seed = g_pending_sync_seed;
+            has_trailer = g_pending_sync_has_trailer;
             send = true;
             g_sync_dirty = false;
         }
@@ -271,21 +315,24 @@ void FlushPendingSyncLocked(HANDLE pipe) {
         return;
     }
 
-    char buffer[64];
-    snprintf(buffer, sizeof(buffer), "SYNC %u", index);
+    char buffer[96];
+    snprintf(buffer, sizeof(buffer), "SYNC %u %u %u", index, seed, has_trailer);
     if (!WriteLineLocked(pipe, buffer)) {
         std::lock_guard<std::mutex> lock(g_sync_mutex);
         g_sync_dirty = true;
-        LogWarn("Failed to send SYNC %u", index);
+        LogWarn("Failed to send SYNC %u %u %u", index, seed, has_trailer);
         return;
     }
-    LogInfo("Sent SYNC to bridge: received_index=%u", index);
+    LogInfo("Sent SYNC to bridge: received_index=%u seed_hash=0x%08X has_trailer=%u", index, seed,
+            has_trailer);
     // Keys live only in DLL memory — wipe before bridge re-applies from AllItemsReceived.
     ClearMapKeyState();
     {
         std::lock_guard<std::mutex> lock(g_sync_mutex);
         g_sync_sent = true;
         g_last_sent_sync_index = index;
+        g_last_sent_sync_seed = seed;
+        g_last_sent_sync_has_trailer = has_trailer;
     }
 }
 
@@ -461,16 +508,22 @@ void PipeEnqueueLockoutMessage(const std::string& message) {
     g_pending_lockouts.push(message);
 }
 
-void PipeEnqueueSync(unsigned received_index, bool force) {
+void PipeEnqueueSync(unsigned received_index, unsigned seed_hash, unsigned has_trailer, bool force) {
     std::lock_guard<std::mutex> lock(g_sync_mutex);
-    if (!force && g_sync_sent && g_last_sent_sync_index == received_index && !g_sync_dirty) {
+    if (!force && g_sync_sent && g_last_sent_sync_index == received_index &&
+        g_last_sent_sync_seed == seed_hash && g_last_sent_sync_has_trailer == has_trailer &&
+        !g_sync_dirty) {
         return;
     }
-    if (!force && g_have_sync && g_pending_sync_index == received_index && g_sync_dirty) {
+    if (!force && g_have_sync && g_pending_sync_index == received_index &&
+        g_pending_sync_seed == seed_hash && g_pending_sync_has_trailer == has_trailer &&
+        g_sync_dirty) {
         return;
     }
     g_have_sync = true;
     g_pending_sync_index = received_index;
+    g_pending_sync_seed = seed_hash;
+    g_pending_sync_has_trailer = has_trailer;
     g_sync_dirty = true;
 }
 

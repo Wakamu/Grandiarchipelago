@@ -1,0 +1,1542 @@
+﻿* This file contains the translations for previous hard-coded text strings
+* the format for the strings are as follows:
+	* -- '*' represent comments (not used by the program)
+	* -- [Text before the '=' sign] represents the identifier of the string (no translation needed)
+	* -- '=' is the seperator for the identifier and the used string
+	* -- all text after the '=' is the used string ( including spaces )
+	* -- keep number comands after '\' signs as is for now, usually '\3'
+
+* fwin menu option names
+	* the space between the commands is all the space allowed for each option ( Including spaces )
+	* Example: (\003"I,t,e,m,s, "\0) means there are 6 characters available for that option
+	
+fwin_win_mes1=\003Items \0\003Equip \0\3Magic \0\003Moves \000\003Status\000\003List  \000\003Magic \000\003Skill \000
+fwin_win_mes2=\003Use    \0\003Give   \0\3Discard\000
+fwin_win_mes3=\003Change\0\003Trade \0
+fwin_win_mes5=\003LEVEL1\0\3LEVEL2\0\3LEVEL3\0\3Skill \0
+fwin_win_mes6=\003 was learned!\0\3Skill Level Went Up!\0
+fwin_win_mes9=\003LEVEL1\0\3LEVEL2\0\3LEVEL3\0\3Skill \0
+
+* itemget menu option names
+	* the space between the commands is all the space allowed for each option ( Including spaces )
+	* Example: (\003"I,t,e,m,s, "\0) means there are 6 characters available for that option
+
+itemget_win_mes=\003Auto        \0\003Manual      \0\003Use         \0\003Discard Item\0\003Discard Invn\0\003Found    item(s)\0\003acquired        \0\003Give  item to    \0
+
+* shop menu option names
+	* the space between the commands is all the space allowed for each option ( Including spaces )
+	* Example: (\003"I,t,e,m,s, "\0) means there are 6 characters available for that option
+
+shop_win_mes1=\003Buy   \0\003Cancel\0\003Sell  \0\003Cancel\0\003Stash \0\003Cancel\0\003Get   \0\003Cancel\0
+shop_win_mes2=\003Equip\0\003Trade\0\003Buy  \0\003 will trade?\0\003 \0\003Cannot Trade\0
+shop_win_mes9=\003Welcome             \0\003Pick an item to buy\0\003Who will buy it?\0\003Pick an item to sell\0\003Buy which attribute?\0\003Pick an item to stash\0\003Pick an item to get\0\003  Who is buying?\0\003You have no Mana Eggs\0\003You have no items to get\0\003 was learned!\0
+
+* field save/load menu
+
+reading_storage=Reading Storage
+select_location=Select location
+no_game_data=No game data.
+insufficient_storage=Insufficient Storage.
+load_failed=Load failed
+current=Current:
+save=Save
+load=Load
+loading=Loading
+checking_storage=  Checking Storage
+overwrite_save_yes_no=Overwrite Save ?  Yes / No
+save_yes_no          =Save ?            Yes / No
+load_yes_no          =Load ?            Yes / No
+saving_do_not_exit_the_game=Saving, Do not exit the game.
+save_finished=Save finished.
+checking_game_data=Checking game data.
+save_failed=Save failed.
+save_data_is_damaged=Save Data is Damaged.
+do_you_want_to_format_yes_no=Do you want to format Yes / No
+formatting_slot_1=Formatting slot 1
+formatting_slot_2=Formatting slot 2
+time=Time
+
+* return to launcher menu strings
+	* these lines have a max of 20 characters ( including spaces )
+	
+return_to_launcher= Exit GRANDIA
+yes_no=      Yes / No
+
+* field and title option menu names
+	* these lines have a max of 20 characters ( including spaces )
+	
+
+options=Options
+camera=Camera
+standard=Standard
+reverse=Reverse
+sound_mode=Sound Mode
+stereo=Stereo
+mono=Mono
+vibration=Vibration
+on=On
+off=Off
+audio=Audio
+english=English
+japanese=Japanese
+exit_to_title=Exit To Title
+yes=Yes
+no=No
+
+* title option menu descriptions
+	* these lines have a max of 20 characters ( including spaces )
+
+camera.=Camera.
+standard_right_left=Standard : R1=right, L1=left
+reverse_right_left=Reverse  : R1=left, L1=right
+sound_mode.=Sound Mode.
+stereo_mode=Stereo : Stereo mode.
+monaural_mode=Mono   : Monaural mode.
+vibration_switch=Vibration Switch.
+vibration_on=On  : Vibration on.
+vibration_off=Off : Vibration off.
+download.=Download.
+document_1=document 1 
+document_2=document 2
+audio_language=Audio Language.
+english_audio=English  : English Audio
+japanese_audio=Japanese : Japanese Audio
+
+* Party Names - Used in save game files
+Justin=Justin
+Feena=Feena
+Sue=Sue
+Gadwin=Gadwin
+Rapp=Rapp
+Milda=Milda
+Guido=Guido
+Liete=Liete
+
+* Various Shop/Item/Stats Strings
+runlib_1=GOLD PCS
+runlib_2=-GOOD-
+runlib_3=HP
+skildsp_1=STR 	
+skildsp_2=VIT
+skildsp_3=WIT
+skildsp_4=AGI
+skildsp_5=MAGIC
+skildsp_6=WEAPON
+skildsp_8=LV UP PARAM
+mgcsel_1=SKILL
+form4_1=VAL
+form7_1=Mana Eggs
+form7_2=Eggs
+statdsp_1=WEAPON
+statdsp_2=MAGIC
+
+* 3 letter abbriviations used in stat screens:
+*   Attack, Defense, Action, Movement, Strength, Vitality, Wit, Agility
+param_mes_0=ATK
+param_mes_1=DEF
+param_mes_2=ACT
+param_mes_3=MOV
+param_mes_4=STR
+param_mes_5=VIT
+param_mes_6=WIT
+param_mes_7=AGI
+
+* The equipment type identifier.
+* These can be up to 9 letters 
+equip_mes_0=WEAPON
+equip_mes_1=SHIELD
+equip_mes_2=ARMOR
+equip_mes_3=HELMET
+equip_mes_4=SHOES
+equip_mes_5=JEWELRY
+
+* Magic store stuff
+mgc_attribute=Attribute
+mgc_mix_attribute=Mix Attribute
+mgc_basic_ele_fire=Fire
+mgc_basic_ele_wind=Wind
+mgc_basic_ele_water=Water
+mgc_basic_ele_earth=Earth
+mgc_add_ele_thunder=THUNDER
+mgc_add_ele_blizzard=BLIZZARD
+mgc_add_ele_forest=FOREST
+mgc_add_ele_explosion=EXPLOSION
+
+
+* Monster Names
+	* full names have a max of 20 characters ( including spaces )
+	* quarter names have a max of 10 characters ( including spaces )
+	* every fullsize name has a command (\3) that should remain for now
+
+monster_full_1=\3Gaia Ape
+monster_quarter_1=GAIA APE
+
+monster_full_2=\3Gaia Horn
+monster_quarter_2=GAIA HORN
+
+monster_full_3=\3Dragonoid
+monster_quarter_3=DRAGONOID
+
+monster_full_4=\3Gaia Drago
+monster_quarter_4=G. DRAGO
+
+monster_full_5=\3Dragon Knight
+monster_quarter_5=DRAGONITE
+
+monster_full_6=\3Mountain Ape
+monster_quarter_6=MT. APE
+
+monster_full_7=\3Yeti
+monster_quarter_7=YETI
+
+monster_full_8=\3Black Beret
+monster_quarter_8=BLK BERET
+
+monster_full_9=\3Rock Man
+monster_quarter_9=ROCK MAN
+
+monster_full_10=\3Magma Man
+monster_quarter_10=MAGMA MAN
+
+monster_full_11=\3Iron Giant
+monster_quarter_11=IRON GIAN
+
+monster_full_12=\3Cactus Man
+monster_quarter_12=CACTUSMAN
+
+monster_full_13=\3Vanatos
+monster_quarter_13=VANATOS
+
+monster_full_14=\3Gaia Man
+monster_quarter_14=GAIA MAN
+
+monster_full_15=\3Medusa Dancer
+monster_quarter_15=MEDUSA
+
+monster_full_16=\3Lilith
+monster_quarter_16=~LILITH
+
+monster_full_17=\3Naga Queen
+monster_quarter_17=NAGAQUEEN
+
+monster_full_18=\3Hyena Man
+monster_quarter_18=HYENA MAN
+
+monster_full_19=\3Wolfman
+monster_quarter_19=WOLFMAN
+
+monster_full_20=\3Jackal
+monster_quarter_20=JACKAL
+
+monster_full_21=\3Red Devil
+monster_quarter_21=RED DEVIL
+
+monster_full_22=\3Blue Devil
+monster_quarter_22=BLU DEVIL
+
+monster_full_23=\3Nyalmot
+monster_quarter_23=NYALMOT
+
+monster_full_24=\3Pink Mage
+monster_quarter_24=PINK MAGE
+
+monster_full_25=\3Shaman
+monster_quarter_25=SHAMAN
+
+monster_full_26=\3Layelah
+monster_quarter_26=LAYELAH
+
+monster_full_27=\3Pteranobone
+monster_quarter_27=TERANOBON
+
+monster_full_28=\3Bird Skull
+monster_quarter_28=BIRDSKULL
+
+monster_full_29=\3Skeleton
+monster_quarter_29=SKELETON
+
+monster_full_30=\3Zombie
+monster_quarter_30=ZOMBIE
+
+monster_full_31=\3Lich
+monster_quarter_31=LICH
+
+monster_full_32=\3Gaia Zombie
+monster_quarter_32=G. ZOMBIE
+
+monster_full_33=\3Warp Man
+monster_quarter_33=WARP MAN
+
+monster_full_34=\3Gaia Knight
+monster_quarter_34=G. KNIGHT
+
+monster_full_35=\3Spacetime Armor
+monster_quarter_35=SPACETIME
+
+monster_full_36=\3Ghostoid
+monster_quarter_36=GHOSTOID
+
+monster_full_37=\3Vengeful Spirit
+monster_quarter_37=VENGEFUL
+
+monster_full_38=\3Ghost
+monster_quarter_38=GHOST
+
+monster_full_39=\3Lost Soul
+monster_quarter_39=LOST SOUL
+
+monster_full_40=\3Critter
+monster_quarter_40=CRITTER
+
+monster_full_41=\3Will-O'-Wisp
+monster_quarter_41=WILLOWISP
+
+monster_full_42=\3Hot Dog
+monster_quarter_42=HOT DOG
+
+monster_full_43=\3Fire Hound
+monster_quarter_43=FIREHOUND
+
+monster_full_44=\3Cerberus
+monster_quarter_44=CERBERUS
+
+monster_full_45=\3Snow Boar
+monster_quarter_45=SNOW BOAR
+
+monster_full_46=\3King Horn
+monster_quarter_46=KING HORN
+
+monster_full_47=\3Milda
+monster_quarter_47=MILDA
+
+monster_full_48=\3Glug Bird
+monster_quarter_48=GLUG BIRD
+
+monster_full_49=\3Thud Bird
+monster_quarter_49=THUD BIRD
+
+monster_full_50=\3Flap Bird
+monster_quarter_50=FLAP BIRD
+
+monster_full_51=\3Sphytaros
+monster_quarter_51=SPHYTAROS
+
+monster_full_52=\3Sphynx
+monster_quarter_52=SPHYNX
+
+monster_full_53=\3Guardian
+monster_quarter_53=GUARDIAN
+
+monster_full_54=\3Land Slug
+monster_quarter_54=LAND SLUG
+
+monster_full_55=\3Huge Pupa
+monster_quarter_55=HUGE PUPA
+
+monster_full_56=\3Gaia Slug
+monster_quarter_56=G. SLUG
+
+monster_full_57=\3Gaia Devil
+monster_quarter_57=G. DEVIL
+
+monster_full_58=\3Toad Demon
+monster_quarter_58=TOADEMON
+
+monster_full_59=\3Satan
+monster_quarter_59=SATAN
+
+monster_full_60=\3Baby Bat
+monster_quarter_60=BABY BAT
+
+monster_full_61=\3Vampire Bat
+monster_quarter_61=VAMPIRE
+
+monster_full_62=\3Sonic Bat
+monster_quarter_62=SONIC BAT
+
+monster_full_63=\3Magic Head
+monster_quarter_63=MAGICHEAD
+
+monster_full_64=\3Gaia Brain
+monster_quarter_64=G. BRAIN
+
+monster_full_65=\3Brain Bat
+monster_quarter_65=BRAIN BAT
+
+monster_full_66=\3Clay Bird
+monster_quarter_66=CLAY BIRD
+
+monster_full_67=\3Rock Bird
+monster_quarter_67=ROCK BIRD
+
+monster_full_68=\3Emerald Bird
+monster_quarter_68=EMRLDBIRD
+
+monster_full_69=\3Sweet Moth
+monster_quarter_69=SWEETMOTH
+
+monster_full_70=\3Sour Moth 
+monster_quarter_70=SOUR MOTH
+
+monster_full_71=\3Giant Moth
+monster_quarter_71=GIANTMOTH
+
+monster_full_72=\3Plop Mold
+monster_quarter_72=PLOP MOLD
+
+monster_full_73=\3Mold Bird
+monster_quarter_73=MOLD BIRD
+
+monster_full_74=\3Gaia Mold
+monster_quarter_74=GAIA MOLD
+
+monster_full_75=\3Marna Bug
+monster_quarter_75=MARNA BUG
+
+monster_full_76=\3Beetlebug
+monster_quarter_76=BEETLEBUG
+
+monster_full_77=\3Metal Beetle
+monster_quarter_77=METL BETL
+
+monster_full_78=\3Zil Scorpion
+monster_quarter_78=ZIL SCORP
+
+monster_full_79=\3Desert Lord
+monster_quarter_79=DESRTLORD
+
+monster_full_80=\3Gaia Demon
+monster_quarter_80=G. DEMON
+
+monster_full_81=\3Crimsona
+monster_quarter_81=CRIMSONA
+
+monster_full_82=\3Lesser Crab
+monster_quarter_82=LESR CRAB
+
+monster_full_83=\3Gaia Alien
+monster_quarter_83=G. ALIEN
+
+monster_full_84=\3Spyder
+monster_quarter_84=SPYDER
+
+monster_full_85=\3Black Widow
+monster_quarter_85=BK. WIDOW
+
+monster_full_86=\3Tarantula
+monster_quarter_86=TARANTULA
+
+monster_full_87=\3Ammonite
+monster_quarter_87=AMMONITE
+
+monster_full_88=\3Mad Snail
+monster_quarter_88=MAD SNAIL
+
+monster_full_89=\3Gaia Cyst
+monster_quarter_89=GAIA CYST
+
+monster_full_90=\3Sea Jelly
+monster_quarter_90=SEA JELLY
+
+monster_full_91=\3Mud Jelly
+monster_quarter_91=MUD JELLY
+
+monster_full_92=\3Skip
+monster_quarter_92=SKIP
+
+monster_full_93=\3Hermit Crab
+monster_quarter_93=HRMT CRAB
+
+monster_full_94=\3Scarab
+monster_quarter_94=SCARAB
+
+monster_full_95=\3Gaia Cancer
+monster_quarter_95=G. CANCER
+
+monster_full_96=\3Sea Star
+monster_quarter_96=SEA STAR
+
+monster_full_97=\3Starfish
+monster_quarter_97=STARFISH
+
+monster_full_98=\3Gaia Star
+monster_quarter_98=GAIA STAR
+
+monster_full_99=\3Blue Kite
+monster_quarter_99=BLUE KITE
+
+monster_full_100=\3Manta Ray
+monster_quarter_100=MANTA RAY
+
+monster_full_101=\3Stingray
+monster_quarter_101=STINGRAY
+
+monster_full_102=\3Sand Diver
+monster_quarter_102=SAND DIVR
+
+monster_full_103=\3Sand Man
+monster_quarter_103=SAND MAN
+
+monster_full_104=\3Gaia Scorpion
+monster_quarter_104=G.SCORPIO
+
+monster_full_105=\3Giant Centipede
+monster_quarter_105=CENTIPEDE
+
+monster_full_106=\3Inchworm
+monster_quarter_106=INCHWORM
+
+monster_full_107=\3Roadcrawler
+monster_quarter_107=ROADCRAWL
+
+monster_full_108=\3Spitting Cobra
+monster_quarter_108=COBRA
+
+monster_full_109=\3Pit Viper
+monster_quarter_109=PIT VIPER
+
+monster_full_110=\3Skip
+monster_quarter_110=SKIP
+
+monster_full_111=\3Sand Worm
+monster_quarter_111=SAND WORM
+
+monster_full_112=\3Sand Snake
+monster_quarter_112=SANDSNAKE
+
+monster_full_113=\3Gaia Snake
+monster_quarter_113=G. SNAKE
+
+monster_full_114=\3Chameleon
+monster_quarter_114=CHAMELEON
+
+monster_full_115=\3Alligator
+monster_quarter_115=ALLIGATOR
+
+monster_full_116=\3Salamadile
+monster_quarter_116=SALAMADIL
+
+monster_full_117=\3Gill Newt
+monster_quarter_117=GILL NEWT
+
+monster_full_118=\3Oopa-Loopa
+monster_quarter_118=OOPALOOPA
+
+monster_full_119=\3Gaia Fly
+monster_quarter_119=GAIA FLY
+
+monster_full_120=\3Horned Toad
+monster_quarter_120=HORN TOAD
+
+monster_full_121=\3Mad Frog
+monster_quarter_121=MAD FROG
+
+monster_full_122=\3Toad King
+monster_quarter_122=TOAD KING
+
+monster_full_123=\3Hippocamp
+monster_quarter_123=HIPPOCAMP
+
+monster_full_124=\3Coelacanth
+monster_quarter_124=COELACANT
+
+monster_full_125=\3Gaia Cactus
+monster_quarter_125=G. CACTUS
+
+monster_full_126=\3Green Slime
+monster_quarter_126=GRE SLIME
+
+monster_full_127=\3Purple Slime
+monster_quarter_127=PUR SLIME
+
+monster_full_128=\3Red Slime
+monster_quarter_128=RED SLIME
+
+monster_full_129=\3Grim Haze
+monster_quarter_129=GRIM HAZE
+
+monster_full_130=\3Gas Cloud
+monster_quarter_130=GAS CLOUD
+
+monster_full_131=\3Mist Wraith
+monster_quarter_131=WRAITH
+
+monster_full_132=\3Odd Bird
+monster_quarter_132=ODD BIRD
+
+monster_full_133=\3Birdrake
+monster_quarter_133=BIRDRAKE
+
+monster_full_134=\3Dodo
+monster_quarter_134=DODO
+
+monster_full_135=\3Slipple
+monster_quarter_135=SLIPPLE
+
+monster_full_136=\3Gripple
+monster_quarter_136=GRIPPLE
+
+monster_full_137=\3Stuttle
+monster_quarter_137=STUTTLE
+
+monster_full_138=\3Ent
+monster_quarter_138=ENT
+
+monster_full_139=\3Mist Guard
+monster_quarter_139=MIST GARD
+
+monster_full_140=\3Killer Tree
+monster_quarter_140=KILR TREE
+
+monster_full_141=\3Private
+monster_quarter_141=PRIVATE
+
+monster_full_142=\3Sergeant
+monster_quarter_142=SERGEANT
+
+monster_full_143=\3Elite Officer
+monster_quarter_143=OFFICER
+
+monster_full_144=\3Klepp Soldier
+monster_quarter_144=K.SOLDIER
+
+monster_full_145=\3Elite Klepp
+monster_quarter_145=ELITE K.
+
+monster_full_146=\3Klepp Knight
+monster_quarter_146=K. KNIGHT
+
+monster_full_147=\3Lizard Rider
+monster_quarter_147=LZRD RIDR
+
+monster_full_148=\3Mad Rider
+monster_quarter_148=MAD RIDER
+
+monster_full_149=\3Klepp Rider
+monster_quarter_149=K. RIDER
+
+monster_full_150=\3Squid King
+monster_quarter_150=SQUIDKING
+
+monster_full_151=\3Right Tentacle
+monster_quarter_151=R.TENTACL
+
+monster_full_152=\3Left Tentacle
+monster_quarter_152=L.TENTACL
+
+monster_full_153=\3Kraken
+monster_quarter_153=KRAKEN
+
+monster_full_154=\3Right Tentacle
+monster_quarter_154=R.TENTACL
+
+monster_full_155=\3Left Tentacle
+monster_quarter_155=L.TENTACL
+
+monster_full_156=\3Ganymede
+monster_quarter_156=GANYMEDE
+
+monster_full_157=\3Ganymede
+monster_quarter_157=GANYMEDE
+
+monster_full_158=\3Skip
+monster_quarter_158=SKIP
+
+monster_full_159=\3Mad Turtle
+monster_quarter_159=MADTURTLE
+
+monster_full_160=\3Mad Turtle
+monster_quarter_160=MADTURTLE
+
+monster_full_161=\3Gaia Bird
+monster_quarter_161=GAIA BIRD
+
+monster_full_162=\3Gargoyle
+monster_quarter_162=GARGOYLE
+
+monster_full_163=\3Gargoyle
+monster_quarter_163=GARGOYLE
+
+monster_full_164=\3Madragon
+monster_quarter_164=MADRAGON
+
+monster_full_165=\3Madragon
+monster_quarter_165=MADRAGON
+
+monster_full_166=\3Skip
+monster_quarter_166=SKIP
+
+monster_full_167=\3Phantom Dragon
+monster_quarter_167=P. DRAGON
+
+monster_full_168=\3Phantom Dragon
+monster_quarter_168=P. DRAGON
+
+monster_full_169=\3Skip
+monster_quarter_169=SKIP
+
+monster_full_170=\3Massacre Machine
+monster_quarter_170=MASSACRE
+
+monster_full_171=\3Eye
+monster_quarter_171=EYE
+
+monster_full_172=\3Massacre Machine
+monster_quarter_172=MASSACRE
+
+monster_full_173=\3Eye
+monster_quarter_173=EYE
+
+monster_full_174=\3Serpent
+monster_quarter_174=SERPENT
+
+monster_full_175=\3Mean Head
+monster_quarter_175=MEAN HEAD
+
+monster_full_176=\3Hot Head
+monster_quarter_176=HOT HEAD
+
+monster_full_177=\3Nice Head
+monster_quarter_177=NICE HEAD
+
+monster_full_178=\3Bad Head
+monster_quarter_178=BAD HEAD
+
+monster_full_179=\3Hydra
+monster_quarter_179=HYDRA
+
+monster_full_180=\3Sad Head  
+monster_quarter_180=SAD HEAD 
+
+monster_full_181=\3Hot Head
+monster_quarter_181=HOT HEAD
+
+monster_full_182=\3Nice Head
+monster_quarter_182=NICE HEAD
+
+monster_full_183=\3Awful Head
+monster_quarter_183=AWFULHEAD
+
+monster_full_184=\3Trent
+monster_quarter_184=TRENT
+
+monster_full_185=\3Arm
+monster_quarter_185=ARM
+
+monster_full_186=\3Flower
+monster_quarter_186=FLOWER
+
+monster_full_187=\3Gaia Trent
+monster_quarter_187=G. TRENT
+
+monster_full_188=\3Arm
+monster_quarter_188=ARM
+
+monster_full_189=\3Flower
+monster_quarter_189=FLOWER
+
+monster_full_190=\3Lord's Ghost
+monster_quarter_190=L'S GHOST
+
+monster_full_191=\3Lord's Ghost
+monster_quarter_191=L'S GHOST
+
+monster_full_192=\3Wand
+monster_quarter_192=WAND
+
+monster_full_193=\3Mage King
+monster_quarter_193=MAGE KING
+
+monster_full_194=\3Mage King
+monster_quarter_194=MAGE KING
+
+monster_full_195=\3Wand
+monster_quarter_195=WAND
+
+monster_full_196=\3Ruin Guard
+monster_quarter_196=RUIN GARD
+
+monster_full_197=\3Ax
+monster_quarter_197=AX
+
+monster_full_198=\3Skip
+monster_quarter_198=SKIP
+
+monster_full_199=\3Boomerang
+monster_quarter_199=BOOMERANG
+
+monster_full_200=\3Great Susano-o
+monster_quarter_200=SUSANO-O
+
+monster_full_201=\3Ax
+monster_quarter_201=AX
+
+monster_full_202=\3Iron Ball
+monster_quarter_202=IRON BALL
+
+monster_full_203=\3Skip
+monster_quarter_203=SKIP
+
+monster_full_204=\3Chang
+monster_quarter_204=CHANG
+
+monster_full_205=\3Gadwin
+monster_quarter_205=GADWIN
+
+monster_full_206=\3Gadwin
+monster_quarter_206=GADWIN
+
+monster_full_207=\3Kung Fu Master
+monster_quarter_207=KUNG FU M
+
+monster_full_208=\3Mullen
+monster_quarter_208=MULLEN
+
+monster_full_209=\3Saki
+monster_quarter_209=SAKI
+
+monster_full_210=\3Saki
+monster_quarter_210=SAKI
+
+monster_full_211=\3Mio
+monster_quarter_211=MIO
+
+monster_full_212=\3Mio
+monster_quarter_212=MIO
+
+monster_full_213=\3Nana
+monster_quarter_213=NANA
+
+monster_full_214=\3Nana
+monster_quarter_214=NANA
+
+monster_full_215=\3Grinwhale
+monster_quarter_215=GRINWHALE
+
+monster_full_216=\3Lure
+monster_quarter_216=LURE
+
+monster_full_217=\3Slug Fish
+monster_quarter_217=SLUG FISH
+
+monster_full_218=\3Lure
+monster_quarter_218=LURE
+
+monster_full_219=\3Baal
+monster_quarter_219=BAAL
+
+monster_full_220=\3Baal
+monster_quarter_220=BAAL
+
+monster_full_221=\3Gaia Tentacle
+monster_quarter_221=G.TENTACL
+
+monster_full_222=\3Baal
+monster_quarter_222=BAAL
+
+monster_full_223=\3Gaia Tentacle
+monster_quarter_223=G.TENTACL
+
+monster_full_224=\3Gaia Tentacle
+monster_quarter_224=G.TENTACL
+
+monster_full_225=\3Gaia Battler
+monster_quarter_225=G.BATTLER
+
+monster_full_226=\3Right Hand
+monster_quarter_226=R. HAND
+
+monster_full_227=\3Left Hand
+monster_quarter_227=L. HAND
+
+monster_full_228=\3Gaia Battler
+monster_quarter_228=G.BATTLER
+
+monster_full_229=\3Right Hand
+monster_quarter_229=R. HAND
+
+monster_full_230=\3Left Hand
+monster_quarter_230=L. HAND
+
+monster_full_231=\3Gaia Battler
+monster_quarter_231=G.BATTLER
+
+monster_full_232=\3Right Hand
+monster_quarter_232=R. HAND
+
+monster_full_233=\3Left Hand
+monster_quarter_233=L. HAND
+
+monster_full_234=\3Gaia Battler
+monster_quarter_234=G.BATTLER
+
+monster_full_235=\3Right Hand
+monster_quarter_235=R. HAND
+
+monster_full_236=\3Left Hand
+monster_quarter_236=L. HAND
+
+monster_full_237=\3Gaia Core
+monster_quarter_237=GAIA CORE
+
+monster_full_238=\3Mega Gaia
+monster_quarter_238=MEGA GAIA
+
+monster_full_239=\3Giga Gaia
+monster_quarter_239=GIGA GAIA
+
+monster_full_240=\3Gaia Minion  
+monster_quarter_240=MINION   
+
+monster_full_241=\3Evil Gaia
+monster_quarter_241=EVIL GAIA
+
+monster_full_242=\3Gaia Core
+monster_quarter_242=G. CORE 6
+
+monster_full_243=\3Gaia Core
+monster_quarter_243=G. CORE 7
+
+monster_full_244=\3Gaia Armor
+monster_quarter_244=G. ARMOR
+
+monster_full_245=\3Eye
+monster_quarter_245=EYE
+
+monster_full_246=\3Gaia Slime
+monster_quarter_246=G. SLIME
+
+monster_full_247=\3Combatant
+monster_quarter_247=COMBATANT
+
+monster_full_248=\3Gaia Tree
+monster_quarter_248=GAIA TREE
+
+monster_full_249=\3Gaia Beetle
+monster_quarter_249=G. BEETLE
+
+monster_full_250=\3Leviathan
+monster_quarter_250=LEVIATHAN
+
+monster_full_251=\3Right Tentacle
+monster_quarter_251=R.TENTACL
+
+monster_full_252=\3Left Tentacle
+monster_quarter_252=L.TENTACL
+
+monster_full_253=\3Orc
+monster_quarter_253=ORC
+
+monster_full_254=\3Orc King
+monster_quarter_254=ORC KING
+
+monster_full_255=\3Dom Orc
+monster_quarter_255=DOM ORC
+
+* Monster Attack/Magic Attack Names
+	* full names have a max of 20 characters ( including spaces )
+	* quarter names have a max of 10 characters ( including spaces )
+	* every fullsize name has a command (\3) that should remain for now
+
+* Fullsize Names
+
+1-Tentacle Attack=\0031-Tentacle Attack
+2-Tentacle Attack=\0032-Tentacle Attack
+3-Tentacle Attack=\0033-Tentacle Attack
+4-Tentacle Attack=\0034-Tentacle Attack
+4-Head Attack=\0034-Head Attack
+Acid Gas=\3Acid Gas
+Aim Cut=\3Aim Cut
+All Together!=\3All Together!
+Atomic Shot=\3Divide Beam
+Back Kick=\3Back Kick
+Balloon=\3Balloon
+Beat Attack=\3Beat Attack
+Big Dog=\3Big Dog
+Bite=\3Bite
+Block Attacks=\3Block Attacks
+Body Blow=\3Body Blow
+Body Slam=\3Body Slam
+Bomb Throw=\3Bomb Throw
+Bombs Away=\3Bombs Away
+Boomerang=\3Boomerang
+Breath=\3Breath
+Burst Shot=\3Nerve Stun
+Chain Kick=\3Chain Kick
+Clay Breath=\3Clay Breath
+Clay Feather=\3Clay Feather
+Cloud Attack=\3Cloud Attack
+Combination=\3Combination
+Combo Attack=\3Combo Attack
+Confuse Wing=\3Confuse Wing
+Coverup=\3Coverup
+Crazy Dance=\3Crazy Dance
+Critical Hit=\3Critical Hit
+Crush=\3Crush
+Crushing Bite=\3Crushing Bite
+Curl Defense=\3Curl Defense
+Curl Gas=\3Curl Gas
+Curl Laser=\3Curl Laser
+Curl Recover=\3Curl Recover
+Dark Breath=\3Dark Breath
+Dart Feather=\3Dart Feather
+Deadly Stink=\3Deadly Stink
+Deadly Temptation=\3Deadly Temptation
+Dead Circle=\3Dead Circle
+Death Mark=\3Death Mark
+Death Spear=\3Death Spear
+Death Tornado=\3Death Tornado
+Delay Gas=\3Delay Gas
+Demon Kick=\3Demon Kick
+Demon Throw=\3Demon Throw
+Disease Germs=\3Disease Germs
+Divide=\3Divide
+Diving=\3Diving
+Dizzy Gas=\3Nasty Gas
+Dizzy Spin=\3Dizzy Spin
+Dizzy Tentacle=\3Dizzy Tentacle
+Doze Cut=\3Doze Cut
+Dragon Cut=\3Dragon Cut
+Drop Kick=\3Drop Kick
+Earthquake=\3Earthquake
+Earthrend=\3Earthrend
+Earth Attack=\3Earth Attack
+Earth Pound=\3Earth Pound
+Ectoplasm=\3Ectoplasm
+Egg Smash=\3Egg Smash
+Electric Shock=\3Electric Shock
+Electric Yo-Yo=\3Electric Yo-Yo
+Emerald Bomb=\3Emerald Bomb
+Entice=\3Entice
+Eruption Cut=\3Eruption Cut
+Feather Shuriken=\3Feather Shuriken
+Fire Breath=\3Fire Breath
+Fire Hand=\3Fire Hand
+Fire Orb=\3Fire Orb
+Fire Time=\3Fire Time
+Flame Breath=\3Blast Breath
+Flame Howl=\3Flame Howl
+Flame Shot=\3Soul Break
+Flap Twister=\3Flap Twister
+Flight Bomb=\3Flight Bomb
+Flower Beam=\3Flower Beam
+Flower Laser=\3Flower Laser
+Flying Dragon Cut=\3Flying Dragon Cut
+Frog Lullaby=\3Frog Lullaby
+Full-Moon Cut=\3Full-Moon Cut
+Gaia Fang=\3Gaia Fang
+Gaia Power=\3Gaia Power
+Gaia Strike=\3Gaia Strike
+Gaia Tail=\3Gaia Tail
+Germ Spores=\3Germ Spores
+Glide Attack=\3Glide Attack
+Goaround=\3Goaround
+Gooey Fluid=\3Gooey Fluid
+Grand Cross=\3Grand Cross
+Grand Heal=\3Grand Heal
+Grapple Nut=\3Grapple Nut
+Gummy Fluid=\3Gummy Fluid
+Hammer Shot=\3Hammer Shot
+Head Crash=\3Head Crash
+Head Dance=\3Head Dance
+Head Step=\3Head Step
+Heavy Blow=\3Heavy Blow
+Heavy Feather=\3Heavy Feather
+Hide=\3Hide
+Hoist Heel=\3Hoist Heel
+Hoparound=\3Hoparound
+Hot Gas=\3Hot Gas
+Hurricane=\3Hurricane
+Hurricane Mixer=\3Hurricane Mixer
+Hyper Lance=\3Hyper Lance
+Illusion=\3Illusion
+Invisible=\3Invisible
+Killer Bite=\3Killer Bite
+Killer Breath=\3Killer Breath
+Killer Tackle=\3Killer Tackle
+Kill Stun Gun=\3Kill Stun Gun
+Laser Eye=\3Laser Eye
+Lava Throw=\3Lava Throw
+Lean Over=\3Lean Over
+Life Drain=\3Soul Eater
+Lightning=\3Lightning
+Lightning Claw=\3Lightning Claw
+Mad Tackle=\3Mad Tackle
+Magic Block=\3Magic Block
+Magic Block Cut=\3Magic Block Cut
+Magic Block Orb=\3  Poison Orb   
+Magic Block Wing=\3Magic Block Wing
+Magic Cut=\3Magic Cut
+Mana Capture=\3Mana Capture
+Mana Drain=\3Mana Drain
+Max Lariat=\3Max Lariat 
+Milda Hit=\3Milda Hit
+Move Block Wing=\3Move Block Wing
+Multiply=\3 Summon 
+Neck-a-Neck Breath=\3Neck-a-Neck Breath
+Needles=\3Needles
+Nut Bomb=\3Nut Bomb
+Nut Throw=\3Nut Throw
+Nyalmot Throw=\3Nyalmot Throw
+Oxy Gas=\3Oxy Gas
+Oxy Spores=\3Oxy Spores
+Paralyze Fluid=\3Paralyze Fluid
+Paralyze Gas=\3Paralyze Gas
+Paralyze Spear=\3Thunder Spear 
+Para Tail=\3Para Tail
+Plague Fluid=\3Plague Fluid
+Plague Lick=\3Plague Lick
+Plague Spores=\3Plague Spores
+Poison Bite=\3Poison Bite
+Poison Fluid=\3Poison Fluid
+Poison Gas=\3Poison Gas
+Poison Lance=\3Poison Lance
+Poison Quills=\3Poison Quills
+Poison Scales=\3Sleep  Scales
+Poison Spear=\3Poison Spear
+Poison Spores=\3Poison Spores
+Poke Attack=\3Poison Lick
+Power Drain=\3Power Drain
+Power Lariat=\3Power Lariat
+Prickle=\3Prickle
+Prickle Spin=\3Prickle Spin
+Psychokinesis=\3Psychokinesis
+Quick Quills=\3Quick Quills
+Random Fire=\3Energy Leak
+Random Nut=\3Random Nut
+Random Shuriken=\3Random Shuriken
+Ray of Ruin=\3 The End?! 
+Ray Spread=\3Ray Spread
+Recover Gas=\3Recover Gas
+Red Slime Gas=\3Red Toxic Gas
+Riddle=\3Riddle
+Rising Dragon Cut=\3Rising Dragon Cut
+Rock Feather=\3Rock Feather
+Rock Throw=\3Rock Throw
+Runaround=\3Runaround
+Run Amok=\3Run Amok
+Rush Attack=\3Rush Attack
+Rust Gas=\3Rust Gas
+Rust Scales=\3Rust Scales
+Sandstorm=\3Sandstorm
+Sandwave=\3Sandwave
+Sand Shower=\3Sand Shower
+Scissors Attack=\3Scissors Attack
+Seed Smash=\3Seed Smash
+Shocksword=\3Shocksword
+Shockwave=\3Shockwave
+Shock Bomb=\3Shock Bomb
+Shooting Thorns=\3Shooting Thorns
+Shoot Quills=\3Shoot Quills
+Shout!=\3Shout!
+Silk Orb=\3Silk Orb
+Skiparound=\3Skiparound
+Slapstick Home Run=\3Slapstick Home Run
+Slap Stick=\3Slap Stick
+Slash Mace=\3Slash Mace
+Sleep Gas=\3Sleep Gas
+Sleep Pollen=\3Nasty Pollen
+Slime=\3Slime
+Slip Away=\3Slip Away
+Snowball Throw=\3Snowball Throw
+Solo Screw=\3Solo Screw
+Sonar=\3Sonar
+Sonar Flutter=\3Sonar Flutter
+Sonic Boom=\3Sonic Boom
+Spew=\3Spew
+Spew Poison=\3Spew Poison
+Spew Slime=\3Spew Slime
+Spinning Yo-Yo=\3Spinning Yo-Yo
+Spin Attack=\3Spin Attack
+Spin Cut=\3Spin Cut
+Spin Kick=\3Spin Kick
+Spin Mace=\3Spin Mace
+Spin Needle=\3Spin Needle
+Spin Strike=\3Spin Strike
+Spin Tentacle=\3Spin Tentacle
+Sticky Fluid=\3Sticky Fluid
+String Orb=\3String Orb
+Stun Gas=\3Stun Gas
+Stun Gun=\3Stun Gun
+Stun Mist=\3Green Gas
+Suck Blood=\3Suck Blood
+Suck In=\3Suck In
+Sudden Death=\3Minus Bite  
+Super Balloon=\3Super Balloon
+Swing=\3Swing
+Sword Dance=\3Sword Dance
+Tail Attack=\3Tail Attack
+Tap Dance=\3Tap Dance
+Tentacle=\3Tentacle
+Tentacle Attack=\3Tentacle Attack
+Tentacle Swing=\3Tentacle Swing
+Tentacle Thrust=\3Tentacle Thrust
+The Dead Stir=\3The Dead Stir
+Thrust=\3Thrust
+Tornado=\3Tornado
+Trinity Attack=\3Trinity Attack
+Twin Typhoon=\3Twin Typhoon
+Twister=\3Twister
+Twister Tentacle=\3Twister Tentacle
+Vanish=\3Vanish
+Wave Cut=\3Wave Cut
+Wave Rip=\3Wave Rip
+Wing Beat=\3Wing Beat
+Wing Sonar=\3Wing Sonar
+X-Ray=\3X-Ray
+Yo-Yo=\3Yo-Yo
+
+* Quartersize Names
+
+1-TENTACL=1-TENTACL
+2-TENTACL=2-TENTACL
+3-TENTACL=3-TENTACL
+4-TENTACL=4-TENTACL
+4HEAD ATK=4HEAD ATK
+ACID GAS=ACID GAS
+AIM CUT=AIM CUT
+ATOMICSHT=DIV BEAM 
+BACK KICK=BACK KICK
+BALLOON=BALLOON
+BEAT ATK=BEAT ATK
+BIG DOG=BIG DOG
+BITE=BITE
+BLOCK ATK=BLOCK ATK
+BODY BLOW=BODY BLOW
+BODY SLAM=BODY SLAM
+BOMBTHROW=BOMBTHROW
+BOMB AWAY=BOMB AWAY
+BOOMERANG=BOOMERANG
+BREATH=BREATH
+BURSTSHOT=NERVESTUN
+CHAINKICK=CHAINKICK
+CLAYBRETH=CLAYBRETH
+CLAYFETHR=CLAYFETHR
+CLOUD ATK=CLOUD ATK
+COMBO=COMBO
+COMBO ATK=COMBO ATK
+CONF WING=CONF WING
+COVERUP=COVERUP
+CRAZYDANC=CRAZYDANC
+CRIT HIT=CRIT HIT
+CRUSH=CRUSH
+CURLLASER=CURLLASER
+CURL DEF.=CURL DEF.
+CURL GAS=CURL GAS
+CURL RECO=CURL RECO
+CRUSHBITE=CRUSHBITE
+DART FEAT=DART FEAT
+DEADSTINK=DEADSTINK
+DEAD STIR=DEAD STIR
+DEATHMARK=DEATHMARK
+DEATH SP=DEATH SP
+DED CIRCL=DED CIRCL
+DED TEMPT=DED TEMPT
+DELAY GAS=DELAY GAS
+DEMNTHROW=DEMNTHROW
+DEMONKICK=DEMONKICK
+DETH NADO=DETH NADO
+DISE GERM=DISE GERM
+DIVIDE=DIVIDE
+DIVING=DIVING
+DIZZYSPIN=DIZZYSPIN
+DIZZY GAS=NASTY GAS
+DIZ TENT=DIZ TENT
+DK BREATH=DK BREATH
+DOZE CUT=DOZE CUT
+DRAGN CUT=DRAGN CUT
+DROP KICK=DROP KICK
+EARTHREND=EARTHREND
+EARTH ATK=EARTH ATK
+ECTOPLASM=ECTOPLASM
+EGG SMASH=EGG SMASH
+ELEC YOYO=ELEC YOYO
+EMRLD BOM=EMRLD BOM
+ENTICE=ENTICE
+ERTHPOUND=ERTHPOUND
+ERUPT CUT=ERUPT CUT
+FIREBREAT=FIREBREAT
+FIREBRETH=FIREBRETH
+FIRE HAND=FIRE HAND
+FIRE ORB=FIRE ORB
+FIRE TIME=FIRE TIME
+FLAMBRETH=BLSTBRETH
+FLAMEHOWL=FLAMEHOWL
+FLAMESHOT=SOULBREAK
+FLIT BOMB=FLIT BOMB
+FLOWRBEAM=FLOWRBEAM
+FLOWRLASR=FLOWRLASR
+FLY CUT=FLY CUT
+FSHURIKEN=FSHURIKEN
+GAIASTRYK=GAIASTRYK
+GAIA FANG=GAIA FANG
+GAIA POWR=GAIA POWR
+GAIA TAIL=GAIA TAIL
+GERM SPOR=GERM SPOR
+GLIDE ATK=GLIDE ATK
+GOAROUND=GOAROUND
+GOO FLUID=GOO FLUID
+GRANDHEAL=GRANDHEAL
+GRAPL NUT=GRAPL NUT
+GRNDCROSS=GRNDCROSS
+GUM FLUID=GUM FLUID
+HAMR SHOT=HAMR SHOT
+HEADCRASH=HEADCRASH
+HEAD DANC=HEAD DANC
+HEAD STEP=HEAD STEP
+HEVYFETHR=HEVYFETHR
+HEVY BLOW=HEVY BLOW
+HIDE=HIDE
+HOISTHEEL=HOISTHEEL
+HOME RUN=HOME RUN
+HOPAROUND=HOPAROUND
+HOT GAS=HOT GAS
+HURRICANE=HURRICANE
+HYP LANCE=HYP LANCE
+ILLUSION=ILLUSION
+INVISIBLE=INVISIBLE
+KILRBRETH=KILRBRETH
+KILR BITE=KILR BITE
+KILR TAKL=KILR TAKL
+LASER EYE=LASER EYE
+LAVATHROW=LAVATHROW
+LEAN OVER=LEAN OVER
+LIFEDRAIN=SOULEATER
+LIGHTNING=LIGHTNING
+LULLABY=LULLABY
+MAD TAKL=MAD TAKL
+MAGC BLOK=POIS ORB 
+MAGICBLOK=MAGICBLOK
+MAGIC CUT=MAGIC CUT
+MANADRAIN=MANADRAIN
+MANA CAPT=MANA CAPT
+MAXLARIAT=MAXLARIAT
+MILDA HIT=MILDA HIT
+MOON CUT=MOON CUT
+MOVE BLOK=MOVE BLOK
+MULTIPLY=SUMMON  
+NECKBRETH=NECKBRETH
+NEEDLES=NEEDLES
+NUT BOMB=NUT BOMB
+NUT THROW=NUT THROW
+NYALMOT=NYALMOT
+OXY GAS=OXY GAS
+OXY SPORE=OXY SPORE
+QUAKE=QUAKE
+PARA FLID=PARA FLID
+PARA GAS=PARA GAS
+PARA SP=THND SP
+PARA TAIL=PARA TAIL
+PLAG FLID=PLAG FLID
+PLAG LICK=PLAG LICK
+PLAG SPOR=PLAG SPOR
+PLAGUE FL=PLAGUE FL
+POISNBITE=POISNBITE
+POIS FLID=POIS FLID
+POIS QUIL=POIS QUIL
+POIS SCAL=SLP SCALE
+POIS SPOR=POIS SPOR
+POISN GAS=POISN GAS
+POISON=POISON
+POISON LA=POISON LA
+POISON SP=POISON SP
+POKE ATK=POI LICK
+POWRDRAIN=POWRDRAIN
+PRICKLE=PRICKLE
+PSYCHOKIN=PSYCHOKIN
+PWRLARIAT=PWRLARIAT
+QUIK QUIL=QUIK QUIL
+QUILLS=QUILLS
+RANDOFIRE=ENGY LEAK
+RAND NUT=RAND NUT
+RAYSPREAD=RAYSPREAD
+RAY RUIN=THE END?
+RECOVER=RECOVER
+RIDDLE=RIDDLE
+RISE CUT=RISE CUT
+ROCKFETHR=ROCKFETHR
+ROCKTHROW=ROCKTHROW
+RSHURIKEN=RSHURIKEN
+RUNAROUND=RUNAROUND
+RUN AMOK=RUN AMOK
+RUSH ATK=RUSH ATK
+RUST GAS=RUST GAS
+RUST SCAL=RUST SCAL
+SANDSHOWR=SANDSHOWR
+SANDSTORM=SANDSTORM
+SANDWAVE=SANDWAVE
+SCISSORS=SCISSORS
+SEEDSMASH=SEEDSMASH
+SHOCK=SHOCK
+SHOCKBOMB=SHOCKBOMB
+SHOCKSORD=SHOCKSORD
+SHOCKWAVE=SHOCKWAVE
+SHOUT!=SHOUT!
+SILK ORB=SILK ORB
+SKPAROUND=SKPAROUND
+SLAPSTICK=SLAPSTICK
+SLASHMACE=SLASHMACE
+SLEEPPOLN=NASTYPOLN
+SLEEP GAS=SLEEP GAS
+SLIME=SLIME
+SLIME GAS=TOXIC GAS
+SLIP AWAY=SLIP AWAY
+SNOWBALL=SNOWBALL
+SOLO SCRU=SOLO SCRU
+SONAR=SONAR
+SONICBOOM=SONICBOOM
+SPEW=SPEW
+SPEWSLIME=SPEWSLIME
+SPINSTRYK=SPINSTRYK
+SPIN ATK=SPIN ATK
+SPIN CUT=SPIN CUT
+SPIN KICK=SPIN KICK
+SPIN MACE=SPIN MACE
+SPIN NEDL=SPIN NEDL
+SPIN TENT=SPIN TENT
+SPIN YOYO=SPIN YOYO
+STK FLUID=STK FLUID
+STRINGORB=STRINGORB
+STUN GAS=STUN GAS
+STUN GUN=STUN GUN
+STUN MIST=GREEN GAS
+SUCKBLOOD=SUCKBLOOD
+SUCK IN=SUCK IN
+SUDNDEATH=MINUSBITE
+SUPR BALL=SUPR BALL
+SWING=SWING
+SWORDANCE=SWORDANCE
+TAIL ATK=TAIL ATK
+TAP DANCE=TAP DANCE
+TENTACLE=TENTACLE
+TENTSWING=TENTSWING
+TENTTHRST=TENTTHRST
+TENT ATK=COMMAND 
+THORNS=THORNS
+THRUST=THRUST
+TOGETHER!=TOGETHER!
+TORNADO=TORNADO
+TRNTY ATK=TRNTY ATK
+TWISTER=TWISTER
+TYPHOON=TYPHOON
+2 TYPHOON=TYPHOON
+VANISH=VANISH
+WAVE CUT=WAVE CUT
+WAVE RIP=WAVE RIP
+WING BEAT=WING BEAT
+WING SONR=WING SONR
+X-RAY=X-RAY
+YO-YO=YO-YO
+
+* Save game names
+saveid_2004=Seagull Rest.
+saveid_2400=Sult Ruins
+saveid_2404=Sult Ruins (B1)
+saveid_2406=Sult Ruins (B2)
+saveid_2408=Sult Passageway
+saveid_2410=Marna Road
+saveid_2800=Leck Mines
+saveid_280C=Leck Mines (2)
+saveid_2C00=Port of Parm
+saveid_2C04=Port of Parm
+saveid_2C05=Port of Parm
+saveid_3014=Crew's Quarters
+saveid_3408=Ghost Pantry
+saveid_3424=Ghost Ship Hall
+saveid_3C04=Adv. Hut Hotel
+saveid_3C58=Church Passage
+saveid_4004=Feena's House
+saveid_4400=Dom (Vestibule)
+saveid_4404=Dom Ruins (1)
+saveid_440C=Dom Ruins (2)
+saveid_4804=West Misty
+saveid_4808=East Misty (2)
+saveid_480C=East Misty (3)
+saveid_4810=East Misty (1)
+saveid_4C0A=Garlyle Base
+saveid_4C0C=Base Barracks
+saveid_4C18=Base Warehouse
+saveid_4C20=Switchyard
+saveid_5004=Military Train
+saveid_5400=Luc Village
+saveid_5402=Luc Village
+saveid_5404=Rem's House
+saveid_5405=Rem's House
+saveid_5C04=East Rangle Mtn
+saveid_600C=End World (3)
+saveid_6018=End World (6)
+saveid_6028=End World (10)
+saveid_602A=End World, Peak
+saveid_6400=Dragon Val. (1)
+saveid_6414=Gadwin's House
+saveid_6804=Dight Inn
+saveid_6C08=Typhoon Twr (1)
+saveid_6C0C=Typhoon Twr (2)
+saveid_7004=South Lama Mtns
+saveid_7404=Gumbo Guest Hse
+saveid_7405=Guest House
+saveid_7800=Volcano (1)
+saveid_7808=Volcano Crater
+saveid_7C00=Twrs Vestibule
+saveid_7C10=Twrs (South)
+saveid_7C18=Twrs (Sin Room)
+saveid_7C44=Twrs (Coast)
+saveid_8004=Vanishing Hill
+saveid_8804=Sea Dragon
+saveid_8808=Virgin Forest
+saveid_9000=Virgin Frst (1)
+saveid_9008=Virgin Frst (3)
+saveid_9404=Cafu Inn
+saveid_9405=Cafu Inn
+saveid_9805=Doom Warehouse
+saveid_9808=Doom, 1st Floor
+saveid_9810=Doom, 3rd Floor
+saveid_9C00=N. Zil Desert
+saveid_9C04=S. Zil Desert
+saveid_9C10=N. Zil Desert
+saveid_9C14=S. Zil Desert
+saveid_A004=Hotel Alqada
+saveid_A230=Guido's House
+saveid_A240=Mogay Inn
+saveid_A400=Dreams Castle
+saveid_A404=Dreams Grt Hall
+saveid_A420=Dreams Study
+saveid_A804=Alpine Inn
+saveid_AC04=Graveyard (B1)
+saveid_B400=Temptation Twr
+saveid_B800=Zil Ruins (1)
+saveid_B804=Zil Ruins (2)
+saveid_B806=Zil Ruins (3)
+saveid_B814=Zil Ruins (B3)
+saveid_BA08=The Grandeur
+saveid_BA0C=Grandeur Engine
+saveid_BA28=Grandeur Secret
+saveid_BA30=Grandeur Bow
+saveid_BC00=Rainbow Mt Peak
+saveid_C000=Alent Garden
+saveid_C004=Alent Chapel
+saveid_C400=Warp Space (1)
+saveid_C404=Warp Space (2)
+saveid_C408=Warp Space (3)
+saveid_C40C=Warp Space Core
+saveid_C800=North Brinan
+saveid_C804=South Brinan
+saveid_CA00=West Luzet
+saveid_CA04=East Luzet
+saveid_CA08=West Luzet
+saveid_CA0C=East Luzet
+saveid_CC04=J Base Hangar
+saveid_CC06=J Base Hangar
+saveid_D000=Railway Rns (1)
+saveid_D00C=Railway Rns (3)
+saveid_D400=Field Base (1)
+saveid_D800=Sanctuary (1)
+saveid_D804=Sanctuary (2)
+saveid_D808=Sanctuary (1)
+saveid_DC02=Icarian City(1)
+saveid_DC08=Icarian City(3)
+saveid_DC0C=Icarian City(4)
+saveid_E004=Gaia (1)
+saveid_E006=Gaia (2)
+saveid_E010=Gaia (4)
+saveid_E018=Gaia (5)

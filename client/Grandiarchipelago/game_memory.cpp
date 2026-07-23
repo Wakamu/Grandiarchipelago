@@ -2,6 +2,7 @@
 #include "game_memory.h"
 #include "log.h"
 #include "map_travel.h"
+#include "m_dat_balance.h"
 #include "movie_skip.h"
 #include "save_sync.h"
 #include "speed_turbo.h"
@@ -902,11 +903,13 @@ bool InitializeGameMemory() {
     if (g_grandia_module_base != 0) {
         InstallFieldGoldAddHook(g_grandia_module_base + kFieldGoldAddRva);
         InstallXpMultiplierHooks();
+        InstallMdatBalanceHook();
     }
 
     return !stash_exec.empty() || !gold_exec.empty() || g_chest_flag_hook_site != nullptr ||
            g_assign_ui_hook_site != nullptr || g_field_gold_hook_site != nullptr ||
-           IsSaveSyncHookInstalled() || IsMapTravelHookInstalled() || IsXpMultiplierHookInstalled();
+           IsSaveSyncHookInstalled() || IsMapTravelHookInstalled() || IsXpMultiplierHookInstalled() ||
+           IsMdatBalanceHookInstalled();
 }
 
 bool TryAdoptStashBaseFromGlobal() {
