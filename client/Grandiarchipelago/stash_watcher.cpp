@@ -5,6 +5,7 @@
 #include "log.h"
 #include "m_dat_balance.h"
 #include "movie_skip.h"
+#include "party_custom.h"
 #include "save_sync.h"
 #include "speed_turbo.h"
 #include "windt_balance.h"
@@ -98,6 +99,7 @@ DWORD WINAPI WatcherThread(LPVOID) {
         PollMapOverviewHotkey();
         PollMovieSkipHotkey();
         PollSpeedTurboHotkey();
+        PollPartyCustomHotkey();
 
         // File-overlay Redux: WINDT reloads already come from redux_content via fopen.
         // Only poll until first healthy spot-check (finalize/sell hooks re-check on use).

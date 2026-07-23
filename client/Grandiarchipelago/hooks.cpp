@@ -10,6 +10,7 @@
 #include "map_travel.h"
 #include "m_dat_balance.h"
 #include "movie_skip.h"
+#include "party_custom.h"
 #include "save_sync.h"
 #include "speed_turbo.h"
 #include "windt_balance.h"
@@ -28,6 +29,12 @@ bool InstallHooks() {
         LogWarn("Movie skip not installed — cinematics stay unskippable");
     } else {
         LogInfo("Movie skip active — Select/Backspace skips MP4 cinematics");
+    }
+    if (!InstallShopBalanceHooks()) {
+        LogWarn("fopen overlay not installed — Redux content remap unavailable");
+    }
+    if (!InstallPartyCustomHook()) {
+        LogWarn("Party custom not installed");
     }
     if (!InstallDebugOverlayHook()) {
         LogWarn("Debug overlay not installed");
@@ -65,9 +72,6 @@ bool InstallHooks() {
     if (!InstallWindtSec3Hooks()) {
         LogWarn("WINDT sec3 finalize hooks not installed — shop may bake vanilla prices");
     }
-    if (!InstallShopBalanceHooks()) {
-        LogWarn("SHOP balance fopen hook not installed — shop stock stays vanilla");
-    }
     if (IsSaveSyncHookInstalled()) {
         LogInfo("Save sync hooks active (confirm-UI gate + fopen backstop / GAP1 trailer)");
     } else {
@@ -90,6 +94,7 @@ void RemoveHooks() {
     RemoveMdatBalanceHook();
     RemoveMapOverviewHook();
     RemoveDebugOverlayHook();
+    RemovePartyCustomHook();
     RemoveMovieSkipHook();
     RemoveSpeedTurbo();
     RemoveXpMultiplierHooks();

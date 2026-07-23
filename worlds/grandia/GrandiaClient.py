@@ -30,6 +30,10 @@ PROCESS_NAME = "grandia.exe"
 POLL_S = 0.25
 # Fake AP progression ids: Key to <Map> = 0x47523000 + map_id (not stash rows).
 MAP_KEY_ITEM_BASE = 0x47523000
+AREA_LOCKOUT_ITEM_BASE = 0x47540000
+# Must match worlds/grandia/Locations.py
+CHEST_EVENT_LOCATION_BASE = 0x47522000
+AREA_LOCKOUT_LOCATION_BASE = 0x47524000
 # NetworkItem.flags bit for progression (includes progression_skip_balancing).
 _PROGRESSION_FLAG = int(ItemClassification.progression)
 
@@ -48,7 +52,11 @@ def compute_seed_hash(seed_name: str, slot: int) -> int:
 
 
 def _is_map_key_item(item_id: int) -> bool:
-    return item_id >= MAP_KEY_ITEM_BASE
+    return MAP_KEY_ITEM_BASE <= item_id < AREA_LOCKOUT_ITEM_BASE
+
+
+def _is_lockout_item(item_id: int) -> bool:
+    return AREA_LOCKOUT_ITEM_BASE <= item_id < AREA_LOCKOUT_ITEM_BASE + 0x10000
 
 
 def _package_native_bytes(rel_posix: str) -> Optional[bytes]:
@@ -547,8 +555,13 @@ class GrandiaContext(CommonContext):
 
     async def _apply_lockout_checks(self, event_id: int, location_ids: List[int]) -> None:
         prog = self._progression_locations(location_ids)
-        if prog:
-            await self.check_locations(set(prog))
+        to_check: Set[int] = set(prog)
+        # Companion lockout location (locked event item) for UT region seals.
+        companion = AREA_LOCKOUT_LOCATION_BASE + int(event_id)
+        if companion in self.missing_locations:
+            to_check.add(companion)
+        if to_check:
+            await self.check_locations(to_check)
 
     def apply_sync(self, received_index: int, save_seed_hash: int = 0, has_trailer: bool = False) -> None:
         if not self.expected_seed_hash:
@@ -649,6 +662,11 @@ class GrandiaContext(CommonContext):
             return
         if not self.pipe or not self.pipe.connected:
             return
+        # Logic-only tokens — still advance the watermark so catch-up does not stall.
+        if _is_lockout_item(item_id):
+            self._forwarded_indexes.add(index)
+            self.applied_index = index
+            return
         self.pipe.send_line(f"ITEM 0x{item_id:X} INDEX {index}")
         self._forwarded_indexes.add(index)
         self.applied_index = index
@@ -699,6 +717,12 @@ class GrandiaContext(CommonContext):
                     logger.warning("Invalid CHECK line: %s", line)
                     return
             async_start(self.check_locations({location_id}), name="grandia-check")
+            # If this is a story event check, also clear its Area Lockout companion when present.
+            if location_id >= CHEST_EVENT_LOCATION_BASE and location_id < AREA_LOCKOUT_LOCATION_BASE:
+                event_id = location_id - CHEST_EVENT_LOCATION_BASE
+                companion = AREA_LOCKOUT_LOCATION_BASE + event_id
+                if companion in self.missing_locations:
+                    async_start(self.check_locations({companion}), name="grandia-lockout-companion")
             return
         if line.startswith("LOCKOUT "):
             if not self.save_bound:

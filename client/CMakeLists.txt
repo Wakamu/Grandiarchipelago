@@ -27,6 +27,7 @@ add_library(Grandiarchipelago SHARED
     Grandiarchipelago/xp_multiplier.cpp
     Grandiarchipelago/speed_turbo.cpp
     Grandiarchipelago/movie_skip.cpp
+    Grandiarchipelago/party_custom.cpp
     Grandiarchipelago/m_dat_balance.cpp
     Grandiarchipelago/windt_balance.cpp
     Grandiarchipelago/shop_balance.cpp

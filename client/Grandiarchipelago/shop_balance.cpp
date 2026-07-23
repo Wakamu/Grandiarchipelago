@@ -3,6 +3,7 @@
 #include "game_memory.h"
 #include "log.h"
 #include "m_dat_balance.h"
+#include "party_custom.h"
 
 #include <Windows.h>
 
@@ -242,6 +243,20 @@ std::string OverlayPathFor(const char* original_path) {
 }
 
 FILE* __cdecl ApFopenHook(const char* path, const char* mode) {
+    if (path) {
+        char party_remap[MAX_PATH]{};
+        if (TryPartyAssetOverlay(path, party_remap, sizeof(party_remap))) {
+            FILE* f = g_orig_fopen(party_remap, mode);
+            if (f) {
+                static bool logged = false;
+                if (!logged) {
+                    LogInfo("Party asset remap: %s", party_remap);
+                    logged = true;
+                }
+                return f;
+            }
+        }
+    }
     if (GetGameplayBalance() == 1 && path) {
         const std::string overlay = OverlayPathFor(path);
         if (!overlay.empty()) {

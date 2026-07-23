@@ -8,8 +8,8 @@ from .Items import (
     item_name_groups,
     item_table,
 )
-from .Keys_data import FINISH_LOCATION_NAME, KEY_ITEM_DATA, LOGIC_MAP_HEXES
-from .Locations import GrandiaLocation, location_table
+from .Keys_data import FINISH_LOCATION_NAME, KEY_ITEM_DATA, LOGIC_MAP_HEXES, STORY_CHECK_DATA
+from .Locations import GrandiaLocation, location_table, lockout_location_name
 from .Locations_data import CHEST_LOCATION_DATA
 from .OptionalDungeons_data import excluded_optional_dungeon_hexes
 from .Options import GrandiaOptions
@@ -85,8 +85,8 @@ class GrandiaWorld(World):
 
     required_client_version = (0, 5, 0)
 
-    data_version = 8
-    required_data_version = 8
+    data_version = 12
+    required_data_version = 12
 
     def create_regions(self) -> None:
         create_regions(self)
@@ -113,6 +113,10 @@ class GrandiaWorld(World):
         locked_names = {"Victory"}
         if FINISH_LOCATION_NAME:
             locked_names.add(FINISH_LOCATION_NAME)
+        # Companion area-lockout locations hold locked events (not the shuffle pool).
+        for entry in STORY_CHECK_DATA:
+            if entry.get("blocks"):
+                locked_names.add(lockout_location_name(entry["ap_name"]))
 
         location_count = sum(
             1
@@ -186,6 +190,7 @@ class GrandiaWorld(World):
         set_rules(self)
         # Key placement: Archipelago spheres + region access rules (start_maps /
         # unlocks_maps). No per-location item_rule / accessible_maps list.
+        # Lockout events are placed in Rules.set_rules / place_lockout_events.
         victory_loc = FINISH_LOCATION_NAME or "Victory"
         victory = self.multiworld.get_location(victory_loc, self.player)
         victory.place_locked_item(self.create_item("Victory"))

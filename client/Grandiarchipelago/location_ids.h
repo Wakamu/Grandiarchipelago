@@ -10,6 +10,10 @@ constexpr unsigned kLocationBase = 0x47521000u;
 // Per-chest / event-flag locations (RE: EDI at grandia.exe+0x70505, caller +0x53C45).
 constexpr unsigned kChestEventLocationBase = 0x47522000u;
 
+// Companion checks for story events that block maps (locked lockout events in apworld).
+// Must match worlds/grandia/Locations.py GRANDIA_AREA_LOCKOUT_LOCATION_BASE.
+constexpr unsigned kAreaLockoutLocationBase = 0x47524000u;
+
 inline bool LocationIdForItemSlot(int slot_id, unsigned* out_location_id) {
     if (!IsKnownSlot(slot_id)) {
         return false;
@@ -20,6 +24,10 @@ inline bool LocationIdForItemSlot(int slot_id, unsigned* out_location_id) {
 
 inline unsigned LocationIdForChestEvent(unsigned event_id) {
     return kChestEventLocationBase + event_id;
+}
+
+inline unsigned LocationIdForAreaLockout(unsigned event_id) {
+    return kAreaLockoutLocationBase + event_id;
 }
 
 }  // namespace grandia_ap

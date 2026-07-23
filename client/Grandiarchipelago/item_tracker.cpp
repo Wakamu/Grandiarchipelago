@@ -80,6 +80,21 @@ void ItemTracker::OnChestEventChecked(unsigned event_id, const char* context) {
     LogInfo("Location check: event=0x%04X location=0x%08X ctx=%s", event_id, location_id,
             context ? context : "");
     GetApSession().EnqueueLocationCheck(location_id);
+
+    // Companion lockout location (apworld event item) — seals blocked maps for UT.
+    for (std::size_t i = 0; i < progressions::kAreaLockoutCount; ++i) {
+        if (progressions::kAreaLockouts[i].event_id != static_cast<uint16_t>(event_id)) {
+            continue;
+        }
+        const unsigned lockout_loc = LocationIdForAreaLockout(event_id);
+        if (!WasCheckSent(lockout_loc)) {
+            MarkCheckSent(lockout_loc);
+            LogInfo("Area lockout check: event=0x%04X location=0x%08X", event_id, lockout_loc);
+            GetApSession().EnqueueLocationCheck(lockout_loc);
+        }
+        break;
+    }
+
     RequestLockoutProgressionSweep(event_id);
 }
 
@@ -91,6 +106,13 @@ void ItemTracker::EnqueueReceivedItem(unsigned ap_item_id, const char* item_name
     LogInfo("Queued AP item %s (0x%08X)", item_name ? item_name : "?", ap_item_id);
 
     if (TryHandleMapKeyItem(ap_item_id)) {
+        return;
+    }
+
+    // Area-lockout tokens are logic-only (0x47540000 + event_id); ignore for inventory.
+    constexpr unsigned kLockoutItemBase = 0x47540000u;
+    if (ap_item_id >= kLockoutItemBase && ap_item_id < kLockoutItemBase + 0x10000u) {
+        LogInfo("Received area lockout token 0x%08X (logic only)", ap_item_id);
         return;
     }
 

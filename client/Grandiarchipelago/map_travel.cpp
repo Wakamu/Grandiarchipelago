@@ -309,6 +309,11 @@ bool TryHandleMapKeyItem(unsigned ap_item_id) {
     if (ap_item_id < kMapKeyItemBase) {
         return false;
     }
+    // Lockout tokens live at 0x47540000+; do not treat as map keys.
+    constexpr unsigned kLockoutItemBase = 0x47540000u;
+    if (ap_item_id >= kLockoutItemBase) {
+        return false;
+    }
     const unsigned map_id = ap_item_id - kMapKeyItemBase;
     if (map_id == 0 || map_id > 0xFFFFu) {
         return false;
