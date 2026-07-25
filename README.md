@@ -4,6 +4,10 @@ Live **Archipelago multiworld** for **Grandia HD Remaster (PC)**.
 
 Grandiarchipelago hooks the running **32-bit native** game and sends/receives checks over the AP server.
 
+## Disclaimer
+
+Reverse engineering of the game's code has been greatly helped by the use of AI
+
 ## How to use
 
 - Install the latest release's APWorld
