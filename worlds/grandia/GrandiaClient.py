@@ -21,9 +21,14 @@ from .dll_inject import find_process_id, inject_dll
 from .game_pipe import GamePipe
 
 try:
-    from NetUtils import ItemClassification
+    from NetUtils import ClientStatus, ItemClassification
 except ImportError:  # pragma: no cover
     from BaseClasses import ItemClassification
+    try:
+        from NetUtils import ClientStatus
+    except ImportError:  # pragma: no cover
+        class ClientStatus:  # type: ignore[no-redef]
+            CLIENT_GOAL = 30
 
 ITEM_DELIVERY_DELAY_S = 2.5
 PROCESS_NAME = "grandia.exe"
@@ -31,6 +36,8 @@ POLL_S = 0.25
 # Fake AP progression ids: Key to <Map> = 0x47523000 + map_id (not stash rows).
 MAP_KEY_ITEM_BASE = 0x47523000
 AREA_LOCKOUT_ITEM_BASE = 0x47540000
+# Must match worlds/grandia/Items.py GRANDIA_ITEM_BASE (locked on GameOver).
+VICTORY_ITEM_ID = 0x47520000
 # Must match worlds/grandia/Locations.py
 CHEST_EVENT_LOCATION_BASE = 0x47522000
 AREA_LOCKOUT_LOCATION_BASE = 0x47524000
@@ -57,6 +64,10 @@ def _is_map_key_item(item_id: int) -> bool:
 
 def _is_lockout_item(item_id: int) -> bool:
     return AREA_LOCKOUT_ITEM_BASE <= item_id < AREA_LOCKOUT_ITEM_BASE + 0x10000
+
+
+def _is_victory_item(item_id: int) -> bool:
+    return int(item_id) == VICTORY_ITEM_ID
 
 
 def _package_native_bytes(rel_posix: str) -> Optional[bytes]:
@@ -375,6 +386,19 @@ class GrandiaContext(CommonContext):
         if cmd == "Connected" and not self.expected_seed_hash:
             self._refresh_seed_hash()
             self._push_runtime_config()
+        if cmd in ("Connected", "ReceivedItems"):
+            async_start(self._consider_goal(), name="grandia-goal")
+
+    async def _consider_goal(self) -> None:
+        """Mark the AP slot finished once Victory (GameOver) is received."""
+        if getattr(self, "finished_game", False):
+            return
+        if not any(_is_victory_item(int(item.item)) for item in self.items_received):
+            return
+        self.finished_game = True
+        logger.info("Victory received — sending CLIENT_GOAL (slot complete).")
+        self._send_toast("Goal complete!", "#7CFC00")
+        await self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
 
     def _push_runtime_config(self) -> None:
         if not self.pipe or not self.pipe.connected:
@@ -663,9 +687,11 @@ class GrandiaContext(CommonContext):
         if not self.pipe or not self.pipe.connected:
             return
         # Logic-only tokens — still advance the watermark so catch-up does not stall.
-        if _is_lockout_item(item_id):
+        if _is_lockout_item(item_id) or _is_victory_item(item_id):
             self._forwarded_indexes.add(index)
             self.applied_index = index
+            if _is_victory_item(item_id):
+                async_start(self._consider_goal(), name="grandia-goal")
             return
         self.pipe.send_line(f"ITEM 0x{item_id:X} INDEX {index}")
         self._forwarded_indexes.add(index)

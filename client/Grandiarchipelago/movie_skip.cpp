@@ -3,6 +3,7 @@
 #include "d3d_overlay.h"
 #include "game_memory.h"
 #include "log.h"
+#include "xinput_dyn.h"
 
 #include <Windows.h>
 #include <Xinput.h>
@@ -10,8 +11,6 @@
 #include <atomic>
 #include <cstdint>
 #include <cstring>
-
-#pragma comment(lib, "Xinput9_1_0.lib")
 
 #if defined(_M_IX86)
 extern "C" void ApMovieInputDetour();
@@ -91,7 +90,7 @@ void ApplyPendingSkip() {
 bool GamepadSelectDown() {
     for (DWORD i = 0; i < XUSER_MAX_COUNT; ++i) {
         XINPUT_STATE state{};
-        if (XInputGetState(i, &state) != ERROR_SUCCESS) {
+        if (XInputGetStateDyn(i, &state) != ERROR_SUCCESS) {
             continue;
         }
         if (state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) {

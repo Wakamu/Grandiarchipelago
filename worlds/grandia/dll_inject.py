@@ -75,11 +75,26 @@ _k32.GetExitCodeThread.restype = wintypes.BOOL
 
 _MEM_COMMIT_RESERVE = 0x3000
 _PAGE_READWRITE = 0x04
+_PAGE_EXECUTE_READWRITE = 0x40
 _PROCESS_ALL = 0x1FFFFF
 _TH32CS_SNAPPROCESS = 0x00000002
 _TH32CS_SNAPMODULE = 0x00000008
 _TH32CS_SNAPMODULE32 = 0x00000010
 _INVALID = ctypes.c_void_p(-1).value
+
+_IMAGE_FILE_MACHINE_I386 = 0x014C
+_IMAGE_FILE_MACHINE_AMD64 = 0x8664
+
+_WIN32_ERROR_HINTS = {
+    2: "ERROR_FILE_NOT_FOUND — DLL path not visible to grandia.exe",
+    3: "ERROR_PATH_NOT_FOUND — DLL folder missing from game process view",
+    5: "ERROR_ACCESS_DENIED — antivirus / permissions blocking the load",
+    126: "ERROR_MOD_NOT_FOUND — missing dependency (or DLL deleted after extract)",
+    127: "ERROR_PROC_NOT_FOUND — DLL export mismatch",
+    193: "ERROR_BAD_EXE_FORMAT — need Win32/x86 Grandiarchipelago.dll (not x64)",
+    1114: "ERROR_DLL_INIT_FAILED — DllMain failed inside the game process",
+    0xFFFFFFFF: "LoadLibrary failed with GetLastError=0 (often AV quarantine)",
+}
 
 
 class PROCESSENTRY32W(ctypes.Structure):
@@ -179,7 +194,22 @@ def _module_base(handle, module_name: str) -> Optional[int]:
     return None
 
 
-def _target_loadlibraryw(handle) -> Optional[int]:
+def _pe_machine(dll_path: Path) -> Optional[int]:
+    try:
+        with dll_path.open("rb") as f:
+            if f.read(2) != b"MZ":
+                return None
+            f.seek(0x3C)
+            e_lfanew = struct.unpack("<I", f.read(4))[0]
+            f.seek(e_lfanew)
+            if f.read(4) != b"PE\x00\x00":
+                return None
+            return struct.unpack("<H", f.read(2))[0]
+    except OSError:
+        return None
+
+
+def _target_export(handle, export_name: str) -> Optional[int]:
     base = _module_base(handle, "kernel32.dll")
     if not base:
         logger.warning("Could not find kernel32.dll in grandia.exe")
@@ -195,7 +225,7 @@ def _target_loadlibraryw(handle) -> Optional[int]:
         for i in range(num_names):
             name_rva = _read_u32(handle, addr_names + i * 4)
             name = _read_string_ascii(handle, base + name_rva)
-            if name == "LoadLibraryW":
+            if name == export_name:
                 buf = (ctypes.c_ubyte * 2)()
                 read = ctypes.c_size_t()
                 _k32.ReadProcessMemory(
@@ -205,8 +235,44 @@ def _target_loadlibraryw(handle) -> Optional[int]:
                 func_rva = _read_u32(handle, addr_funcs + ordinal * 4)
                 return base + func_rva
     except OSError as exc:
-        logger.debug("resolve LoadLibraryW failed: %s", exc)
+        logger.debug("resolve %s failed: %s", export_name, exc)
     return None
+
+
+def _target_loadlibraryw(handle) -> Optional[int]:
+    return _target_export(handle, "LoadLibraryW")
+
+
+def _build_loadlibrary_stub(load_library_w: int, get_last_error: int) -> bytes:
+    """x86 stdcall ThreadProc(path) → HMODULE on success, Win32 error (<64K) on failure."""
+    return b"".join(
+        [
+            b"\x55",  # push ebp
+            b"\x8B\xEC",  # mov ebp, esp
+            b"\xFF\x75\x08",  # push [ebp+8]
+            b"\xB8" + struct.pack("<I", load_library_w & 0xFFFFFFFF),
+            b"\xFF\xD0",  # call eax
+            b"\x85\xC0",  # test eax, eax
+            b"\x75\x10",  # jnz done
+            b"\xB8" + struct.pack("<I", get_last_error & 0xFFFFFFFF),
+            b"\xFF\xD0",  # call eax
+            b"\x85\xC0",  # test eax, eax
+            b"\x75\x05",  # jnz done
+            b"\xB8\xFF\xFF\xFF\xFF",  # mov eax, -1
+            # done:
+            b"\x5D",  # pop ebp
+            b"\xC2\x04\x00",  # ret 4
+        ]
+    )
+
+
+def _format_load_failure(code: int, dll_path: Path) -> str:
+    hint = _WIN32_ERROR_HINTS.get(code, "See Win32 error code")
+    return (
+        f"LoadLibraryW failed for {dll_path} (remote error={code}: {hint}). "
+        "Common fixes: allow the DLL in antivirus, use the latest Win32 apworld, "
+        "run Archipelago and Steam as the same Windows user."
+    )
 
 
 def inject_dll(pid: int, dll_path: Path) -> bool:
@@ -215,52 +281,98 @@ def inject_dll(pid: int, dll_path: Path) -> bool:
         logger.error("DLL not found: %s", dll_path)
         return False
 
+    machine = _pe_machine(dll_path)
+    if machine == _IMAGE_FILE_MACHINE_AMD64:
+        logger.error(
+            "DLL is x64 (%s) — grandia.exe is Win32/x86. Rebuild/reinstall the Win32 apworld.",
+            dll_path,
+        )
+        return False
+    if machine is not None and machine != _IMAGE_FILE_MACHINE_I386:
+        logger.error("DLL has unexpected PE machine 0x%04X (%s)", machine, dll_path)
+        return False
+    if machine is None:
+        logger.warning("Could not parse PE headers for %s — injecting anyway", dll_path)
+
     handle = _k32.OpenProcess(_PROCESS_ALL, False, pid)
     if not handle:
         logger.error("OpenProcess failed (%s)", ctypes.get_last_error())
         return False
 
-    remote = None
+    remote_path = None
+    remote_stub = None
     thread = None
     try:
         load_lib = _target_loadlibraryw(handle)
+        get_last_error = _target_export(handle, "GetLastError")
         if not load_lib:
             logger.error("Could not resolve LoadLibraryW in grandia.exe")
             return False
 
+        logger.info("Injecting %s into pid %s", dll_path, pid)
+
         path_bytes = str(dll_path).encode("utf-16-le") + b"\x00\x00"
-        remote = _k32.VirtualAllocEx(handle, None, len(path_bytes), _MEM_COMMIT_RESERVE, _PAGE_READWRITE)
-        if not remote:
-            logger.error("VirtualAllocEx failed")
+        remote_path = _k32.VirtualAllocEx(
+            handle, None, len(path_bytes), _MEM_COMMIT_RESERVE, _PAGE_READWRITE
+        )
+        if not remote_path:
+            logger.error("VirtualAllocEx(path) failed (%s)", ctypes.get_last_error())
             return False
 
         written = ctypes.c_size_t()
         if not _k32.WriteProcessMemory(
-            handle, remote, path_bytes, len(path_bytes), ctypes.byref(written)
+            handle, remote_path, path_bytes, len(path_bytes), ctypes.byref(written)
         ):
-            logger.error("WriteProcessMemory failed")
+            logger.error("WriteProcessMemory(path) failed (%s)", ctypes.get_last_error())
             return False
 
-        thread = _k32.CreateRemoteThread(handle, None, 0, ctypes.c_void_p(load_lib), remote, 0, None)
+        start_addr: int = int(load_lib)
+        if get_last_error:
+            stub = _build_loadlibrary_stub(int(load_lib), int(get_last_error))
+            remote_stub = _k32.VirtualAllocEx(
+                handle, None, len(stub), _MEM_COMMIT_RESERVE, _PAGE_EXECUTE_READWRITE
+            )
+            if remote_stub and _k32.WriteProcessMemory(
+                handle, remote_stub, stub, len(stub), ctypes.byref(written)
+            ):
+                start_addr = int(remote_stub)
+            else:
+                logger.warning(
+                    "Could not plant LoadLibrary stub (%s) — falling back without remote GetLastError",
+                    ctypes.get_last_error(),
+                )
+                if remote_stub:
+                    _k32.VirtualFreeEx(handle, remote_stub, 0, 0x8000)
+                    remote_stub = None
+
+        thread = _k32.CreateRemoteThread(
+            handle, None, 0, ctypes.c_void_p(start_addr), remote_path, 0, None
+        )
         if not thread:
             logger.error("CreateRemoteThread failed (%s)", ctypes.get_last_error())
             return False
 
-        _k32.WaitForSingleObject(thread, 60000)
-        exit_code = wintypes.DWORD()
-        _k32.GetExitCodeThread(thread, ctypes.byref(exit_code))
-        if exit_code.value == 0:
-            logger.error("LoadLibraryW returned NULL")
-            return False
-        if exit_code.value == 193:
-            logger.error("ERROR_BAD_EXE_FORMAT — need Win32/x86 Grandiarchipelago.dll")
+        wait = _k32.WaitForSingleObject(thread, 60000)
+        if wait != 0:
+            logger.error("Remote LoadLibraryW timed out (WaitForSingleObject=%s)", wait)
             return False
 
-        logger.info("Injected %s (module=0x%X)", dll_path.name, exit_code.value)
+        exit_code = wintypes.DWORD()
+        _k32.GetExitCodeThread(thread, ctypes.byref(exit_code))
+        value = int(exit_code.value)
+
+        # Stub returns Win32 errors as small codes; bare LoadLibrary returns NULL (0).
+        if value == 0 or value < 0x10000 or value == 0xFFFFFFFF:
+            logger.error(_format_load_failure(value if value else 0, dll_path))
+            return False
+
+        logger.info("Injected %s (module=0x%X)", dll_path.name, value)
         return True
     finally:
         if thread:
             _k32.CloseHandle(thread)
-        if remote:
-            _k32.VirtualFreeEx(handle, remote, 0, 0x8000)
+        if remote_stub:
+            _k32.VirtualFreeEx(handle, remote_stub, 0, 0x8000)
+        if remote_path:
+            _k32.VirtualFreeEx(handle, remote_path, 0, 0x8000)
         _k32.CloseHandle(handle)

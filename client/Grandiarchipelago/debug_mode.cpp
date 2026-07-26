@@ -4,6 +4,7 @@
 #include "game_memory.h"
 #include "log.h"
 #include "movie_skip.h"
+#include "xinput_dyn.h"
 
 #include <Windows.h>
 #include <Xinput.h>
@@ -12,8 +13,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-
-#pragma comment(lib, "Xinput9_1_0.lib")
 
 #if defined(_M_IX86)
 extern "C" {
@@ -115,7 +114,7 @@ bool EdgePress(int vk, bool& was_down) {
 bool GamepadSelectL2Down() {
     for (DWORD i = 0; i < XUSER_MAX_COUNT; ++i) {
         XINPUT_STATE state{};
-        if (XInputGetState(i, &state) != ERROR_SUCCESS) {
+        if (XInputGetStateDyn(i, &state) != ERROR_SUCCESS) {
             continue;
         }
         const WORD buttons = state.Gamepad.wButtons;

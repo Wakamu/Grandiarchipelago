@@ -4,6 +4,7 @@
 #include "game_memory.h"
 #include "log.h"
 #include "movie_skip.h"
+#include "xinput_dyn.h"
 
 #include <Windows.h>
 #include <Xinput.h>
@@ -14,8 +15,6 @@
 #include <cstring>
 #include <mutex>
 #include <vector>
-
-#pragma comment(lib, "Xinput9_1_0.lib")
 
 namespace grandia_ap {
 
@@ -532,7 +531,7 @@ void PaceSpeedTurboFrame() {
 bool GamepadSelectShoulderDown(WORD shoulder) {
     for (DWORD i = 0; i < XUSER_MAX_COUNT; ++i) {
         XINPUT_STATE state{};
-        if (XInputGetState(i, &state) != ERROR_SUCCESS) {
+        if (XInputGetStateDyn(i, &state) != ERROR_SUCCESS) {
             continue;
         }
         const WORD buttons = state.Gamepad.wButtons;

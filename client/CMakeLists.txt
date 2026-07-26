@@ -31,13 +31,13 @@ add_library(Grandiarchipelago SHARED
     Grandiarchipelago/m_dat_balance.cpp
     Grandiarchipelago/windt_balance.cpp
     Grandiarchipelago/shop_balance.cpp
+    Grandiarchipelago/xinput_dyn.cpp
 )
 
 target_link_libraries(Grandiarchipelago PRIVATE
     d3d11
     dxgi
     gdi32
-    Xinput9_1_0
 )
 
 target_include_directories(Grandiarchipelago PRIVATE
