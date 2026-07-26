@@ -6,7 +6,9 @@ Grandiarchipelago hooks the running **32-bit native** game and sends/receives ch
 
 ## Disclosure
 
-Reverse engineering of the game's code has been greatly helped by the use of AI
+- Reverse engineering of the game's code has been greatly helped by the use of AI
+- Implementations of most findings into actual useable hooks were also done with AI and fixed manualy.
+- All items and locations tables were done manualy
 
 ## How to use
 
