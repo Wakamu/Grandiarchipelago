@@ -19,9 +19,11 @@ Grandiarchipelago hooks the running **32-bit native** game and sends/receives ch
 
 **Quality of life Shortcuts:**
 
-Right Ctrl (Keyboard) / Select + L1 (Controller) : Toggle SpeedHack
-F8 (Keyboard) / Select + R1 (Controller) : Toggle enemy encounters ON/OFF
-Backspace (Keyboard) / Select (Controller) : Skip current video cinematic
+- Right Ctrl (Keyboard) : Toggle SpeedHack
+- F8 (Keyboard) / Select + L2 (Controller) : Toggle enemy encounters ON/OFF
+- Backspace (Keyboard) / Select|Start (Controller) : Skip current video cinematic
+- Select + R1 : Increment Speedhack
+- Select + L1 : Decrement Speedhack
 
 ## Yaml Options
 

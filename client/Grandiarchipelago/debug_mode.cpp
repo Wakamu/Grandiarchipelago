@@ -112,14 +112,15 @@ bool EdgePress(int vk, bool& was_down) {
     return true;
 }
 
-bool GamepadSelectR1Down() {
+bool GamepadSelectL2Down() {
     for (DWORD i = 0; i < XUSER_MAX_COUNT; ++i) {
         XINPUT_STATE state{};
         if (XInputGetState(i, &state) != ERROR_SUCCESS) {
             continue;
         }
         const WORD buttons = state.Gamepad.wButtons;
-        if ((buttons & XINPUT_GAMEPAD_BACK) && (buttons & XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
+        if ((buttons & XINPUT_GAMEPAD_BACK) &&
+            state.Gamepad.bLeftTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD) {
             return true;
         }
     }
@@ -334,7 +335,7 @@ bool IsDebugOverlayActive() { return g_overlay_active.load(); }
 
 bool InstallDebugOverlayHook() {
     if (!kDebugOverlayEnabled) {
-        LogInfo("Debug overlay: parked (F4 menu deferred — F8/Select+R1 encounter still active)");
+        LogInfo("Debug overlay: parked (F4 menu deferred — F8/Select+L2 encounter still active)");
         return true;
     }
 #if !defined(_M_IX86)
@@ -403,9 +404,9 @@ void PollDebugModeHotkey() {
                             enable ? 0x7CFC00u : 0xFFE528u);
     }
 
-    // F8 or Select+R1: encounter off (same bit as Map debug "ENCOUNT OFF").
+    // F8 or Select+L2: encounter off (same bit as Map debug "ENCOUNT OFF").
     bool encounter_edge = EdgePress(kEncounterToggleVk, g_encounter_was_down);
-    const bool enc_pad = GamepadSelectR1Down();
+    const bool enc_pad = GamepadSelectL2Down();
     if (!IsMoviePlaying() && enc_pad && !g_encounter_pad_was_down) {
         encounter_edge = true;
     }

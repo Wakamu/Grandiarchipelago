@@ -85,8 +85,8 @@ class GrandiaWorld(World):
 
     required_client_version = (0, 5, 0)
 
-    data_version = 12
-    required_data_version = 12
+    data_version = 13
+    required_data_version = 13
 
     def create_regions(self) -> None:
         create_regions(self)

@@ -1,6 +1,7 @@
 #include "d3d_overlay.h"
 
 #include "log.h"
+#include "speed_turbo.h"
 
 #include <Windows.h>
 #include <d3d11.h>
@@ -436,13 +437,24 @@ HRESULT __stdcall PresentHook(IDXGISwapChain* swap, UINT sync_interval, UINT fla
         DrawOverlayText(swap);
     }
 
+    // Vsync Present caps time-warp turbo near ~2x (dt catch-up). Drop sync waits while turbo is on.
+    const int turbo = GetSpeedTurboLevel();
+    UINT present_interval = sync_interval;
+    if (turbo >= 2 && (flags & DXGI_PRESENT_TEST) == 0) {
+        present_interval = 0;
+    }
+
     HRESULT hr = E_FAIL;
     {
         std::lock_guard<std::mutex> lock(g_present_mutex);
         RestoreBytes(g_present_site, g_present_original, g_present_patch_size);
         auto* original = reinterpret_cast<PresentFn>(g_present_site);
-        hr = original(swap, sync_interval, flags);
+        hr = original(swap, present_interval, flags);
         WriteJump(g_present_site, reinterpret_cast<void*>(&PresentHook), nullptr, g_present_patch_size);
+    }
+
+    if (turbo >= 2 && (flags & DXGI_PRESENT_TEST) == 0) {
+        PaceSpeedTurboFrame();
     }
 
     if (!g_logged_passthrough.exchange(true)) {

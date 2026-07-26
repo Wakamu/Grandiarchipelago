@@ -21,9 +21,9 @@ namespace grandia_ap {
 
 bool InstallHooks() {
     if (!InstallSpeedTurbo()) {
-        LogWarn("Speed turbo not installed — Select+L1 / RCtrl 2x unavailable");
+        LogWarn("Speed turbo not installed — Select+R1/L1 / RCtrl unavailable");
     } else {
-        LogInfo("Speed turbo active — Select+L1 toggles / RCtrl holds 2x");
+        LogInfo("Speed turbo active — Select+R1/L1 steps 2x..5x / RCtrl holds 2x");
     }
     if (!InstallMovieSkipHook()) {
         LogWarn("Movie skip not installed — cinematics stay unskippable");
