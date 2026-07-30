@@ -24,13 +24,25 @@ namespace grandia_ap {
 namespace {
 
 constexpr bool kD3dOverlayTestEnabled = true;
-constexpr UINT kOverlayW = 640;
+
+// Shared GPU texture large enough for centered party panel or top-left toasts.
+constexpr UINT kTexW = 800;
+constexpr UINT kTexH = 560;
+
 constexpr size_t kMaxToastLines = 8;
 constexpr UINT kToastLineH = 30;
 constexpr UINT kToastPadY = 8;
-constexpr UINT kOverlayH = kToastPadY * 2 + static_cast<UINT>(kMaxToastLines) * kToastLineH;
-constexpr int kOverlayX = 12;
-constexpr int kOverlayY = 12;
+constexpr UINT kToastW = 640;
+constexpr UINT kToastH = kToastPadY * 2 + static_cast<UINT>(kMaxToastLines) * kToastLineH;
+constexpr int kToastX = 12;
+constexpr int kToastY = 12;
+
+constexpr size_t kMaxPanelLines = 14;
+constexpr UINT kPanelLineH = 40;
+constexpr UINT kPanelPad = 28;
+constexpr UINT kPanelFontPx = 28;
+constexpr UINT kPanelW = 720;
+constexpr UINT kPanelH = kPanelPad * 2 + static_cast<UINT>(kMaxPanelLines) * kPanelLineH;
 
 using PresentFn = HRESULT(__stdcall*)(IDXGISwapChain* swap, UINT sync_interval, UINT flags);
 
@@ -48,6 +60,16 @@ struct ToastLine {
 std::mutex g_toast_mutex;
 std::vector<ToastLine> g_toasts;
 bool g_toast_dirty = true;
+
+struct PanelLine {
+    std::wstring text;
+    unsigned rgb = 0xFFE528;
+};
+
+std::mutex g_panel_mutex;
+std::vector<PanelLine> g_panel_lines;
+bool g_panel_active = false;
+bool g_panel_dirty = true;
 
 ID3D11Device* g_cached_device = nullptr;
 ID3D11Texture2D* g_overlay_tex = nullptr;
@@ -151,6 +173,7 @@ bool EnsureOverlayTexture(ID3D11Device* device, DXGI_FORMAT format) {
         g_cached_device = device;
         g_cached_device->AddRef();
         g_toast_dirty = true;
+        g_panel_dirty = true;
     }
 
     if (g_overlay_tex && g_overlay_format == format) {
@@ -160,8 +183,8 @@ bool EnsureOverlayTexture(ID3D11Device* device, DXGI_FORMAT format) {
     ReleaseOverlaySurface();
 
     D3D11_TEXTURE2D_DESC td{};
-    td.Width = kOverlayW;
-    td.Height = kOverlayH;
+    td.Width = kTexW;
+    td.Height = kTexH;
     td.MipLevels = 1;
     td.ArraySize = 1;
     td.Format = format;
@@ -180,6 +203,7 @@ bool EnsureOverlayTexture(ID3D11Device* device, DXGI_FORMAT format) {
 
     g_overlay_format = format;
     g_toast_dirty = true;
+    g_panel_dirty = true;
     return true;
 }
 
@@ -199,27 +223,7 @@ bool PruneExpiredToastsLocked() {
 }
 
 // Returns false if nothing to draw. out_lines / out_rgbs parallel; out_pixel_h = copy height.
-bool GetActiveToastLines(std::vector<std::wstring>* out_lines, std::vector<unsigned>* out_rgbs,
-                         UINT* out_pixel_h) {
-    std::lock_guard<std::mutex> lock(g_toast_mutex);
-    PruneExpiredToastsLocked();
-    if (g_toasts.empty()) {
-        return false;
-    }
-    out_lines->clear();
-    out_rgbs->clear();
-    out_lines->reserve(g_toasts.size());
-    out_rgbs->reserve(g_toasts.size());
-    for (const ToastLine& line : g_toasts) {
-        out_lines->push_back(line.text);
-        out_rgbs->push_back(line.rgb);
-    }
-    *out_pixel_h = kToastPadY * 2 + static_cast<UINT>(out_lines->size()) * kToastLineH;
-    if (*out_pixel_h > kOverlayH) {
-        *out_pixel_h = kOverlayH;
-    }
-    return true;
-}
+// (Implemented below with center-panel helpers.)
 
 COLORREF RgbToColorRef(unsigned rgb) {
     const unsigned r = (rgb >> 16) & 0xFF;
@@ -229,17 +233,18 @@ COLORREF RgbToColorRef(unsigned rgb) {
 }
 
 // GDI renders BGRA DIBs; game backbuffer is R8G8B8A8 — swizzle on upload.
-bool RasterizeToastToRgba(const std::vector<std::wstring>& lines, const std::vector<unsigned>& rgbs,
+bool RasterizeLinesToRgba(const std::vector<std::wstring>& lines, const std::vector<unsigned>& rgbs,
+                          UINT box_w, UINT box_h, UINT line_h, UINT pad_y, int font_px, bool center_text,
                           UINT pixel_h, std::vector<uint8_t>* out_rgba) {
-    out_rgba->assign(static_cast<size_t>(kOverlayW) * kOverlayH * 4, 0);
-    if (lines.empty() || pixel_h == 0) {
+    out_rgba->assign(static_cast<size_t>(kTexW) * kTexH * 4, 0);
+    if (lines.empty() || pixel_h == 0 || box_w == 0 || box_h == 0) {
         return true;
     }
 
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = static_cast<LONG>(kOverlayW);
-    bmi.bmiHeader.biHeight = -static_cast<LONG>(kOverlayH);  // top-down
+    bmi.bmiHeader.biWidth = static_cast<LONG>(kTexW);
+    bmi.bmiHeader.biHeight = -static_cast<LONG>(kTexH);  // top-down
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
@@ -264,25 +269,36 @@ bool RasterizeToastToRgba(const std::vector<std::wstring>& lines, const std::vec
 
     HGDIOBJ old_bmp = SelectObject(mem, dib);
 
-    HBRUSH bg = CreateSolidBrush(RGB(20, 20, 20));
-    RECT bg_rc = {0, 0, static_cast<LONG>(kOverlayW), static_cast<LONG>(pixel_h)};
+    HBRUSH bg = CreateSolidBrush(RGB(16, 18, 28));
+    RECT bg_rc = {0, 0, static_cast<LONG>(box_w), static_cast<LONG>(pixel_h)};
     FillRect(mem, &bg_rc, bg);
     DeleteObject(bg);
 
+    // Soft border
+    HPEN pen = CreatePen(PS_SOLID, 2, RGB(180, 160, 80));
+    HGDIOBJ old_pen = SelectObject(mem, pen);
+    HGDIOBJ old_br = SelectObject(mem, GetStockObject(NULL_BRUSH));
+    Rectangle(mem, 1, 1, static_cast<int>(box_w) - 1, static_cast<int>(pixel_h) - 1);
+    SelectObject(mem, old_br);
+    SelectObject(mem, old_pen);
+    DeleteObject(pen);
+
     SetBkMode(mem, TRANSPARENT);
-    HFONT font = CreateFontW(22, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+    HFONT font = CreateFontW(font_px, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
                              OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                              DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
     HGDIOBJ old_font = font ? SelectObject(mem, font) : nullptr;
 
-    for (size_t i = 0; i < lines.size() && i < kMaxToastLines; ++i) {
+    const UINT dt_flags = DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX |
+                          (center_text ? DT_CENTER : DT_LEFT);
+
+    for (size_t i = 0; i < lines.size(); ++i) {
         const unsigned rgb = i < rgbs.size() ? rgbs[i] : 0xFFE528;
         SetTextColor(mem, RgbToColorRef(rgb));
-        RECT text_rc = {12, static_cast<LONG>(kToastPadY + i * kToastLineH),
-                        static_cast<LONG>(kOverlayW - 12),
-                        static_cast<LONG>(kToastPadY + (i + 1) * kToastLineH)};
-        DrawTextW(mem, lines[i].c_str(), static_cast<int>(lines[i].size()), &text_rc,
-                  DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
+        RECT text_rc = {static_cast<LONG>(pad_y), static_cast<LONG>(pad_y + i * line_h),
+                        static_cast<LONG>(box_w - pad_y),
+                        static_cast<LONG>(pad_y + (i + 1) * line_h)};
+        DrawTextW(mem, lines[i].c_str(), static_cast<int>(lines[i].size()), &text_rc, dt_flags);
     }
 
     if (old_font) {
@@ -294,10 +310,11 @@ bool RasterizeToastToRgba(const std::vector<std::wstring>& lines, const std::vec
 
     const auto* src = static_cast<const uint8_t*>(dib_bits);
     uint8_t* dst = out_rgba->data();
-    const size_t pixels = static_cast<size_t>(kOverlayW) * kOverlayH;
+    const size_t pixels = static_cast<size_t>(kTexW) * kTexH;
     for (size_t i = 0; i < pixels; ++i) {
-        const UINT y = static_cast<UINT>(i / kOverlayW);
-        if (y >= pixel_h) {
+        const UINT x = static_cast<UINT>(i % kTexW);
+        const UINT y = static_cast<UINT>(i / kTexW);
+        if (y >= pixel_h || x >= box_w) {
             dst[i * 4 + 0] = 0;
             dst[i * 4 + 1] = 0;
             dst[i * 4 + 2] = 0;
@@ -319,16 +336,73 @@ bool RasterizeToastToRgba(const std::vector<std::wstring>& lines, const std::vec
     return true;
 }
 
+bool GetActiveToastLines(std::vector<std::wstring>* out_lines, std::vector<unsigned>* out_rgbs,
+                         UINT* out_pixel_h) {
+    std::lock_guard<std::mutex> lock(g_toast_mutex);
+    PruneExpiredToastsLocked();
+    if (g_toasts.empty()) {
+        return false;
+    }
+    out_lines->clear();
+    out_rgbs->clear();
+    out_lines->reserve(g_toasts.size());
+    out_rgbs->reserve(g_toasts.size());
+    for (const ToastLine& line : g_toasts) {
+        out_lines->push_back(line.text);
+        out_rgbs->push_back(line.rgb);
+    }
+    *out_pixel_h = kToastPadY * 2 + static_cast<UINT>(out_lines->size()) * kToastLineH;
+    if (*out_pixel_h > kToastH) {
+        *out_pixel_h = kToastH;
+    }
+    return true;
+}
+
+bool GetActivePanelLines(std::vector<std::wstring>* out_lines, std::vector<unsigned>* out_rgbs,
+                         UINT* out_pixel_h) {
+    std::lock_guard<std::mutex> lock(g_panel_mutex);
+    if (!g_panel_active || g_panel_lines.empty()) {
+        return false;
+    }
+    out_lines->clear();
+    out_rgbs->clear();
+    for (const PanelLine& line : g_panel_lines) {
+        out_lines->push_back(line.text);
+        out_rgbs->push_back(line.rgb);
+    }
+    *out_pixel_h = kPanelPad * 2 + static_cast<UINT>(out_lines->size()) * kPanelLineH;
+    if (*out_pixel_h > kPanelH) {
+        *out_pixel_h = kPanelH;
+    }
+    return true;
+}
+
 void DrawOverlayText(IDXGISwapChain* swap) {
     std::vector<std::wstring> lines;
     std::vector<unsigned> rgbs;
     UINT pixel_h = 0;
-    if (!GetActiveToastLines(&lines, &rgbs, &pixel_h)) {
-        return;
+    bool panel = false;
+    bool dirty = false;
+
+    {
+        std::lock_guard<std::mutex> plock(g_panel_mutex);
+        if (g_panel_active && !g_panel_lines.empty()) {
+            panel = true;
+            dirty = g_panel_dirty;
+            if (dirty) {
+                g_panel_dirty = false;
+            }
+        }
     }
 
-    bool dirty = false;
-    {
+    if (panel) {
+        if (!GetActivePanelLines(&lines, &rgbs, &pixel_h)) {
+            return;
+        }
+    } else {
+        if (!GetActiveToastLines(&lines, &rgbs, &pixel_h)) {
+            return;
+        }
         std::lock_guard<std::mutex> lock(g_toast_mutex);
         dirty = g_toast_dirty;
         if (dirty) {
@@ -374,7 +448,13 @@ void DrawOverlayText(IDXGISwapChain* swap) {
     }
 
     if (dirty) {
-        if (!RasterizeToastToRgba(lines, rgbs, pixel_h, &g_pixel_scratch)) {
+        const UINT box_w = panel ? kPanelW : kToastW;
+        const UINT box_h = panel ? kPanelH : kToastH;
+        const UINT line_h = panel ? kPanelLineH : kToastLineH;
+        const UINT pad = panel ? kPanelPad : kToastPadY;
+        const int font_px = panel ? static_cast<int>(kPanelFontPx) : 22;
+        if (!RasterizeLinesToRgba(lines, rgbs, box_w, box_h, line_h, pad, font_px, panel, pixel_h,
+                                  &g_pixel_scratch)) {
             if (!g_logged_text_fail.exchange(true)) {
                 LogWarn("D3D11 overlay: GDI rasterize failed");
             }
@@ -382,8 +462,8 @@ void DrawOverlayText(IDXGISwapChain* swap) {
             device->Release();
             return;
         }
-        context->UpdateSubresource(g_overlay_tex, 0, nullptr, g_pixel_scratch.data(), kOverlayW * 4,
-                                   kOverlayW * kOverlayH * 4);
+        context->UpdateSubresource(g_overlay_tex, 0, nullptr, g_pixel_scratch.data(), kTexW * 4,
+                                   kTexW * kTexH * 4);
     }
 
     ID3D11Texture2D* back_buffer = nullptr;
@@ -395,13 +475,13 @@ void DrawOverlayText(IDXGISwapChain* swap) {
 
     const UINT dst_w = desc.BufferDesc.Width;
     const UINT dst_h = desc.BufferDesc.Height;
-    if (dst_w > static_cast<UINT>(kOverlayX) && dst_h > static_cast<UINT>(kOverlayY)) {
-        const UINT copy_w = (kOverlayW < dst_w - static_cast<UINT>(kOverlayX))
-                                ? kOverlayW
-                                : (dst_w - static_cast<UINT>(kOverlayX));
-        const UINT copy_h = (pixel_h < dst_h - static_cast<UINT>(kOverlayY))
-                                ? pixel_h
-                                : (dst_h - static_cast<UINT>(kOverlayY));
+    const UINT box_w = panel ? kPanelW : kToastW;
+    UINT dst_x = panel ? ((dst_w > box_w) ? (dst_w - box_w) / 2u : 0u) : static_cast<UINT>(kToastX);
+    UINT dst_y = panel ? ((dst_h > pixel_h) ? (dst_h - pixel_h) / 2u : 0u) : static_cast<UINT>(kToastY);
+
+    if (dst_w > dst_x && dst_h > dst_y) {
+        const UINT copy_w = (box_w < dst_w - dst_x) ? box_w : (dst_w - dst_x);
+        const UINT copy_h = (pixel_h < dst_h - dst_y) ? pixel_h : (dst_h - dst_y);
         D3D11_BOX src_box{};
         src_box.left = 0;
         src_box.top = 0;
@@ -409,8 +489,7 @@ void DrawOverlayText(IDXGISwapChain* swap) {
         src_box.right = copy_w;
         src_box.bottom = copy_h;
         src_box.back = 1;
-        context->CopySubresourceRegion(back_buffer, 0, static_cast<UINT>(kOverlayX),
-                                       static_cast<UINT>(kOverlayY), 0, g_overlay_tex, 0, &src_box);
+        context->CopySubresourceRegion(back_buffer, 0, dst_x, dst_y, 0, g_overlay_tex, 0, &src_box);
     }
 
     back_buffer->Release();
@@ -418,7 +497,7 @@ void DrawOverlayText(IDXGISwapChain* swap) {
     device->Release();
 
     if (!g_logged_text_ok.exchange(true)) {
-        LogInfo("D3D11 overlay: text path OK (GDI multi-line toast queue)");
+        LogInfo("D3D11 overlay: text path OK (GDI toast + center panel)");
     }
 }
 
@@ -568,6 +647,40 @@ void ClearD3dOverlayToast() {
     g_toast_dirty = true;
 }
 
+void SetD3dCenterPanel(const char* const* lines, const unsigned* rgbs, std::size_t count) {
+    std::lock_guard<std::mutex> lock(g_panel_mutex);
+    g_panel_lines.clear();
+    if (!lines || count == 0) {
+        g_panel_active = false;
+        g_panel_dirty = true;
+        return;
+    }
+    const std::size_t n = (count > kMaxPanelLines) ? kMaxPanelLines : count;
+    g_panel_lines.reserve(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        PanelLine line;
+        line.text = Utf8ToWide(lines[i] ? lines[i] : "");
+        line.rgb = (rgbs ? rgbs[i] : 0xFFE528u) & 0xFFFFFFu;
+        if (!line.text.empty()) {
+            g_panel_lines.push_back(std::move(line));
+        }
+    }
+    g_panel_active = !g_panel_lines.empty();
+    g_panel_dirty = true;
+}
+
+void ClearD3dCenterPanel() {
+    std::lock_guard<std::mutex> lock(g_panel_mutex);
+    g_panel_lines.clear();
+    g_panel_active = false;
+    g_panel_dirty = true;
+}
+
+bool IsD3dCenterPanelActive() {
+    std::lock_guard<std::mutex> lock(g_panel_mutex);
+    return g_panel_active;
+}
+
 bool InstallD3dOverlay() {
     if (!kD3dOverlayTestEnabled) {
         return false;
@@ -607,8 +720,9 @@ void ShutdownD3dOverlay() {
             g_present_patch_size = 0;
         }
     }
-    ReleaseDeviceResources();
     ClearD3dOverlayToast();
+    ClearD3dCenterPanel();
+    ReleaseDeviceResources();
 }
 
 bool IsD3dOverlayInstalled() {

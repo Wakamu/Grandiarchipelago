@@ -4,6 +4,7 @@ from worlds.LauncherComponents import Component, Type, components, launch
 
 from .Items import (
     GrandiaItem,
+    PARTY_CHARACTER_DATA,
     classification_table,
     item_name_groups,
     item_table,
@@ -85,8 +86,17 @@ class GrandiaWorld(World):
 
     required_client_version = (0, 5, 0)
 
-    data_version = 13
-    required_data_version = 13
+    data_version = 14
+    required_data_version = 14
+
+    # Filled in generate_early when custom_party == roulette (native char ids 1..8).
+    roulette_party: list[int]
+
+    def generate_early(self) -> None:
+        self.roulette_party = []
+        if self.options.custom_party == self.options.custom_party.option_roulette:
+            # Full playable cast (Justin..Liete). Order is the locked battle roster.
+            self.roulette_party = self.random.sample([1, 2, 3, 4, 5, 6, 7, 8], 4)
 
     def create_regions(self) -> None:
         create_regions(self)
@@ -145,6 +155,12 @@ class GrandiaWorld(World):
         for entry in KEY_ITEM_DATA:
             pool.append(self.create_item(entry["item_name"]))
 
+        # Unlocks mode: Justin starts unlocked; other cast members replace Gold filler.
+        if self.options.custom_party == self.options.custom_party.option_unlocks:
+            for entry in PARTY_CHARACTER_DATA:
+                if entry["name"] in item_table:
+                    pool.append(self.create_item(entry["name"]))
+
         filler_cycle = [self.get_filler_item_name()]
         if include_gold:
             for name in ("Gold (10)", "Gold (30)", "Gold (60)", "Gold (90)"):
@@ -196,7 +212,8 @@ class GrandiaWorld(World):
         victory.place_locked_item(self.create_item("Victory"))
 
     def fill_slot_data(self) -> dict:
-        return {
+        mode = int(self.options.custom_party.value)
+        data = {
             "include_gold_chests": bool(self.options.include_gold_chests.value),
             "include_soldiers_graveyard": bool(self.options.include_soldiers_graveyard.value),
             "include_castle_of_dreams": bool(self.options.include_castle_of_dreams.value),
@@ -205,5 +222,9 @@ class GrandiaWorld(World):
             "skill_xp_multiplier": int(self.options.skill_xp_multiplier.value),
             "level_xp_multiplier": int(self.options.level_xp_multiplier.value),
             "gameplay_balance": int(self.options.gameplay_balance.value),
+            "custom_party": mode,
             "data_version": self.data_version,
         }
+        if mode == self.options.custom_party.option_roulette and self.roulette_party:
+            data["custom_party_roster"] = list(self.roulette_party)
+        return data

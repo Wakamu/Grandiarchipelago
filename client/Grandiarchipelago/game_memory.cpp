@@ -841,6 +841,40 @@ void LogPatternMatches(const char* label, const std::vector<std::uintptr_t>& exe
 
 }  // namespace
 
+bool PatchGoldHookStolenImm8(size_t imm_offset, uint8_t stock_imm, uint8_t patched_imm) {
+    // Stolen bytes live in the gold trampoline (same buffer as g_gold_trampoline_mem).
+    constexpr size_t kStolenSize = 5;  // push imm8; mov al,[esi+disp8]
+    if (!g_ap_gold_trampoline || imm_offset >= kStolenSize) {
+        LogWarn("Gold trampoline: not installed (ptr=%p) — cannot patch stolen imm",
+                g_ap_gold_trampoline);
+        return false;
+    }
+    auto* tramp = reinterpret_cast<uint8_t*>(g_ap_gold_trampoline);
+    if (tramp[0] != 0x6A) {
+        LogWarn("Gold trampoline: expected push at [0], got %02X", tramp[0]);
+        return false;
+    }
+    const uint8_t current = tramp[imm_offset];
+    if (current == patched_imm) {
+        return true;
+    }
+    if (current != stock_imm) {
+        LogWarn("Gold trampoline: imm[%zu]=%u (want %u or %u)", imm_offset, current, stock_imm,
+                patched_imm);
+        return false;
+    }
+    DWORD old_protect = 0;
+    if (!VirtualProtect(tramp + imm_offset, 1, PAGE_EXECUTE_READWRITE, &old_protect)) {
+        return false;
+    }
+    tramp[imm_offset] = patched_imm;
+    VirtualProtect(tramp + imm_offset, 1, old_protect, &old_protect);
+    FlushInstructionCache(GetCurrentProcess(), tramp + imm_offset, 1);
+    LogInfo("Gold trampoline: stolen push imm %u -> %u (FWIN tab count coexist)", stock_imm,
+            patched_imm);
+    return true;
+}
+
 bool TryAdoptStashBaseFromGlobal();
 bool TryAdoptStashBaseFromHeapBlock();
 bool EnsureStashBaseResolved();

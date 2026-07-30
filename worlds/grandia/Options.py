@@ -94,6 +94,23 @@ class GameplayBalance(Choice):
     default = 0
 
 
+class CustomParty(Choice):
+    """How the battle/menu party is determined.
+
+    vanilla: Stock story parties; no custom party overlay.
+    roulette: A random 4-character roster is picked at generation and locked for
+    the whole seed; no custom party overlay.
+    unlocks: Start with Justin only; other characters are Useful AP items. The
+    Save menu Party tab edits the roster among unlocked members only.
+    """
+
+    display_name = "Custom Party"
+    option_vanilla = 0
+    option_roulette = 1
+    option_unlocks = 2
+    default = 2
+
+
 @dataclass
 class GrandiaOptions(PerGameCommonOptions):
     include_gold_chests: IncludeGoldChests
@@ -104,3 +121,4 @@ class GrandiaOptions(PerGameCommonOptions):
     skill_xp_multiplier: SkillXpMultiplier
     level_xp_multiplier: LevelXpMultiplier
     gameplay_balance: GameplayBalance
+    custom_party: CustomParty

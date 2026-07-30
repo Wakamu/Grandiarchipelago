@@ -7,6 +7,7 @@
 #include "location_labels.h"
 #include "log.h"
 #include "map_travel.h"
+#include "party_custom.h"
 #include "pipe_bridge.h"
 #include "progressions_generated.h"
 
@@ -104,6 +105,10 @@ void ItemTracker::OnItemAcquired(int item_slot_id, const char* context) {
 
 void ItemTracker::EnqueueReceivedItem(unsigned ap_item_id, const char* item_name) {
     LogInfo("Queued AP item %s (0x%08X)", item_name ? item_name : "?", ap_item_id);
+
+    if (TryHandleCharacterUnlockItem(ap_item_id)) {
+        return;
+    }
 
     if (TryHandleMapKeyItem(ap_item_id)) {
         return;

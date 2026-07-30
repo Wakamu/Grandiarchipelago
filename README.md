@@ -45,12 +45,14 @@ Grandia HD Remaster is a native port (Sickhead Games) built from PlayStation sou
 Grandiarchipelago/
 ├── worlds/grandia/                         # Archipelago APWorld (Python)
 ├── data/                                   # Extracted and mapped Chests / Events
+├── docs/ap_client_re.md                    # AP hooks / RVAs / memory (start here for RE)
 └── tools/
     ├── sync_apworld_from_mdp_catalog.py
     ├── sync_progressions.py
     └── build_grandia_apworld.py
 ```
 
+**RE index:** [docs/ap_client_re.md](docs/ap_client_re.md) — chest/gold/stash, map keys, save GAP1, custom party, and related hooks.
 ## Architecture
 
 ```mermaid

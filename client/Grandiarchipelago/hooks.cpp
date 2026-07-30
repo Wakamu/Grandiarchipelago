@@ -9,6 +9,8 @@
 #include "map_overview.h"
 #include "map_travel.h"
 #include "m_dat_balance.h"
+#include "menu_fwin_party_tab.h"
+#include "menu_save_party_tab.h"
 #include "movie_skip.h"
 #include "party_custom.h"
 #include "save_sync.h"
@@ -35,6 +37,14 @@ bool InstallHooks() {
     }
     if (!InstallPartyCustomHook()) {
         LogWarn("Party custom not installed");
+    }
+    if (!InstallMenuFwinPartyTabHook()) {
+        // Parked on purpose — Party is on Save MC strip; avoid noisy WARN.
+    }
+    if (!InstallMenuSavePartyTabHook()) {
+        LogWarn("Save party tab nav not installed — MC strip stays 2 tabs");
+    } else {
+        LogInfo("Save party tab active (MC1|MC2|Party draw+panel, Save only)");
     }
     if (!InstallDebugOverlayHook()) {
         LogWarn("Debug overlay not installed");
@@ -95,6 +105,8 @@ void RemoveHooks() {
     RemoveMapOverviewHook();
     RemoveDebugOverlayHook();
     RemovePartyCustomHook();
+    RemoveMenuFwinPartyTabHook();
+    RemoveMenuSavePartyTabHook();
     RemoveMovieSkipHook();
     RemoveSpeedTurbo();
     RemoveXpMultiplierHooks();

@@ -35,6 +35,9 @@ std::uintptr_t GetGoldBase();
 std::uintptr_t GetCharacterStatsBase();
 bool AddGoldAmount(unsigned amount);
 void FlushPendingGold();
+// GetGoldPtrAOB is at FWIN +0x1C695B (push 5; mov al,[esi+disp]). When the gold JMP
+// hook is installed, edit the stolen push imm in the trampoline (offset 1).
+bool PatchGoldHookStolenImm8(size_t imm_offset, uint8_t stock_imm, uint8_t patched_imm);
 
 bool IsPartyInventoryWriteHookInstalled();
 bool IsChestFlagHookInstalled();

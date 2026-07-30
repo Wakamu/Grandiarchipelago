@@ -36,6 +36,9 @@ POLL_S = 0.25
 # Fake AP progression ids: Key to <Map> = 0x47523000 + map_id (not stash rows).
 MAP_KEY_ITEM_BASE = 0x47523000
 AREA_LOCKOUT_ITEM_BASE = 0x47540000
+# Custom-party unlocks: 0x47525000 + native char id (2..8). Must match Items.py.
+CHARACTER_ITEM_BASE = 0x47525000
+CHARACTER_ITEM_MAX = CHARACTER_ITEM_BASE + 8
 # Must match worlds/grandia/Items.py GRANDIA_ITEM_BASE (locked on GameOver).
 VICTORY_ITEM_ID = 0x47520000
 # Must match worlds/grandia/Locations.py
@@ -58,7 +61,13 @@ def compute_seed_hash(seed_name: str, slot: int) -> int:
     return _fnv1a32(f"{seed_name}\0{slot}".encode("utf-8"))
 
 
+def _is_character_unlock_item(item_id: int) -> bool:
+    return CHARACTER_ITEM_BASE < item_id <= CHARACTER_ITEM_MAX
+
+
 def _is_map_key_item(item_id: int) -> bool:
+    if _is_character_unlock_item(item_id):
+        return False
     return MAP_KEY_ITEM_BASE <= item_id < AREA_LOCKOUT_ITEM_BASE
 
 
@@ -303,6 +312,9 @@ class GrandiaContext(CommonContext):
         self.expected_seed_hash = 0
         self._delivery_open_at = 0.0
         self._forwarded_indexes: Set[int] = set()
+        # Runtime unlocks (map keys / party members) may be sent before delivery_open;
+        # track by ReceivedItems index so we do not spam the pipe every poll.
+        self._runtime_unlocks_sent: Set[int] = set()
         self._pending_sync: Optional[int] = None
         self._pending_lockouts: List[tuple[int, List[int]]] = []
         self._scouted_all = False
@@ -388,6 +400,10 @@ class GrandiaContext(CommonContext):
             self._push_runtime_config()
         if cmd in ("Connected", "ReceivedItems"):
             async_start(self._consider_goal(), name="grandia-goal")
+            # Party members / map keys do not need stash — push as soon as the pipe is up
+            # (do not wait for the first GAP1 save that opens full item delivery).
+            if self.pipe and self.pipe.connected:
+                self.forward_runtime_unlocks()
 
     async def _consider_goal(self) -> None:
         """Mark the AP slot finished once Victory (GameOver) is received."""
@@ -422,6 +438,19 @@ class GrandiaContext(CommonContext):
                 return default
             return max(lo, min(hi, value))
 
+        def _custom_party_mode() -> int:
+            # 0=vanilla, 1=roulette, 2=unlocks. Legacy bool: True→unlocks, False→vanilla.
+            if not isinstance(slot_data, dict) or "custom_party" not in slot_data:
+                return 2
+            raw = slot_data["custom_party"]
+            if isinstance(raw, bool):
+                return 2 if raw else 0
+            try:
+                return max(0, min(2, int(raw)))
+            except (TypeError, ValueError):
+                return 2
+
+        mode = _custom_party_mode()
         flags = {
             "include_gold_chests": _flag("include_gold_chests"),
             "include_soldiers_graveyard": _flag("include_soldiers_graveyard"),
@@ -436,11 +465,32 @@ class GrandiaContext(CommonContext):
                 lo=0,
                 hi=1,
             ),
+            "custom_party": mode,
         }
         if self.expected_seed_hash:
             flags["seed_hash"] = self.expected_seed_hash
         for key, value in flags.items():
             self.pipe.send_line(f"CONFIG {key} {value}")
+        if mode == 1:
+            roster = slot_data.get("custom_party_roster") if isinstance(slot_data, dict) else None
+            ids: List[int] = []
+            if isinstance(roster, (list, tuple)):
+                for x in roster:
+                    try:
+                        cid = int(x)
+                    except (TypeError, ValueError):
+                        continue
+                    if 1 <= cid <= 8:
+                        ids.append(cid)
+            if len(ids) == 4:
+                self.pipe.send_line(
+                    "CONFIG custom_party_roster " + " ".join(str(i) for i in ids)
+                )
+            else:
+                logger.warning(
+                    "custom_party=roulette but slot_data roster missing/invalid: %r",
+                    roster,
+                )
         logger.info("Pushed CONFIG %s", " ".join(f"{k}={v}" for k, v in flags.items()))
 
     def on_print_json(self, args: dict) -> None:
@@ -631,44 +681,59 @@ class GrandiaContext(CommonContext):
 
         self.save_bound = True
         self._forwarded_indexes = {i for i in self._forwarded_indexes if i <= received_index}
+        self._runtime_unlocks_sent.clear()
         self.applied_index = received_index
         self.last_sync_index = received_index
         self.delivery_open = False
         self._pending_sync = received_index
         self._delivery_open_at = time.monotonic() + ITEM_DELIVERY_DELAY_S
         logger.info(
-            "Save SYNC OK seed=0x%08X received_index=%s — re-applying map keys + Index > %s after %.1fs",
+            "Save SYNC OK seed=0x%08X received_index=%s — re-applying runtime unlocks + Index > %s after %.1fs",
             save_seed_hash,
             received_index,
             received_index,
             ITEM_DELIVERY_DELAY_S,
         )
 
-    def reapply_map_keys(self) -> None:
-        """Map keys are runtime-only in the DLL. After save load, SYNC clears them and
-        catch-up only forwards Index > watermark — re-send every key already counted in
-        the save as ITEM without INDEX (must not rewrite GAP1 received_index).
-        Newer keys (Index > watermark) are delivered by catch-up as usual.
+    def forward_runtime_unlocks(self) -> None:
+        """Deliver map keys + character unlocks without waiting for stash delivery_open.
+
+        These are DLL memory only (no GAP1 INDEX bump). After save SYNC the DLL wipes
+        them; clearing `_runtime_unlocks_sent` lets this resend the full owned set.
         """
         if not self.pipe or not self.pipe.connected:
             return
-        # Index N ↔ items_received[N - 1]; only re-apply Index ≤ applied_index.
-        limit = min(self.applied_index, len(self.items_received))
-        sent = 0
-        for i in range(limit):
-            item = self.items_received[i]
-            item_id = int(item.item)
-            if not _is_map_key_item(item_id):
+        sent_keys = 0
+        sent_chars = 0
+        for i, item in enumerate(self.items_received):
+            index = i + 1
+            if index in self._runtime_unlocks_sent:
                 continue
-            self.pipe.send_line(f"ITEM 0x{item_id:X}")
-            logger.info("Re-applied map key after load: 0x%X", item_id)
-            sent += 1
-        if sent:
+            item_id = int(item.item)
+            if _is_map_key_item(item_id):
+                self.pipe.send_line(f"ITEM 0x{item_id:X}")
+                self._runtime_unlocks_sent.add(index)
+                sent_keys += 1
+            elif _is_character_unlock_item(item_id):
+                self.pipe.send_line(f"ITEM 0x{item_id:X}")
+                self._runtime_unlocks_sent.add(index)
+                sent_chars += 1
+        if sent_keys or sent_chars:
             logger.info(
-                "Re-applied %s map key(s) from items_received (Index ≤ %s).",
-                sent,
-                self.applied_index,
+                "Forwarded runtime unlocks: %s map key(s), %s character(s).",
+                sent_keys,
+                sent_chars,
             )
+
+    def reapply_map_keys(self) -> None:
+        """Map keys are runtime-only in the DLL. After save load, SYNC clears them —
+        resend via forward_runtime_unlocks (set cleared in apply_sync).
+        """
+        self.forward_runtime_unlocks()
+
+    def reapply_character_unlocks(self) -> None:
+        """Character unlocks are runtime-only (like map keys). Re-send after SYNC wipe."""
+        self.forward_runtime_unlocks()
 
     def catch_up_items(self) -> None:
         if not self.pipe or not self.pipe.connected or not self.delivery_open:
@@ -685,6 +750,13 @@ class GrandiaContext(CommonContext):
         if index in self._forwarded_indexes:
             return
         if not self.pipe or not self.pipe.connected:
+            return
+        # Runtime unlocks are already applied by forward_runtime_unlocks (no INDEX).
+        # Still advance the watermark so GAP1 / catch-up stay aligned — do not re-send.
+        if _is_map_key_item(item_id) or _is_character_unlock_item(item_id):
+            self._forwarded_indexes.add(index)
+            self._runtime_unlocks_sent.add(index)
+            self.applied_index = index
             return
         # Logic-only tokens — still advance the watermark so catch-up does not stall.
         if _is_lockout_item(item_id) or _is_victory_item(item_id):
@@ -796,11 +868,15 @@ async def game_watcher(ctx: GrandiaContext) -> None:
                 if time.monotonic() >= ctx._delivery_open_at:
                     ctx.delivery_open = True
                     ctx._pending_sync = None
-                    logger.info("Post-load delay done — re-applying map keys and catching up AP items.")
-                    ctx.reapply_map_keys()
+                    logger.info("Post-load delay done — re-applying runtime unlocks and catching up AP items.")
+                    ctx.forward_runtime_unlocks()
                     ctx.catch_up_items()
 
-            # Live items after delivery is open
+            # Map keys / party members: no stash required.
+            if ctx.pipe and ctx.pipe.connected:
+                ctx.forward_runtime_unlocks()
+
+            # Stash items only after GAP1 save bind opens delivery.
             if ctx.delivery_open and ctx.pipe and ctx.pipe.connected:
                 ctx.catch_up_items()
 

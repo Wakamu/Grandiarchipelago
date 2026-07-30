@@ -6,6 +6,7 @@
 #include "log.h"
 #include "map_travel.h"
 #include "m_dat_balance.h"
+#include "party_custom.h"
 #include "save_sync.h"
 #include "xp_multiplier.h"
 
@@ -270,6 +271,40 @@ void HandleBridgeLine(const std::string& line) {
         apply_balance("enemy_data_pack", line.c_str() + std::strlen("CONFIG enemy_data_pack "));
         return;
     }
+    if (line.rfind("CONFIG custom_party ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG custom_party ");
+        while (*rest == ' ') {
+            ++rest;
+        }
+        // Accept numeric 0/1/2 or legacy names / bool-ish.
+        unsigned mode = 0;
+        if (_stricmp(rest, "vanilla") == 0) {
+            mode = kCustomPartyVanilla;
+        } else if (_stricmp(rest, "roulette") == 0) {
+            mode = kCustomPartyRoulette;
+        } else if (_stricmp(rest, "unlocks") == 0) {
+            mode = kCustomPartyUnlocks;
+        } else {
+            mode = static_cast<unsigned>(std::strtoul(rest, nullptr, 10));
+        }
+        ApplyCustomPartyConfig(mode);
+        return;
+    }
+    if (line.rfind("CONFIG custom_party_roster ", 0) == 0) {
+        const char* rest = line.c_str() + std::strlen("CONFIG custom_party_roster ");
+        uint8_t ids[4]{};
+        unsigned a = 0, b = 0, c = 0, d = 0;
+        if (sscanf_s(rest, "%u %u %u %u", &a, &b, &c, &d) == 4) {
+            ids[0] = static_cast<uint8_t>(a);
+            ids[1] = static_cast<uint8_t>(b);
+            ids[2] = static_cast<uint8_t>(c);
+            ids[3] = static_cast<uint8_t>(d);
+            ApplyCustomPartyRoster(ids, 4);
+        } else {
+            LogWarn("Could not parse CONFIG custom_party_roster: %s", line.c_str());
+        }
+        return;
+    }
 
     if (line.rfind("CONFIG seed_hash ", 0) == 0) {
         const char* rest = line.c_str() + std::strlen("CONFIG seed_hash ");
@@ -325,8 +360,9 @@ void FlushPendingSyncLocked(HANDLE pipe) {
     }
     LogInfo("Sent SYNC to bridge: received_index=%u seed_hash=0x%08X has_trailer=%u", index, seed,
             has_trailer);
-    // Keys live only in DLL memory — wipe before bridge re-applies from AllItemsReceived.
+    // Keys / character unlocks live only in DLL memory — wipe before bridge re-applies.
     ClearMapKeyState();
+    ClearCharacterUnlockState();
     {
         std::lock_guard<std::mutex> lock(g_sync_mutex);
         g_sync_sent = true;

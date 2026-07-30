@@ -8,6 +8,20 @@ GRANDIA_ITEM_BASE = 0x4752_0000  # client/item_tracker.cpp — inventory item_id
 # Logic-only progression tokens for area seals (not inventory).
 # Must sit above map-key ids (0x47523000 + map_id, map_id up to ~0xE01C).
 GRANDIA_LOCKOUT_ITEM_BASE = 0x4754_0000
+# Custom-party unlocks (Useful). Native char id 2..8 — Justin (1) is always unlocked.
+# Band sits between map keys and lockout items; DLL handles before TryHandleMapKeyItem.
+GRANDIA_CHARACTER_ITEM_BASE = 0x4752_5000
+
+# Recruitable cast for custom_party (Justin starts unlocked — not an AP item).
+PARTY_CHARACTER_DATA = (
+    {"name": "Feena", "char_id": 2},
+    {"name": "Sue", "char_id": 3},
+    {"name": "Gadwin", "char_id": 4},
+    {"name": "Rapp", "char_id": 5},
+    {"name": "Milda", "char_id": 6},
+    {"name": "Guido", "char_id": 7},
+    {"name": "Liete", "char_id": 8},
+)
 
 
 class GrandiaItem(Item):
@@ -23,6 +37,8 @@ def _classification(name: str) -> ItemClassification:
         return ItemClassification.progression
     if any(e["item_name"] == name for e in KEY_ITEM_DATA):
         return ItemClassification.progression
+    if any(e["name"] == name for e in PARTY_CHARACTER_DATA):
+        return ItemClassification.useful
     meta = next((e for e in CHEST_ITEM_DATA if e["name"] == name), None)
     if meta is None:
         return ItemClassification.filler
@@ -45,6 +61,9 @@ for entry in CHEST_ITEM_DATA:
 for entry in KEY_ITEM_DATA:
     # ITEM id = KEY_BASE + unlocks_maps[0] (primary); DLL unlocks the whole group.
     item_table[entry["item_name"]] = GRANDIA_KEY_ITEM_BASE + entry["primary_map_id"]
+
+for entry in PARTY_CHARACTER_DATA:
+    item_table[entry["name"]] = GRANDIA_CHARACTER_ITEM_BASE + int(entry["char_id"])
 
 for entry in STORY_CHECK_DATA:
     if not entry.get("blocks"):
@@ -70,8 +89,10 @@ item_name_groups = {
         for e in STORY_CHECK_DATA
         if e.get("blocks")
     },
+    "Party Members": {e["name"] for e in PARTY_CHARACTER_DATA},
     "Useful": {
-        e["name"] for e in CHEST_ITEM_DATA if e["classification"] == "useful"
+        *(e["name"] for e in CHEST_ITEM_DATA if e["classification"] == "useful"),
+        *(e["name"] for e in PARTY_CHARACTER_DATA),
     },
     "Filler": {
         e["name"] for e in CHEST_ITEM_DATA if e["classification"] == "filler"
@@ -84,3 +105,5 @@ classification_table = {name: _classification(name) for name in item_table}
 item_pool_counts = dict(CHEST_ITEM_POOL_COUNTS)
 for entry in KEY_ITEM_DATA:
     item_pool_counts[entry["item_name"]] = item_pool_counts.get(entry["item_name"], 0) + 1
+for entry in PARTY_CHARACTER_DATA:
+    item_pool_counts[entry["name"]] = 1

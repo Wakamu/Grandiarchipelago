@@ -3,6 +3,7 @@
 #include "d3d_overlay.h"
 #include "game_memory.h"
 #include "log.h"
+#include "party_custom.h"
 #include "pipe_bridge.h"
 
 #include <Windows.h>
@@ -174,12 +175,28 @@ bool PeekGap1Trailer(std::FILE* file, grandia_ap::ApSaveTrailerV1* out) {
         if (g_crt_fseek(file, static_cast<long>(grandia_ap::kVanillaSaveSize), SEEK_SET) != 0) {
             return false;
         }
-        grandia_ap::ApSaveTrailerV1 tmp{};
-        const std::size_t got = g_crt_fread(&tmp, 1, sizeof(tmp), file);
-        if (got != sizeof(tmp) || std::memcmp(tmp.magic, "GAP1", 4) != 0) {
+        uint8_t raw[32]{};
+        const std::size_t got = g_crt_fread(raw, 1, sizeof(raw), file);
+        if (got < 24 || std::memcmp(raw, "GAP1", 4) != 0) {
             return false;
         }
-        if (tmp.version != grandia_ap::kApSaveTrailerVersion) {
+        uint16_t version = 0;
+        std::memcpy(&version, raw + 4, sizeof(version));
+
+        grandia_ap::ApSaveTrailerV1 tmp{};
+        if (version == grandia_ap::kApSaveTrailerVersionLegacy) {
+            // Legacy 24-byte layout: crc sits where party_count begins in v2.
+            std::memcpy(&tmp, raw, 20);  // magic..check_count
+            tmp.party_count = 0;
+            std::memset(tmp.party_ids, 0, sizeof(tmp.party_ids));
+            std::memset(tmp.reserved, 0, sizeof(tmp.reserved));
+            std::memcpy(&tmp.crc32, raw + 20, sizeof(tmp.crc32));
+        } else if (version == grandia_ap::kApSaveTrailerVersion) {
+            if (got < sizeof(tmp)) {
+                return false;
+            }
+            std::memcpy(&tmp, raw, sizeof(tmp));
+        } else {
             return false;
         }
         *out = tmp;
@@ -360,6 +377,19 @@ void AppendTrailer(std::FILE* file) {
             g_trailer.seed_hash = g_expected_seed_hash;
         }
 
+        // Stamp current custom party so load restores the Save Party tab roster.
+        if (grandia_ap::IsPartyCustomEnabled()) {
+            const uint8_t n = grandia_ap::PartyEditCount();
+            g_trailer.party_count = (n >= 1 && n <= 4) ? n : 0;
+            for (uint8_t i = 0; i < 4; ++i) {
+                g_trailer.party_ids[i] = (i < g_trailer.party_count) ? grandia_ap::PartyEditIdAt(i) : 0;
+            }
+        } else {
+            g_trailer.party_count = 0;
+            std::memset(g_trailer.party_ids, 0, sizeof(g_trailer.party_ids));
+        }
+        std::memset(g_trailer.reserved, 0, sizeof(g_trailer.reserved));
+
         const std::size_t wrote = g_crt_fwrite(&g_trailer, 1, sizeof(g_trailer), file);
         if (wrote != sizeof(g_trailer)) {
             grandia_ap::LogWarn("Save trailer fwrite failed (%u / %u bytes)",
@@ -371,8 +401,9 @@ void AppendTrailer(std::FILE* file) {
         g_trailer_dirty = false;
         g_load_committed = true;
         grandia_ap::LogInfo(
-            "Appended GAP1 trailer (received_index=%u seed=0x%08X, +%u bytes after 0xE80)",
+            "Appended GAP1 trailer (received_index=%u seed=0x%08X party=%u, +%u bytes after 0xE80)",
             g_trailer.received_index, g_trailer.seed_hash,
+            static_cast<unsigned>(g_trailer.party_count),
             static_cast<unsigned>(sizeof(g_trailer)));
         // First bind (New Game → Save): announce SYNC so AP delivery can open without reload.
         if (previous_seed == 0 && g_trailer.seed_hash != 0) {
@@ -389,8 +420,12 @@ bool CommitPendingNow(const char* reason) {
         g_trailer_present = true;
         g_trailer_dirty = false;
         grandia_ap::LogInfo(
-            "Committed GAP1 trailer (%s) received_index=%u seed=0x%08X",
-            reason ? reason : "?", g_trailer.received_index, g_trailer.seed_hash);
+            "Committed GAP1 trailer (%s) received_index=%u seed=0x%08X party=%u",
+            reason ? reason : "?", g_trailer.received_index, g_trailer.seed_hash,
+            static_cast<unsigned>(g_trailer.party_count));
+        if (g_trailer.party_count >= 1 && g_trailer.party_count <= 4) {
+            grandia_ap::ApplySavedCustomParty(g_trailer.party_ids, g_trailer.party_count);
+        }
         ClearPendingTrailer();
         g_load_committed = true;
         TryAnnounceSaveSync(true);

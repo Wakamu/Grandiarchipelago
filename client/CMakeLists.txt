@@ -24,6 +24,9 @@ add_library(Grandiarchipelago SHARED
     Grandiarchipelago/d3d_overlay.cpp
     Grandiarchipelago/debug_mode.cpp
     Grandiarchipelago/map_overview.cpp
+    Grandiarchipelago/menu_type5_party_tab.cpp
+    Grandiarchipelago/menu_fwin_party_tab.cpp
+    Grandiarchipelago/menu_save_party_tab.cpp
     Grandiarchipelago/xp_multiplier.cpp
     Grandiarchipelago/speed_turbo.cpp
     Grandiarchipelago/movie_skip.cpp

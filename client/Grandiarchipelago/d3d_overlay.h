@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 namespace grandia_ap {
 
 // Hooks IDXGISwapChain::Present (D3D11). Draws toast text via GDI → R8G8B8A8
@@ -14,5 +16,11 @@ bool IsD3dOverlayInstalled();
 void ShowD3dOverlayToast(const char* utf8_message, unsigned duration_ms = 5000,
                          unsigned rgb = 0xFFE528);
 void ClearD3dOverlayToast();
+
+// Centered multi-line panel (e.g. Save Party editor). Replaces toast drawing while active.
+// lines/rgbs may be null when count==0 (clears). rgb 0xRRGGBB per line (null → default gold).
+void SetD3dCenterPanel(const char* const* lines, const unsigned* rgbs, std::size_t count);
+void ClearD3dCenterPanel();
+bool IsD3dCenterPanelActive();
 
 }  // namespace grandia_ap

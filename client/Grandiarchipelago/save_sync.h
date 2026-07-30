@@ -16,19 +16,23 @@ namespace grandia_ap {
 #pragma pack(push, 1)
 struct ApSaveTrailerV1 {
     char magic[4];           // "GAP1"
-    uint16_t version;        // 1
+    uint16_t version;        // 2 (v1 = 24-byte legacy still readable)
     uint16_t flags;          // reserved
     uint32_t seed_hash;      // AP seed+slot identity (0 = unbound / vanilla)
     uint32_t received_index; // last applied AP ReceivedItems index
     uint32_t check_count;    // checked location count (0 in stub)
+    uint8_t party_count;     // 0 = none; 1..4 = custom party ids follow
+    uint8_t party_ids[4];    // native char ids (1=Justin … 8=Liete)
+    uint8_t reserved[3];
     uint32_t crc32;          // optional integrity (0 skips check in stub)
 };
 #pragma pack(pop)
 
-static_assert(sizeof(ApSaveTrailerV1) == 24, "ApSaveTrailerV1 size");
+static_assert(sizeof(ApSaveTrailerV1) == 32, "ApSaveTrailerV1 size");
 
 constexpr uint32_t kVanillaSaveSize = 0xE80u;
-constexpr uint16_t kApSaveTrailerVersion = 1;
+constexpr uint16_t kApSaveTrailerVersion = 2;
+constexpr uint16_t kApSaveTrailerVersionLegacy = 1;
 
 bool InstallSaveSyncHooks();
 void RemoveSaveSyncHooks();
