@@ -100,6 +100,16 @@ def stage_dll(dll_path: Path) -> Path:
     dest = NATIVE_DIR / "Grandiarchipelago.dll"
     shutil.copy2(dll_path, dest)
     print(f"Staged DLL -> {dest} ({dest.stat().st_size} bytes)")
+    charpack_src = REPO_ROOT / "data" / "pdat_charpack.bin"
+    if charpack_src.is_file():
+        charpack_dest = NATIVE_DIR / "pdat_charpack.bin"
+        shutil.copy2(charpack_src, charpack_dest)
+        print(f"Staged charpack -> {charpack_dest} ({charpack_dest.stat().st_size} bytes)")
+    else:
+        print(
+            "WARNING: data/pdat_charpack.bin missing — run "
+            "`python tools/build_pdat_charpack.py --stage-native`"
+        )
     return dest
 
 

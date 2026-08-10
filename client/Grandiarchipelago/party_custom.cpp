@@ -31,6 +31,8 @@ void ApBattlePackPrepProbeDetour();
 void ApBattleLoadDetour();
 void ApBattleModelBindDetour();
 void ApBattleAnimBindDetour();
+void ApHdLoadContentDetour();
+int ApHdLoadContentShouldSkip(const char* a1, const char* a2, const char* a3);
 unsigned ApPartyResolveCount(unsigned group_index);
 unsigned ApPartyResolveCharId(unsigned slot);
 unsigned ApBattleAllyResolveCount(unsigned formation_index);
@@ -89,6 +91,7 @@ void* g_ap_battle_pack_prep_probe_resume = nullptr;
 void* g_ap_battle_load_tramp = nullptr;
 void* g_ap_battle_model_bind_tramp = nullptr;
 void* g_ap_battle_anim_bind_tramp = nullptr;
+void* g_ap_hd_load_content_tramp = nullptr;
 // Relocated absolute displacement from the original
 // `mov bl, [edx+ecx+disp32]` (preferred 0x6015A1 @ image base 0x400000).
 std::uintptr_t g_ap_party_char_table_abs = 0;
@@ -205,6 +208,13 @@ constexpr std::uintptr_t kBattleFormTablePtrRva = 0x313A78u;  // VA 0x713A78
 // Must see custom MapObj+0A here or Feena/Gadwin get Sue/empty model slots (crash at +12D760).
 constexpr std::uintptr_t kBattleLoadRva = 0x12BDD0u;
 constexpr size_t kBattleLoadPatchSize = 6u;
+// HdTextureManager::LoadContent (thiscall, 6 stack args, ret 0x18). Arg3 = name logged
+// as HdTextureManager::LoadContent(); '%s'. Tester AV lands right after 'win'.
+constexpr std::uintptr_t kHdLoadContentRva = 0x26810u;
+constexpr size_t kHdLoadContentPatchSize = 5u;
+// Diagnostic: no-op HdTextureManager::LoadContent.
+// 0=off, 1=skip only "win", 2=skip every call.
+constexpr int kSkipHdLoadContentMode = 0;
 // Passive probe: stock does `mov al, [ecx+esi+0x64A07]` inside +12C8B0. We log the
 // selected key but return the stock value unchanged.
 constexpr std::uintptr_t kBattlePlayablePackProbeRva = 0x12C8F5u;
@@ -346,6 +356,9 @@ void* g_battle_ally_bind_tail_trampoline_mem = nullptr;
 void* g_battle_load_site = nullptr;
 uint8_t g_battle_load_original[8]{};
 void* g_battle_load_trampoline_mem = nullptr;
+void* g_hd_load_content_site = nullptr;
+uint8_t g_hd_load_content_original[8]{};
+void* g_hd_load_content_trampoline_mem = nullptr;
 void* g_battle_playable_pack_probe_site = nullptr;
 uint8_t g_battle_playable_pack_probe_original[8]{};
 void* g_battle_keyed_task_enqueue_probe_site = nullptr;
@@ -380,11 +393,13 @@ uint32_t g_battle_keyed_task_last_task = 0;
 bool g_battle_keyed_tasks_injected = false;
 void* g_e6a0_alloc[4]{};
 uint32_t g_e6a0_alloc_size[4]{};
-// Per-slot P_DAT character blobs living outside battle_ctx+c8a. Contiguous packs
-// larger than ~184KiB overwrite stock per-slot scratch at ctx+0xF5A00..0x113A00
-// and corrupt slot-4 meshes mid-fight (+97240 anim table AV).
+// External P_DAT blobs (outside battle_ctx+c8a). Prefer one contiguous assembled
+// pack in slot[0] (stock layout; anim spill stays valid). Per-slot allocs are
+// fallback. Never memcpy large packs into ctx+0xC8A00 — ≳184KiB stomps scratch
+// at ctx+0xF5A00..0x113A00 (+97240 anim AV).
 void* g_pdat_slot_alloc[4]{};
 uint32_t g_pdat_slot_alloc_size[4]{};
+bool g_pdat_alloc_is_contiguous = false;
 
 // Field MapObj+0A saved for the override session. Random battles inherit the field
 // roster (Justin+Sue) — 719BC0 stays empty — so we temporarily write MapObj+0A and
@@ -2031,6 +2046,7 @@ constexpr PdatDonorPack kPdatDonors[] = {
     {2, {1, 3, 0, 0}, 30, 38, 8},     // Justin+Sue
     {3, {1, 3, 2, 0}, 76, 54, 11},    // Justin+Sue+Feena
     {2, {1, 2, 0, 0}, 141, 42, 7},    // Justin+Feena
+    {4, {1, 3, 2, 4}, 255, 64, 28},   // Justin+Sue+Feena+Gadwin (fp+MGDAT size)
     {3, {1, 2, 4, 0}, 408, 69, 9},    // Justin+Feena+Gadwin
     {3, {1, 2, 5, 0}, 486, 53, 10},   // Justin+Feena+Rapp
     {4, {1, 2, 5, 6}, 549, 73, 12},   // +Milda
@@ -2060,6 +2076,56 @@ bool ResolvePdatPath(char* out, size_t out_size) {
         }
         if (FileExists(out)) {
             return true;
+        }
+    }
+    return false;
+}
+
+// Pre-sliced playable blobs (tools/build_pdat_charpack.py). Preferred over live P_DAT.
+#pragma pack(push, 1)
+struct Gpd1FileHeader {
+    char magic[4];  // "GPD1"
+    uint32_t version;
+    uint32_t count;
+    uint32_t reserved;
+};
+struct Gpd1Entry {
+    uint8_t char_id;
+    uint8_t variant;
+    uint8_t flags;  // bit0 = preferred
+    uint8_t pad;
+    uint32_t hdr[4];  // blob-relative
+    uint32_t blob_size;
+    uint32_t blob_off;
+};
+#pragma pack(pop)
+constexpr uint32_t kGpd1Version = 1u;
+constexpr uint8_t kGpd1FlagPreferred = 1u;
+
+bool ResolveCharpackPath(char* out, size_t out_size) {
+    const std::string dll_dir = ModuleDirectory();
+    if (!dll_dir.empty()) {
+        if (std::snprintf(out, out_size, "%s\\pdat_charpack.bin", dll_dir.c_str()) > 0 &&
+            FileExists(out)) {
+            return true;
+        }
+    }
+    const std::uintptr_t base = grandia_ap::GetGrandiaModuleBase();
+    if (base != 0) {
+        char exe_path[MAX_PATH]{};
+        if (GetModuleFileNameA(reinterpret_cast<HMODULE>(base), exe_path, MAX_PATH)) {
+            const std::string exe_dir = Dirname(exe_path);
+            const char* rels[] = {
+                "\\pdat_charpack.bin",
+                "\\content\\BATLE\\pdat_charpack.bin",
+                "\\content\\batle\\pdat_charpack.bin",
+            };
+            for (const char* rel : rels) {
+                if (std::snprintf(out, out_size, "%s%s", exe_dir.c_str(), rel) > 0 &&
+                    FileExists(out)) {
+                    return true;
+                }
+            }
         }
     }
     return false;
@@ -2137,6 +2203,67 @@ const std::vector<uint8_t>* GetCachedPdat() {
     return state == 1 ? &cached : nullptr;
 }
 
+const std::vector<uint8_t>* GetCachedCharpack() {
+    static std::vector<uint8_t> cached;
+    static int state = 0;  // 0=unset, 1=ok, -1=fail
+    if (state == 0) {
+        char path[MAX_PATH]{};
+        if (!ResolveCharpackPath(path, sizeof(path)) || !ReadFileAll(path, &cached)) {
+            cached.clear();
+            state = -1;
+            return nullptr;
+        }
+        if (cached.size() < sizeof(Gpd1FileHeader)) {
+            cached.clear();
+            state = -1;
+            return nullptr;
+        }
+        const auto* hdr = reinterpret_cast<const Gpd1FileHeader*>(cached.data());
+        if (std::memcmp(hdr->magic, "GPD1", 4) != 0 || hdr->version != kGpd1Version) {
+            PartyBattleWarn("Party battle charpack: bad header (need GPD1 v%u)", kGpd1Version);
+            cached.clear();
+            state = -1;
+            return nullptr;
+        }
+        const uint32_t need =
+            static_cast<uint32_t>(sizeof(Gpd1FileHeader) + hdr->count * sizeof(Gpd1Entry));
+        if (cached.size() < need) {
+            PartyBattleWarn("Party battle charpack: truncated index");
+            cached.clear();
+            state = -1;
+            return nullptr;
+        }
+        state = 1;
+        grandia_ap::LogInfo("Party battle: loaded charpack %s (%u entries, %u bytes)", path,
+                            hdr->count, static_cast<unsigned>(cached.size()));
+    }
+    return state == 1 ? &cached : nullptr;
+}
+
+const Gpd1Entry* FindCharpackEntry(const std::vector<uint8_t>& pack, uint8_t char_id) {
+    if (pack.size() < sizeof(Gpd1FileHeader)) {
+        return nullptr;
+    }
+    const auto* hdr = reinterpret_cast<const Gpd1FileHeader*>(pack.data());
+    const auto* ents = reinterpret_cast<const Gpd1Entry*>(pack.data() + sizeof(Gpd1FileHeader));
+    const Gpd1Entry* fallback = nullptr;
+    for (uint32_t i = 0; i < hdr->count; ++i) {
+        if (ents[i].char_id != char_id) {
+            continue;
+        }
+        if (static_cast<size_t>(ents[i].blob_off) + ents[i].blob_size > pack.size()) {
+            continue;
+        }
+        if ((ents[i].flags & kGpd1FlagPreferred) != 0 || ents[i].variant == 0) {
+            return &ents[i];
+        }
+        if (!fallback) {
+            fallback = &ents[i];
+        }
+    }
+    return fallback;
+}
+
 // Extend span past hdr[3] anim index table when entries reference bytes beyond hdr max.
 // Entries >= 0x8000 are bank/sentinel flags (e.g. 0xFFFF), not byte offsets — treating
 // them as offsets used to inflate mid-char spans to the entire donor pack.
@@ -2185,9 +2312,10 @@ bool ExtractPdatCharSpan(const uint8_t* pack, uint32_t pack_size, uint8_t index,
         }
     }
     // Primary exclusive end: next character's mesh start, or pack size for last char.
-    // Stock packs share a little anim spill into the next char (~1-10KiB); allow a
-    // capped overrun from the anim table, but never swallow the rest of the pack.
-    constexpr uint32_t kAnimSpillCap = 0x4000u;
+    // Stock packs overlap: anim-table entries (rel < 0x8000 from hdr[3]) often point
+    // past the next character's mesh start. Measured max spill ~0x8118 (Rapp→Milda);
+    // 0x4000 truncated mid-pack donors (Sue/Feena/Justin). Cap at 0x9000.
+    constexpr uint32_t kAnimSpillCap = 0x9000u;
     uint32_t boundary = pack_size;
     const uint32_t next_off = (static_cast<uint32_t>(index) + 1u) * 0x10u;
     if (index + 1u < donor_char_count && next_off + 0x10u <= pack_size) {
@@ -2227,11 +2355,109 @@ bool ExtractPdatCharSpan(const uint8_t* pack, uint32_t pack_size, uint8_t index,
     return true;
 }
 
-// Build playable headers at c8a00/10/20/30 for the custom roster. Character mesh
-// blobs are allocated outside battle_ctx so we never overwrite stock per-slot
-// scratch buffers at ctx+0xF5A00 (slot1) .. +0x113A00 (slot4). Headers store
-// offsets relative to c8a base that can point into those external buffers
-// (same trick as the e6a0 keyed remap path).
+void FreePdatSlotAllocs() {
+    for (int i = 0; i < 4; ++i) {
+        if (g_pdat_slot_alloc[i]) {
+            VirtualFree(g_pdat_slot_alloc[i], 0, MEM_RELEASE);
+            g_pdat_slot_alloc[i] = nullptr;
+            g_pdat_slot_alloc_size[i] = 0;
+        }
+    }
+    g_pdat_alloc_is_contiguous = false;
+}
+
+// Assemble stock-layout pack from charpack into one external buffer, then point
+// c8a headers at it (offsets from c8a). Preserves inter-char anim spill.
+bool TryInstallContiguousCharpack(std::uintptr_t base, uint8_t* c8a, uint32_t c8a_abs,
+                                  uint8_t n, const char* tag) {
+    const std::vector<uint8_t>* charpack = GetCachedCharpack();
+    if (!charpack || n == 0 || n > 4) {
+        return false;
+    }
+
+    const Gpd1Entry* ents[4]{};
+    for (uint8_t slot = 0; slot < n; ++slot) {
+        const uint8_t char_id = g_ids[slot];
+        if (char_id < 1u || char_id > kMaxPlayableCharId) {
+            return false;
+        }
+        ents[slot] = FindCharpackEntry(*charpack, char_id);
+        if (!ents[slot]) {
+            return false;
+        }
+    }
+
+    // header rows + optional terminator
+    const uint32_t header_bytes = static_cast<uint32_t>(n + (n < 4u ? 1u : 0u)) * 0x10u;
+    uint32_t body = 0;
+    for (uint8_t slot = 0; slot < n; ++slot) {
+        body += (ents[slot]->blob_size + 3u) & ~3u;
+    }
+    const uint32_t pack_size = (header_bytes + body + 0xFFu) & ~0xFFu;
+    void* mem = VirtualAlloc(nullptr, pack_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!mem) {
+        PartyBattleWarn("Party battle P_DAT contiguous: VirtualAlloc failed size=%u", pack_size);
+        return false;
+    }
+    std::memset(mem, 0, pack_size);
+    auto* pack = static_cast<uint8_t*>(mem);
+    uint32_t cursor = header_bytes;
+
+    for (uint8_t slot = 0; slot < n; ++slot) {
+        const Gpd1Entry* ent = ents[slot];
+        auto* ph = reinterpret_cast<uint32_t*>(pack + static_cast<uint32_t>(slot) * 0x10u);
+        for (int i = 0; i < 4; ++i) {
+            ph[i] = cursor + ent->hdr[i];
+        }
+        std::memcpy(pack + cursor, charpack->data() + ent->blob_off, ent->blob_size);
+        cursor += (ent->blob_size + 3u) & ~3u;
+    }
+    if (n < 4u) {
+        auto* term = reinterpret_cast<uint32_t*>(pack + static_cast<uint32_t>(n) * 0x10u);
+        term[0] = term[1] = term[2] = term[3] = cursor;
+    }
+
+    FreePdatSlotAllocs();
+    g_pdat_slot_alloc[0] = mem;
+    g_pdat_slot_alloc_size[0] = pack_size;
+    g_pdat_alloc_is_contiguous = true;
+
+    const uint32_t base_rel =
+        static_cast<uint32_t>(reinterpret_cast<uintptr_t>(mem)) - c8a_abs;
+    std::memset(c8a, 0, 0x40u);
+    for (uint8_t slot = 0; slot < n; ++slot) {
+        const auto* ph = reinterpret_cast<const uint32_t*>(pack + static_cast<uint32_t>(slot) * 0x10u);
+        auto* dst = reinterpret_cast<uint32_t*>(c8a + static_cast<uint32_t>(slot) * 0x10u);
+        for (int i = 0; i < 4; ++i) {
+            dst[i] = base_rel + ph[i];
+        }
+        g_party_slot_to_c8a[slot] = slot;
+        PartyBattleLog(
+            "Party battle P_DAT contiguous [%s]: slot=%u char=%u (%s) pack_hdr=%u,%u,%u,%u "
+            "c8a=%u,%u,%u,%u",
+            tag ? tag : "?", slot, g_ids[slot], CharName(g_ids[slot]), ph[0], ph[1], ph[2], ph[3],
+            dst[0], dst[1], dst[2], dst[3]);
+    }
+    if (n < 4u) {
+        auto* term = reinterpret_cast<uint32_t*>(c8a + static_cast<uint32_t>(n) * 0x10u);
+        const uint32_t end_rel = base_rel + cursor;
+        term[0] = term[1] = term[2] = term[3] = end_rel;
+    }
+    for (uint8_t i = n; i < 4u; ++i) {
+        g_party_slot_to_c8a[i] = i;
+    }
+
+    g_battle_pack_rebuilt = true;
+    PartyBattleLog(
+        "Party battle: contiguous P_DAT pack [%s] n=%u bytes=%u ext=%p base_rel=%u "
+        "(form id still ctx+0x243 from setup+3)",
+        tag ? tag : "?", static_cast<unsigned>(n), pack_size, mem, base_rel);
+    LogPackedAllyModelSlots(base, tag ? tag : "post-pdat-contiguous");
+    return true;
+}
+
+// Build playable headers at c8a00/10/20/30 for the custom roster. Prefer one
+// contiguous external pack (stock layout). Fallback: per-char VirtualAlloc slices.
 void TrySplicePdatPlayablesImpl(std::uintptr_t base, const char* tag) {
     if (!g_enabled.load() || g_battle_pack_rebuilt || base == 0) {
         return;
@@ -2242,9 +2468,18 @@ void TrySplicePdatPlayablesImpl(std::uintptr_t base, const char* tag) {
         return;
     }
 
+    uint8_t* c8a = ctx + 0xC8A00u;
+    const uint32_t c8a_abs =
+        static_cast<uint32_t>(reinterpret_cast<uintptr_t>(c8a));
+
+    if (TryInstallContiguousCharpack(base, c8a, c8a_abs, n, tag)) {
+        return;
+    }
+
+    const std::vector<uint8_t>* charpack = GetCachedCharpack();
     const std::vector<uint8_t>* pdat = GetCachedPdat();
-    if (!pdat) {
-        PartyBattleWarn("Party battle P_DAT rebuild: P_DAT.BIN missing/unreadable");
+    if (!charpack && !pdat) {
+        PartyBattleWarn("Party battle P_DAT rebuild: no charpack and P_DAT.BIN missing");
         return;
     }
 
@@ -2252,18 +2487,7 @@ void TrySplicePdatPlayablesImpl(std::uintptr_t base, const char* tag) {
         g_party_slot_to_c8a[i] = i;
     }
 
-    uint8_t* c8a = ctx + 0xC8A00u;
-    const uint32_t c8a_abs =
-        static_cast<uint32_t>(reinterpret_cast<uintptr_t>(c8a));
-
-    // Free any prior external blobs before rebuilding.
-    for (int i = 0; i < 4; ++i) {
-        if (g_pdat_slot_alloc[i]) {
-            VirtualFree(g_pdat_slot_alloc[i], 0, MEM_RELEASE);
-            g_pdat_slot_alloc[i] = nullptr;
-            g_pdat_slot_alloc_size[i] = 0;
-        }
-    }
+    FreePdatSlotAllocs();
 
     g_battle_pack_rebuilt = true;
     std::memset(c8a, 0, 0x40u);
@@ -2275,30 +2499,60 @@ void TrySplicePdatPlayablesImpl(std::uintptr_t base, const char* tag) {
         if (char_id < 1u || char_id > kMaxPlayableCharId) {
             continue;
         }
-        uint8_t donor_index = 0;
-        const PdatDonorPack* donor = FindPdatDonorForChar(char_id, &donor_index);
-        if (!donor) {
-            PartyBattleWarn("Party battle P_DAT rebuild: no donor for char=%u (%s)", char_id,
+
+        const uint8_t* src = nullptr;
+        uint32_t span = 0;
+        uint32_t hdr_rel[4]{};
+        const char* src_tag = nullptr;
+
+        if (charpack) {
+            const Gpd1Entry* ent = FindCharpackEntry(*charpack, char_id);
+            if (ent) {
+                src = charpack->data() + ent->blob_off;
+                span = ent->blob_size;
+                for (int i = 0; i < 4; ++i) {
+                    hdr_rel[i] = ent->hdr[i];
+                }
+                src_tag = "charpack";
+            }
+        }
+        if (!src && pdat) {
+            uint8_t donor_index = 0;
+            const PdatDonorPack* donor = FindPdatDonorForChar(char_id, &donor_index);
+            if (!donor) {
+                PartyBattleWarn("Party battle P_DAT rebuild: no donor for char=%u (%s)", char_id,
                                 CharName(char_id));
+                continue;
+            }
+            const uint32_t pack_off = static_cast<uint32_t>(donor->w0) * 0x800u;
+            const uint32_t pack_size =
+                static_cast<uint32_t>(donor->w2 + donor->w6) * 0x800u;
+            if (pack_off + pack_size > pdat->size()) {
+                PartyBattleWarn("Party battle P_DAT rebuild: donor pack OOB char=%u", char_id);
+                continue;
+            }
+            const uint8_t* pack = pdat->data() + pack_off;
+            uint32_t data_start = 0;
+            uint32_t data_end = 0;
+            const uint32_t* hdr = nullptr;
+            if (!ExtractPdatCharSpan(pack, pack_size, donor_index, donor->count, &data_start,
+                                     &data_end, &hdr)) {
+                PartyBattleWarn("Party battle P_DAT rebuild: bad span char=%u", char_id);
+                continue;
+            }
+            src = pack + data_start;
+            span = data_end - data_start;
+            for (int i = 0; i < 4; ++i) {
+                hdr_rel[i] = hdr[i] - data_start;
+            }
+            src_tag = "P_DAT";
+        }
+        if (!src || span == 0) {
+            PartyBattleWarn("Party battle P_DAT rebuild: no blob for char=%u (%s)", char_id,
+                            CharName(char_id));
             continue;
         }
-        const uint32_t pack_off = static_cast<uint32_t>(donor->w0) * 0x800u;
-        const uint32_t pack_size =
-            static_cast<uint32_t>(donor->w2 + donor->w6) * 0x800u;
-        if (pack_off + pack_size > pdat->size()) {
-            PartyBattleWarn("Party battle P_DAT rebuild: donor pack OOB char=%u", char_id);
-            continue;
-        }
-        const uint8_t* pack = pdat->data() + pack_off;
-        uint32_t data_start = 0;
-        uint32_t data_end = 0;
-        const uint32_t* hdr = nullptr;
-        if (!ExtractPdatCharSpan(pack, pack_size, donor_index, donor->count, &data_start, &data_end,
-                                 &hdr)) {
-            PartyBattleWarn("Party battle P_DAT rebuild: bad span char=%u", char_id);
-            continue;
-        }
-        const uint32_t span = data_end - data_start;
+
         const uint32_t alloc_size = (span + 0xFu) & ~0xFu;
         void* mem = VirtualAlloc(nullptr, alloc_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         if (!mem) {
@@ -2307,33 +2561,30 @@ void TrySplicePdatPlayablesImpl(std::uintptr_t base, const char* tag) {
             continue;
         }
         std::memset(mem, 0, alloc_size);
-        std::memcpy(mem, pack + data_start, span);
+        std::memcpy(mem, src, span);
         g_pdat_slot_alloc[slot] = mem;
         g_pdat_slot_alloc_size[slot] = alloc_size;
 
-        // Headers are offsets from c8a base into the external blob.
         const uint32_t base_rel =
             static_cast<uint32_t>(reinterpret_cast<uintptr_t>(mem)) - c8a_abs;
         auto* dst = reinterpret_cast<uint32_t*>(c8a + static_cast<uint32_t>(slot) * 0x10u);
         for (int i = 0; i < 4; ++i) {
-            dst[i] = base_rel + (hdr[i] - data_start);
+            dst[i] = base_rel + hdr_rel[i];
         }
-        const bool donor_last = (donor_index + 1u) >= donor->count;
         PartyBattleLog(
-            "Party battle P_DAT rebuild [%s]: slot=%u char=%u (%s) donor=%u@%u "
-            "span=%u donor_last=%d ext=%p base_rel=%u hdr=%u,%u,%u,%u",
-            tag ? tag : "?", slot, char_id, CharName(char_id), donor->w0, donor_index, span,
-            donor_last ? 1 : 0, mem, base_rel, dst[0], dst[1], dst[2], dst[3]);
+            "Party battle P_DAT rebuild [%s]: slot=%u char=%u (%s) via=%s "
+            "span=%u ext=%p base_rel=%u hdr=%u,%u,%u,%u",
+            tag ? tag : "?", slot, char_id, CharName(char_id), src_tag ? src_tag : "?", span, mem,
+            base_rel, dst[0], dst[1], dst[2], dst[3]);
         total_bytes += alloc_size;
         ++built;
     }
-    // Terminator like native packs (all-equal end offset) for <4 parties.
     if (n < 4u) {
         auto* term = reinterpret_cast<uint32_t*>(c8a + static_cast<uint32_t>(n) * 0x10u);
         term[0] = term[1] = term[2] = term[3] = 0x40u;
     }
     PartyBattleLog(
-        "Party battle P_DAT rebuild [%s]: external built=%d/%u bytes=%u (c8a headers only)",
+        "Party battle P_DAT rebuild [%s]: external built=%d/%u bytes=%u (per-slot fallback)",
         tag ? tag : "?", built, static_cast<unsigned>(n), total_bytes);
     LogPackedAllyModelSlots(base, tag ? tag : "post-pdat-rebuild");
 }
@@ -2678,6 +2929,7 @@ void FreeKeyedSlotBuffers() {
             g_pdat_slot_alloc_size[i] = 0;
         }
     }
+    g_pdat_alloc_is_contiguous = false;
 }
 
 bool EnsureKeyedSlotBuffers(std::uintptr_t base, uint8_t count) {
@@ -2803,6 +3055,9 @@ void TryInjectExtraKeyedTasks(unsigned owner) {
 
 void __declspec(naked) ApBattleKeyedTaskEnqueueProbeDetour() {
     __asm {
+        // Stock at +12C211: push callback; call enqueue; add esp,8
+        // then +12C21E: mov edi,[ebp-0x28]; mov ecx,[ebp-0x10]; mov cl,[ecx+edi]
+        // Do NOT touch [ecx+edi] before edi is reloaded — leftover edi was &malloc (AV).
         mov byte ptr [g_battle_keyed_task_last_free_slot], dl
         push dword ptr [g_battle_keyed_task_callback]
         call dword ptr [g_battle_scheduler_enqueue]
@@ -2811,6 +3066,7 @@ void __declspec(naked) ApBattleKeyedTaskEnqueueProbeDetour() {
         mov edx, dword ptr [ebp + 8]
         mov dword ptr [g_battle_keyed_task_last_owner], edx
         pushad
+        mov edi, dword ptr [ebp - 0x28]
         mov ecx, dword ptr [ebp - 0x10]
         movzx ecx, byte ptr [ecx + edi]
         movzx edx, bl
@@ -3412,6 +3668,50 @@ void __declspec(naked) ApBattleLoadDetour() {
         call ApOnBattleLoadEntry
         popad
         jmp dword ptr [g_ap_battle_load_tramp]
+    }
+}
+
+static bool HdContentNameIsWin(const char* s) {
+    return s && s[0] == 'w' && s[1] == 'i' && s[2] == 'n' && s[3] == '\0';
+}
+
+int ApHdLoadContentShouldSkip(const char* a1, const char* a2, const char* a3) {
+    if constexpr (kSkipHdLoadContentMode <= 0) {
+        return 0;
+    }
+    const bool is_win =
+        HdContentNameIsWin(a1) || HdContentNameIsWin(a2) || HdContentNameIsWin(a3);
+    const bool skip = (kSkipHdLoadContentMode >= 2) || is_win;
+    // Avoid fopen/fflush on every LoadContent — only log actual skips.
+    if (skip) {
+        static int skip_logs = 8;
+        if (skip_logs > 0) {
+            --skip_logs;
+            grandia_ap::LogInfo("Party: skipped LoadContent(%s, %s, %s)", a1 ? a1 : "(null)",
+                                a2 ? a2 : "(null)", a3 ? a3 : "(null)");
+        }
+    }
+    return skip ? 1 : 0;
+}
+
+void __declspec(naked) ApHdLoadContentDetour() {
+    __asm {
+        // thiscall: ecx=this. Helper is cdecl and must not clobber ecx on passthrough.
+        pushad
+        // After pushad: [esp+0x20]=ret, +0x24=a1, +0x28=a2, +0x2C=a3.
+        push dword ptr [esp + 0x2C]
+        push dword ptr [esp + 0x2C]
+        push dword ptr [esp + 0x2C]
+        call ApHdLoadContentShouldSkip
+        add esp, 12
+        test eax, eax
+        jz hd_load_passthru
+        popad
+        xor eax, eax
+        ret 0x18
+    hd_load_passthru:
+        popad
+        jmp dword ptr [g_ap_hd_load_content_tramp]
     }
 }
 
@@ -4336,6 +4636,33 @@ bool InstallPartyCustomHook() {
                 static_cast<unsigned>(kBattleLoadRva));
     }
 
+    // Skip HdTextureManager::LoadContent (mode 1='win' only, 2=all).
+    if constexpr (kSkipHdLoadContentMode > 0) {
+        auto* hd_site = reinterpret_cast<uint8_t*>(base + kHdLoadContentRva);
+        if (hd_site[0] == 0x55 && hd_site[1] == 0x8B && hd_site[2] == 0xEC &&
+            hd_site[3] == 0x6A && hd_site[4] == 0xFF) {
+            g_hd_load_content_trampoline_mem = MakeTrampoline(
+                hd_site, kHdLoadContentPatchSize, hd_site + kHdLoadContentPatchSize);
+            if (g_hd_load_content_trampoline_mem &&
+                WriteJump(hd_site, reinterpret_cast<void*>(&ApHdLoadContentDetour),
+                          g_hd_load_content_original, kHdLoadContentPatchSize)) {
+                g_ap_hd_load_content_tramp = g_hd_load_content_trampoline_mem;
+                g_hd_load_content_site = hd_site;
+                LogInfo("Party: HdTextureManager::LoadContent hook @ +0x%X (skip mode=%d)",
+                        static_cast<unsigned>(kHdLoadContentRva), kSkipHdLoadContentMode);
+            } else {
+                if (g_hd_load_content_trampoline_mem) {
+                    VirtualFree(g_hd_load_content_trampoline_mem, 0, MEM_RELEASE);
+                    g_hd_load_content_trampoline_mem = nullptr;
+                }
+                LogWarn("Party custom: failed to patch HdTextureManager::LoadContent");
+            }
+        } else {
+            LogWarn("Party custom: HdTextureManager::LoadContent site mismatch at +0x%X",
+                    static_cast<unsigned>(kHdLoadContentRva));
+        }
+    }
+
     // Model bind guard — must steal 8 bytes (full mov eax,[imm32]).
     auto* bind_site = reinterpret_cast<uint8_t*>(base + kBattleModelBindRva);
     if (bind_site[0] == 0x55 && bind_site[1] == 0x8B && bind_site[2] == 0xEC &&
@@ -4577,6 +4904,14 @@ void RemovePartyCustomHook() {
         VirtualFree(g_battle_load_trampoline_mem, 0, MEM_RELEASE);
         g_battle_load_trampoline_mem = nullptr;
     }
+    if (g_hd_load_content_site) {
+        RestoreBytes(g_hd_load_content_site, g_hd_load_content_original, kHdLoadContentPatchSize);
+        g_hd_load_content_site = nullptr;
+    }
+    if (g_hd_load_content_trampoline_mem) {
+        VirtualFree(g_hd_load_content_trampoline_mem, 0, MEM_RELEASE);
+        g_hd_load_content_trampoline_mem = nullptr;
+    }
     if (g_battle_model_bind_site) {
         RestoreBytes(g_battle_model_bind_site, g_battle_model_bind_original,
                      kBattleModelBindPatchSize);
@@ -4646,6 +4981,7 @@ void RemovePartyCustomHook() {
     g_ap_battle_load_tramp = nullptr;
     g_ap_battle_model_bind_tramp = nullptr;
     g_ap_battle_anim_bind_tramp = nullptr;
+    g_ap_hd_load_content_tramp = nullptr;
 #endif
     g_battle_custom_spawn_done = false;
     g_battle_party_init_synced = false;

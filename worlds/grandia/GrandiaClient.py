@@ -157,6 +157,11 @@ def _ensure_bundled_dll() -> Optional[Path]:
     dest = cache_dir / "Grandiarchipelago.dll"
     if not _extract_native_file("native/Grandiarchipelago.dll", dest, "inject DLL"):
         return None
+    _extract_native_file(
+        "native/pdat_charpack.bin",
+        cache_dir / "pdat_charpack.bin",
+        "P_DAT charpack",
+    )
     _extract_redux_content(cache_dir)
     return dest.resolve()
 

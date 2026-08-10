@@ -1,0 +1,11 @@
+GPD1 charpack from C:\Program Files (x86)\Steam\steamapps\common\GRANDIA HD Remaster\content\BATLE\P_DAT.BIN
+entries=8 bytes=457360
+
+id=1 name=Justin variant=0 preferred=1 size=65464 donor=JS fp=e85b0e36f6d3
+id=2 name=Feena variant=0 preferred=1 size=40184 donor=JFG fp=2a60f098b373
+id=3 name=Sue variant=0 preferred=1 size=50088 donor=JSF fp=429f7642b067
+id=4 name=Gadwin variant=0 preferred=1 size=79164 donor=JSFG fp=0e496e43501b
+id=5 name=Rapp variant=0 preferred=1 size=37968 donor=JFRG fp=e22ab1123a06
+id=6 name=Milda variant=0 preferred=1 size=67544 donor=JFRM fp=018757749d53
+id=7 name=Guido variant=0 preferred=1 size=53208 donor=JFRG fp=233e8fb301e2
+id=8 name=Liete variant=0 preferred=1 size=63448 donor=JFRL fp=2b081c1c7945

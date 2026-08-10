@@ -1,0 +1,2683 @@
+{
+  "pdat_size": 2680832,
+  "pack_starts_sec": [
+    0,
+    30,
+    76,
+    141,
+    190,
+    255,
+    348,
+    378,
+    408,
+    486,
+    549,
+    634,
+    664,
+    742,
+    772,
+    833,
+    916,
+    979,
+    1009,
+    1039,
+    1069,
+    1099,
+    1129,
+    1159,
+    1189,
+    1219,
+    1249,
+    1279
+  ],
+  "max_anim_spill_needed": 33048,
+  "recommended_anim_spill_cap": 36864,
+  "packs": [
+    {
+      "label": "sec0",
+      "w0": 0,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "JS",
+      "w0": 30,
+      "w2": 38,
+      "w6": 8,
+      "pack_bytes": 94208,
+      "count": 2,
+      "ids": [
+        1,
+        3
+      ],
+      "confidence": "runtime capture",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "e85b0e36f6d3",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 480,
+              "abs": 52952
+            },
+            {
+              "slot": 51,
+              "rel": 480,
+              "abs": 52952
+            },
+            {
+              "slot": 52,
+              "rel": 488,
+              "abs": 52960
+            },
+            {
+              "slot": 53,
+              "rel": 8608,
+              "abs": 61080
+            },
+            {
+              "slot": 54,
+              "rel": 9912,
+              "abs": 62384
+            },
+            {
+              "slot": 55,
+              "rel": 12544,
+              "abs": 65016
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 65528,
+          "span": 65464,
+          "boundary": 52664,
+          "anim_reach": 65528,
+          "spill_needed": 12864,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 3,
+          "name": "Sue",
+          "fp": "30064e931c43",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            52664,
+            75120,
+            75920,
+            75940
+          ],
+          "start": 52664,
+          "end": 76596,
+          "span": 23932,
+          "boundary": 76100,
+          "anim_reach": 76596,
+          "spill_needed": 496,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "JSF",
+      "w0": 76,
+      "w2": 54,
+      "w6": 11,
+      "pack_bytes": 133120,
+      "count": 3,
+      "ids": [
+        1,
+        3,
+        2
+      ],
+      "confidence": "runtime capture",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "e85b0e36f6d3",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 480,
+              "abs": 52952
+            },
+            {
+              "slot": 51,
+              "rel": 480,
+              "abs": 52952
+            },
+            {
+              "slot": 52,
+              "rel": 488,
+              "abs": 52960
+            },
+            {
+              "slot": 53,
+              "rel": 8608,
+              "abs": 61080
+            },
+            {
+              "slot": 54,
+              "rel": 9912,
+              "abs": 62384
+            },
+            {
+              "slot": 55,
+              "rel": 12544,
+              "abs": 65016
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 65528,
+          "span": 65464,
+          "boundary": 52664,
+          "anim_reach": 65528,
+          "spill_needed": 12864,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 3,
+          "name": "Sue",
+          "fp": "429f7642b067",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 42,
+              "rel": 532,
+              "abs": 76472
+            },
+            {
+              "slot": 43,
+              "rel": 532,
+              "abs": 76472
+            },
+            {
+              "slot": 44,
+              "rel": 540,
+              "abs": 76480
+            },
+            {
+              "slot": 45,
+              "rel": 4484,
+              "abs": 80424
+            },
+            {
+              "slot": 46,
+              "rel": 5924,
+              "abs": 81864
+            },
+            {
+              "slot": 47,
+              "rel": 26300,
+              "abs": 102240
+            }
+          ],
+          "hdr": [
+            52664,
+            75120,
+            75920,
+            75940
+          ],
+          "start": 52664,
+          "end": 102752,
+          "span": 50088,
+          "boundary": 76100,
+          "anim_reach": 102752,
+          "spill_needed": 26652,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "d7ea7e557098",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            76100,
+            108324,
+            109124,
+            109144
+          ],
+          "start": 76100,
+          "end": 109756,
+          "span": 33656,
+          "boundary": 109252,
+          "anim_reach": 109756,
+          "spill_needed": 504,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "JF",
+      "w0": 141,
+      "w2": 42,
+      "w6": 7,
+      "pack_bytes": 100352,
+      "count": 2,
+      "ids": [
+        1,
+        2
+      ],
+      "confidence": "runtime capture",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "61dc811cd189",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 51,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 52,
+              "rel": 540,
+              "abs": 53012
+            },
+            {
+              "slot": 53,
+              "rel": 4484,
+              "abs": 56956
+            },
+            {
+              "slot": 54,
+              "rel": 5924,
+              "abs": 58396
+            },
+            {
+              "slot": 55,
+              "rel": 26300,
+              "abs": 78772
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 79284,
+          "span": 79220,
+          "boundary": 52664,
+          "anim_reach": 79284,
+          "spill_needed": 26620,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "024acb684744",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            52664,
+            84888,
+            85688,
+            85708
+          ],
+          "start": 52664,
+          "end": 86320,
+          "span": 33656,
+          "boundary": 85816,
+          "anim_reach": 86320,
+          "spill_needed": 504,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "sec190",
+      "w0": 190,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 133120,
+      "count": 3,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "e85b0e36f6d3",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 480,
+              "abs": 52952
+            },
+            {
+              "slot": 51,
+              "rel": 480,
+              "abs": 52952
+            },
+            {
+              "slot": 52,
+              "rel": 488,
+              "abs": 52960
+            },
+            {
+              "slot": 53,
+              "rel": 8608,
+              "abs": 61080
+            },
+            {
+              "slot": 54,
+              "rel": 9912,
+              "abs": 62384
+            },
+            {
+              "slot": 55,
+              "rel": 12544,
+              "abs": 65016
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 65528,
+          "span": 65464,
+          "boundary": 52664,
+          "anim_reach": 65528,
+          "spill_needed": 12864,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 3,
+          "name": "Sue",
+          "fp": "429f7642b067",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 42,
+              "rel": 532,
+              "abs": 76472
+            },
+            {
+              "slot": 43,
+              "rel": 532,
+              "abs": 76472
+            },
+            {
+              "slot": 44,
+              "rel": 540,
+              "abs": 76480
+            },
+            {
+              "slot": 45,
+              "rel": 4484,
+              "abs": 80424
+            },
+            {
+              "slot": 46,
+              "rel": 5924,
+              "abs": 81864
+            },
+            {
+              "slot": 47,
+              "rel": 26300,
+              "abs": 102240
+            }
+          ],
+          "hdr": [
+            52664,
+            75120,
+            75920,
+            75940
+          ],
+          "start": 52664,
+          "end": 102752,
+          "span": 50088,
+          "boundary": 76100,
+          "anim_reach": 102752,
+          "spill_needed": 26652,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "d7ea7e557098",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            76100,
+            108324,
+            109124,
+            109144
+          ],
+          "start": 76100,
+          "end": 109756,
+          "span": 33656,
+          "boundary": 109252,
+          "anim_reach": 109756,
+          "spill_needed": 504,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ],
+      "ids_guessed": [
+        1,
+        3,
+        2
+      ]
+    },
+    {
+      "label": "JSFG",
+      "w0": 255,
+      "w2": 64,
+      "w6": 28,
+      "pack_bytes": 188416,
+      "count": 4,
+      "ids": [
+        1,
+        3,
+        2,
+        4
+      ],
+      "confidence": "header+fp",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "e85b0e36f6d3",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 480,
+              "abs": 52952
+            },
+            {
+              "slot": 51,
+              "rel": 480,
+              "abs": 52952
+            },
+            {
+              "slot": 52,
+              "rel": 488,
+              "abs": 52960
+            },
+            {
+              "slot": 53,
+              "rel": 8608,
+              "abs": 61080
+            },
+            {
+              "slot": 54,
+              "rel": 9912,
+              "abs": 62384
+            },
+            {
+              "slot": 55,
+              "rel": 12544,
+              "abs": 65016
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 65528,
+          "span": 65464,
+          "boundary": 52664,
+          "anim_reach": 65528,
+          "spill_needed": 12864,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 3,
+          "name": "Sue",
+          "fp": "429f7642b067",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 42,
+              "rel": 532,
+              "abs": 76472
+            },
+            {
+              "slot": 43,
+              "rel": 532,
+              "abs": 76472
+            },
+            {
+              "slot": 44,
+              "rel": 540,
+              "abs": 76480
+            },
+            {
+              "slot": 45,
+              "rel": 4484,
+              "abs": 80424
+            },
+            {
+              "slot": 46,
+              "rel": 5924,
+              "abs": 81864
+            },
+            {
+              "slot": 47,
+              "rel": 26300,
+              "abs": 102240
+            }
+          ],
+          "hdr": [
+            52664,
+            75120,
+            75920,
+            75940
+          ],
+          "start": 52664,
+          "end": 102752,
+          "span": 50088,
+          "boundary": 76100,
+          "anim_reach": 102752,
+          "spill_needed": 26652,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "2a60f098b373",
+          "anim_oob_past_boundary": 7,
+          "anim_oob_sample": [
+            {
+              "slot": 28,
+              "rel": 144,
+              "abs": 109288
+            },
+            {
+              "slot": 29,
+              "rel": 500,
+              "abs": 109644
+            },
+            {
+              "slot": 30,
+              "rel": 500,
+              "abs": 109644
+            },
+            {
+              "slot": 31,
+              "rel": 500,
+              "abs": 109644
+            },
+            {
+              "slot": 32,
+              "rel": 5436,
+              "abs": 114580
+            },
+            {
+              "slot": 33,
+              "rel": 6628,
+              "abs": 115772
+            }
+          ],
+          "hdr": [
+            76100,
+            108324,
+            109124,
+            109144
+          ],
+          "start": 76100,
+          "end": 116284,
+          "span": 40184,
+          "boundary": 109252,
+          "anim_reach": 116284,
+          "spill_needed": 7032,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 3,
+          "char_id": 4,
+          "name": "Gadwin",
+          "fp": "0e496e43501b",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            109252,
+            163380,
+            164180,
+            164200
+          ],
+          "start": 109252,
+          "end": 188416,
+          "span": 79164,
+          "boundary": 188416,
+          "anim_reach": 164800,
+          "spill_needed": 0,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "sec348",
+      "w0": 348,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec378",
+      "w0": 378,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "JFG",
+      "w0": 408,
+      "w2": 69,
+      "w6": 9,
+      "pack_bytes": 159744,
+      "count": 3,
+      "ids": [
+        1,
+        2,
+        4
+      ],
+      "confidence": "runtime capture",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "61dc811cd189",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 51,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 52,
+              "rel": 540,
+              "abs": 53012
+            },
+            {
+              "slot": 53,
+              "rel": 4484,
+              "abs": 56956
+            },
+            {
+              "slot": 54,
+              "rel": 5924,
+              "abs": 58396
+            },
+            {
+              "slot": 55,
+              "rel": 26300,
+              "abs": 78772
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 79284,
+          "span": 79220,
+          "boundary": 52664,
+          "anim_reach": 79284,
+          "spill_needed": 26620,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "2a60f098b373",
+          "anim_oob_past_boundary": 7,
+          "anim_oob_sample": [
+            {
+              "slot": 28,
+              "rel": 144,
+              "abs": 85852
+            },
+            {
+              "slot": 29,
+              "rel": 500,
+              "abs": 86208
+            },
+            {
+              "slot": 30,
+              "rel": 500,
+              "abs": 86208
+            },
+            {
+              "slot": 31,
+              "rel": 500,
+              "abs": 86208
+            },
+            {
+              "slot": 32,
+              "rel": 5436,
+              "abs": 91144
+            },
+            {
+              "slot": 33,
+              "rel": 6628,
+              "abs": 92336
+            }
+          ],
+          "hdr": [
+            52664,
+            84888,
+            85688,
+            85708
+          ],
+          "start": 52664,
+          "end": 92848,
+          "span": 40184,
+          "boundary": 85816,
+          "anim_reach": 92848,
+          "spill_needed": 7032,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 4,
+          "name": "Gadwin",
+          "fp": "6e509752716b",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            85816,
+            139944,
+            140744,
+            140764
+          ],
+          "start": 85816,
+          "end": 141364,
+          "span": 55548,
+          "boundary": 140860,
+          "anim_reach": 141364,
+          "spill_needed": 504,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "JFR",
+      "w0": 486,
+      "w2": 53,
+      "w6": 10,
+      "pack_bytes": 129024,
+      "count": 3,
+      "ids": [
+        1,
+        2,
+        5
+      ],
+      "confidence": "runtime capture",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "61dc811cd189",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 51,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 52,
+              "rel": 540,
+              "abs": 53012
+            },
+            {
+              "slot": 53,
+              "rel": 4484,
+              "abs": 56956
+            },
+            {
+              "slot": 54,
+              "rel": 5924,
+              "abs": 58396
+            },
+            {
+              "slot": 55,
+              "rel": 26300,
+              "abs": 78772
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 79284,
+          "span": 79220,
+          "boundary": 52664,
+          "anim_reach": 79284,
+          "spill_needed": 26620,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "341158370e53",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 29,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 30,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 31,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 32,
+              "rel": 1880,
+              "abs": 87588
+            },
+            {
+              "slot": 33,
+              "rel": 2488,
+              "abs": 88196
+            },
+            {
+              "slot": 34,
+              "rel": 17180,
+              "abs": 102888
+            }
+          ],
+          "hdr": [
+            52664,
+            84888,
+            85688,
+            85708
+          ],
+          "start": 52664,
+          "end": 103400,
+          "span": 50736,
+          "boundary": 85816,
+          "anim_reach": 103400,
+          "spill_needed": 17584,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 5,
+          "name": "Rapp",
+          "fp": "be0557a01601",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            85816,
+            105484,
+            106356,
+            106376
+          ],
+          "start": 85816,
+          "end": 107032,
+          "span": 21216,
+          "boundary": 106536,
+          "anim_reach": 107032,
+          "spill_needed": 496,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "JFRM",
+      "w0": 549,
+      "w2": 73,
+      "w6": 12,
+      "pack_bytes": 174080,
+      "count": 4,
+      "ids": [
+        1,
+        2,
+        5,
+        6
+      ],
+      "confidence": "runtime capture",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "61dc811cd189",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 51,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 52,
+              "rel": 540,
+              "abs": 53012
+            },
+            {
+              "slot": 53,
+              "rel": 4484,
+              "abs": 56956
+            },
+            {
+              "slot": 54,
+              "rel": 5924,
+              "abs": 58396
+            },
+            {
+              "slot": 55,
+              "rel": 26300,
+              "abs": 78772
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 79284,
+          "span": 79220,
+          "boundary": 52664,
+          "anim_reach": 79284,
+          "spill_needed": 26620,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "341158370e53",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 29,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 30,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 31,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 32,
+              "rel": 1880,
+              "abs": 87588
+            },
+            {
+              "slot": 33,
+              "rel": 2488,
+              "abs": 88196
+            },
+            {
+              "slot": 34,
+              "rel": 17180,
+              "abs": 102888
+            }
+          ],
+          "hdr": [
+            52664,
+            84888,
+            85688,
+            85708
+          ],
+          "start": 52664,
+          "end": 103400,
+          "span": 50736,
+          "boundary": 85816,
+          "anim_reach": 103400,
+          "spill_needed": 17584,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 5,
+          "name": "Rapp",
+          "fp": "7e5074dbc38e",
+          "anim_oob_past_boundary": 7,
+          "anim_oob_sample": [
+            {
+              "slot": 41,
+              "rel": 244,
+              "abs": 106620
+            },
+            {
+              "slot": 42,
+              "rel": 504,
+              "abs": 106880
+            },
+            {
+              "slot": 43,
+              "rel": 504,
+              "abs": 106880
+            },
+            {
+              "slot": 44,
+              "rel": 536,
+              "abs": 106912
+            },
+            {
+              "slot": 45,
+              "rel": 6236,
+              "abs": 112612
+            },
+            {
+              "slot": 46,
+              "rel": 8588,
+              "abs": 114964
+            }
+          ],
+          "hdr": [
+            85816,
+            105484,
+            106356,
+            106376
+          ],
+          "start": 85816,
+          "end": 139584,
+          "span": 53768,
+          "boundary": 106536,
+          "anim_reach": 139584,
+          "spill_needed": 33048,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 3,
+          "char_id": 6,
+          "name": "Milda",
+          "fp": "018757749d53",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            106536,
+            147820,
+            148620,
+            148640
+          ],
+          "start": 106536,
+          "end": 174080,
+          "span": 67544,
+          "boundary": 174080,
+          "anim_reach": 149296,
+          "spill_needed": 0,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "sec634",
+      "w0": 634,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "JFRG",
+      "w0": 664,
+      "w2": 66,
+      "w6": 12,
+      "pack_bytes": 159744,
+      "count": 4,
+      "ids": [
+        1,
+        2,
+        5,
+        7
+      ],
+      "confidence": "runtime capture",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "61dc811cd189",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 51,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 52,
+              "rel": 540,
+              "abs": 53012
+            },
+            {
+              "slot": 53,
+              "rel": 4484,
+              "abs": 56956
+            },
+            {
+              "slot": 54,
+              "rel": 5924,
+              "abs": 58396
+            },
+            {
+              "slot": 55,
+              "rel": 26300,
+              "abs": 78772
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 79284,
+          "span": 79220,
+          "boundary": 52664,
+          "anim_reach": 79284,
+          "spill_needed": 26620,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "341158370e53",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 29,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 30,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 31,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 32,
+              "rel": 1880,
+              "abs": 87588
+            },
+            {
+              "slot": 33,
+              "rel": 2488,
+              "abs": 88196
+            },
+            {
+              "slot": 34,
+              "rel": 17180,
+              "abs": 102888
+            }
+          ],
+          "hdr": [
+            52664,
+            84888,
+            85688,
+            85708
+          ],
+          "start": 52664,
+          "end": 103400,
+          "span": 50736,
+          "boundary": 85816,
+          "anim_reach": 103400,
+          "spill_needed": 17584,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 5,
+          "name": "Rapp",
+          "fp": "e22ab1123a06",
+          "anim_oob_past_boundary": 7,
+          "anim_oob_sample": [
+            {
+              "slot": 41,
+              "rel": 244,
+              "abs": 106620
+            },
+            {
+              "slot": 42,
+              "rel": 600,
+              "abs": 106976
+            },
+            {
+              "slot": 43,
+              "rel": 600,
+              "abs": 106976
+            },
+            {
+              "slot": 44,
+              "rel": 600,
+              "abs": 106976
+            },
+            {
+              "slot": 45,
+              "rel": 6828,
+              "abs": 113204
+            },
+            {
+              "slot": 46,
+              "rel": 9468,
+              "abs": 115844
+            }
+          ],
+          "hdr": [
+            85816,
+            105484,
+            106356,
+            106376
+          ],
+          "start": 85816,
+          "end": 123784,
+          "span": 37968,
+          "boundary": 106536,
+          "anim_reach": 123784,
+          "spill_needed": 17248,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 3,
+          "char_id": 7,
+          "name": "Guido",
+          "fp": "233e8fb301e2",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            106536,
+            132900,
+            133700,
+            133720
+          ],
+          "start": 106536,
+          "end": 159744,
+          "span": 53208,
+          "boundary": 159744,
+          "anim_reach": 134316,
+          "spill_needed": 0,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "sec742",
+      "w0": 742,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "JRG",
+      "w0": 772,
+      "w2": 49,
+      "w6": 12,
+      "pack_bytes": 124928,
+      "count": 3,
+      "ids": [
+        1,
+        5,
+        7
+      ],
+      "confidence": "fp; w2/w6 provisional",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "8e4576c0ef88",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 448,
+              "abs": 52920
+            },
+            {
+              "slot": 51,
+              "rel": 448,
+              "abs": 52920
+            },
+            {
+              "slot": 52,
+              "rel": 448,
+              "abs": 52920
+            },
+            {
+              "slot": 53,
+              "rel": 1880,
+              "abs": 54352
+            },
+            {
+              "slot": 54,
+              "rel": 2488,
+              "abs": 54960
+            },
+            {
+              "slot": 55,
+              "rel": 17180,
+              "abs": 69652
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 70164,
+          "span": 70100,
+          "boundary": 52664,
+          "anim_reach": 70164,
+          "spill_needed": 17500,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 5,
+          "name": "Rapp",
+          "fp": "e22ab1123a06",
+          "anim_oob_past_boundary": 7,
+          "anim_oob_sample": [
+            {
+              "slot": 41,
+              "rel": 244,
+              "abs": 73468
+            },
+            {
+              "slot": 42,
+              "rel": 600,
+              "abs": 73824
+            },
+            {
+              "slot": 43,
+              "rel": 600,
+              "abs": 73824
+            },
+            {
+              "slot": 44,
+              "rel": 600,
+              "abs": 73824
+            },
+            {
+              "slot": 45,
+              "rel": 6828,
+              "abs": 80052
+            },
+            {
+              "slot": 46,
+              "rel": 9468,
+              "abs": 82692
+            }
+          ],
+          "hdr": [
+            52664,
+            72332,
+            73204,
+            73224
+          ],
+          "start": 52664,
+          "end": 90632,
+          "span": 37968,
+          "boundary": 73384,
+          "anim_reach": 90632,
+          "spill_needed": 17248,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 7,
+          "name": "Guido",
+          "fp": "8663b7b6796d",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            73384,
+            99748,
+            100548,
+            100568
+          ],
+          "start": 73384,
+          "end": 101164,
+          "span": 27780,
+          "boundary": 100668,
+          "anim_reach": 101164,
+          "spill_needed": 496,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "JFRL",
+      "w0": 833,
+      "w2": 71,
+      "w6": 12,
+      "pack_bytes": 169984,
+      "count": 4,
+      "ids": [
+        1,
+        2,
+        5,
+        8
+      ],
+      "confidence": "runtime capture",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "61dc811cd189",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 51,
+              "rel": 532,
+              "abs": 53004
+            },
+            {
+              "slot": 52,
+              "rel": 540,
+              "abs": 53012
+            },
+            {
+              "slot": 53,
+              "rel": 4484,
+              "abs": 56956
+            },
+            {
+              "slot": 54,
+              "rel": 5924,
+              "abs": 58396
+            },
+            {
+              "slot": 55,
+              "rel": 26300,
+              "abs": 78772
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 79284,
+          "span": 79220,
+          "boundary": 52664,
+          "anim_reach": 79284,
+          "spill_needed": 26620,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 2,
+          "name": "Feena",
+          "fp": "341158370e53",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 29,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 30,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 31,
+              "rel": 448,
+              "abs": 86156
+            },
+            {
+              "slot": 32,
+              "rel": 1880,
+              "abs": 87588
+            },
+            {
+              "slot": 33,
+              "rel": 2488,
+              "abs": 88196
+            },
+            {
+              "slot": 34,
+              "rel": 17180,
+              "abs": 102888
+            }
+          ],
+          "hdr": [
+            52664,
+            84888,
+            85688,
+            85708
+          ],
+          "start": 52664,
+          "end": 103400,
+          "span": 50736,
+          "boundary": 85816,
+          "anim_reach": 103400,
+          "spill_needed": 17584,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 5,
+          "name": "Rapp",
+          "fp": "f1474813adaa",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 42,
+              "rel": 500,
+              "abs": 106876
+            },
+            {
+              "slot": 43,
+              "rel": 500,
+              "abs": 106876
+            },
+            {
+              "slot": 44,
+              "rel": 500,
+              "abs": 106876
+            },
+            {
+              "slot": 45,
+              "rel": 4904,
+              "abs": 111280
+            },
+            {
+              "slot": 46,
+              "rel": 6120,
+              "abs": 112496
+            },
+            {
+              "slot": 47,
+              "rel": 29984,
+              "abs": 136360
+            }
+          ],
+          "hdr": [
+            85816,
+            105484,
+            106356,
+            106376
+          ],
+          "start": 85816,
+          "end": 136872,
+          "span": 51056,
+          "boundary": 106536,
+          "anim_reach": 136872,
+          "spill_needed": 30336,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 3,
+          "char_id": 8,
+          "name": "Liete",
+          "fp": "2b081c1c7945",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            106536,
+            142640,
+            143440,
+            143460
+          ],
+          "start": 106536,
+          "end": 169984,
+          "span": 63448,
+          "boundary": 169984,
+          "anim_reach": 144060,
+          "spill_needed": 0,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "JRL",
+      "w0": 916,
+      "w2": 51,
+      "w6": 12,
+      "pack_bytes": 129024,
+      "count": 3,
+      "ids": [
+        1,
+        5,
+        8
+      ],
+      "confidence": "fp; w2/w6 provisional",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 1,
+          "name": "Justin",
+          "fp": "8e4576c0ef88",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 50,
+              "rel": 448,
+              "abs": 52920
+            },
+            {
+              "slot": 51,
+              "rel": 448,
+              "abs": 52920
+            },
+            {
+              "slot": 52,
+              "rel": 448,
+              "abs": 52920
+            },
+            {
+              "slot": 53,
+              "rel": 1880,
+              "abs": 54352
+            },
+            {
+              "slot": 54,
+              "rel": 2488,
+              "abs": 54960
+            },
+            {
+              "slot": 55,
+              "rel": 17180,
+              "abs": 69652
+            }
+          ],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 70164,
+          "span": 70100,
+          "boundary": 52664,
+          "anim_reach": 70164,
+          "spill_needed": 17500,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 1,
+          "char_id": 5,
+          "name": "Rapp",
+          "fp": "f1474813adaa",
+          "anim_oob_past_boundary": 6,
+          "anim_oob_sample": [
+            {
+              "slot": 42,
+              "rel": 500,
+              "abs": 73724
+            },
+            {
+              "slot": 43,
+              "rel": 500,
+              "abs": 73724
+            },
+            {
+              "slot": 44,
+              "rel": 500,
+              "abs": 73724
+            },
+            {
+              "slot": 45,
+              "rel": 4904,
+              "abs": 78128
+            },
+            {
+              "slot": 46,
+              "rel": 6120,
+              "abs": 79344
+            },
+            {
+              "slot": 47,
+              "rel": 29984,
+              "abs": 103208
+            }
+          ],
+          "hdr": [
+            52664,
+            72332,
+            73204,
+            73224
+          ],
+          "start": 52664,
+          "end": 103720,
+          "span": 51056,
+          "boundary": 73384,
+          "anim_reach": 103720,
+          "spill_needed": 30336,
+          "spill_truncated": false,
+          "donor_last": false
+        },
+        {
+          "index": 2,
+          "char_id": 8,
+          "name": "Liete",
+          "fp": "f58e63aab2f1",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            73384,
+            109488,
+            110288,
+            110308
+          ],
+          "start": 73384,
+          "end": 110908,
+          "span": 37524,
+          "boundary": 110404,
+          "anim_reach": 110908,
+          "spill_needed": 504,
+          "spill_truncated": false,
+          "donor_last": true
+        }
+      ]
+    },
+    {
+      "label": "sec979",
+      "w0": 979,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1009",
+      "w0": 1009,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1039",
+      "w0": 1039,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1069",
+      "w0": 1069,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1099",
+      "w0": 1099,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1129",
+      "w0": 1129,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1159",
+      "w0": 1159,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1189",
+      "w0": 1189,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1219",
+      "w0": 1219,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1249",
+      "w0": 1249,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    },
+    {
+      "label": "sec1279",
+      "w0": 1279,
+      "w2": null,
+      "w6": null,
+      "pack_bytes": 61440,
+      "count": 1,
+      "ids": [],
+      "confidence": "header scan only",
+      "chars": [
+        {
+          "index": 0,
+          "char_id": 0,
+          "name": "?",
+          "fp": "e805eb1fa7cc",
+          "anim_oob_past_boundary": 0,
+          "anim_oob_sample": [],
+          "hdr": [
+            64,
+            51652,
+            52452,
+            52472
+          ],
+          "start": 64,
+          "end": 53156,
+          "span": 53092,
+          "boundary": 52664,
+          "anim_reach": 53156,
+          "spill_needed": 492,
+          "spill_truncated": false,
+          "donor_last": true,
+          "guess_ids": []
+        }
+      ],
+      "ids_guessed": [
+        0
+      ]
+    }
+  ],
+  "best_donor_by_char": {
+    "1": {
+      "char_id": 1,
+      "name": "Justin",
+      "label": "JS",
+      "w0": 30,
+      "w2": 38,
+      "w6": 8,
+      "index": 0,
+      "span": 65464,
+      "spill_needed": 12864,
+      "spill_truncated": false,
+      "donor_last": false,
+      "fp": "e85b0e36f6d3",
+      "hdr": [
+        64,
+        51652,
+        52452,
+        52472
+      ],
+      "start": 64,
+      "end": 65528,
+      "score": 66936,
+      "confidence": "runtime capture"
+    },
+    "2": {
+      "char_id": 2,
+      "name": "Feena",
+      "label": "JFG",
+      "w0": 408,
+      "w2": 69,
+      "w6": 9,
+      "index": 1,
+      "span": 40184,
+      "spill_needed": 7032,
+      "spill_truncated": false,
+      "donor_last": false,
+      "fp": "2a60f098b373",
+      "hdr": [
+        52664,
+        84888,
+        85688,
+        85708
+      ],
+      "start": 52664,
+      "end": 92848,
+      "score": 42680,
+      "confidence": "runtime capture"
+    },
+    "3": {
+      "char_id": 3,
+      "name": "Sue",
+      "label": "JSF",
+      "w0": 76,
+      "w2": 54,
+      "w6": 11,
+      "index": 1,
+      "span": 50088,
+      "spill_needed": 26652,
+      "spill_truncated": false,
+      "donor_last": false,
+      "fp": "429f7642b067",
+      "hdr": [
+        52664,
+        75120,
+        75920,
+        75940
+      ],
+      "start": 52664,
+      "end": 102752,
+      "score": 52168,
+      "confidence": "runtime capture"
+    },
+    "4": {
+      "char_id": 4,
+      "name": "Gadwin",
+      "label": "JSFG",
+      "w0": 255,
+      "w2": 64,
+      "w6": 28,
+      "index": 3,
+      "span": 79164,
+      "spill_needed": 0,
+      "spill_truncated": false,
+      "donor_last": true,
+      "fp": "0e496e43501b",
+      "hdr": [
+        109252,
+        163380,
+        164180,
+        164200
+      ],
+      "start": 109252,
+      "end": 188416,
+      "score": 18798148,
+      "confidence": "header+fp"
+    },
+    "5": {
+      "char_id": 5,
+      "name": "Rapp",
+      "label": "JFRG",
+      "w0": 664,
+      "w2": 66,
+      "w6": 12,
+      "index": 2,
+      "span": 37968,
+      "spill_needed": 17248,
+      "spill_truncated": false,
+      "donor_last": false,
+      "fp": "e22ab1123a06",
+      "hdr": [
+        85816,
+        105484,
+        106356,
+        106376
+      ],
+      "start": 85816,
+      "end": 123784,
+      "score": 40464,
+      "confidence": "runtime capture"
+    },
+    "6": {
+      "char_id": 6,
+      "name": "Milda",
+      "label": "JFRM",
+      "w0": 549,
+      "w2": 73,
+      "w6": 12,
+      "index": 3,
+      "span": 67544,
+      "spill_needed": 0,
+      "spill_truncated": false,
+      "donor_last": true,
+      "fp": "018757749d53",
+      "hdr": [
+        106536,
+        147820,
+        148620,
+        148640
+      ],
+      "start": 106536,
+      "end": 174080,
+      "score": 18809544,
+      "confidence": "runtime capture"
+    },
+    "7": {
+      "char_id": 7,
+      "name": "Guido",
+      "label": "JFRG",
+      "w0": 664,
+      "w2": 66,
+      "w6": 12,
+      "index": 3,
+      "span": 53208,
+      "spill_needed": 0,
+      "spill_truncated": false,
+      "donor_last": true,
+      "fp": "233e8fb301e2",
+      "hdr": [
+        106536,
+        132900,
+        133700,
+        133720
+      ],
+      "start": 106536,
+      "end": 159744,
+      "score": 18823656,
+      "confidence": "runtime capture"
+    },
+    "8": {
+      "char_id": 8,
+      "name": "Liete",
+      "label": "JFRL",
+      "w0": 833,
+      "w2": 71,
+      "w6": 12,
+      "index": 3,
+      "span": 63448,
+      "spill_needed": 0,
+      "spill_truncated": false,
+      "donor_last": true,
+      "fp": "2b081c1c7945",
+      "hdr": [
+        106536,
+        142640,
+        143440,
+        143460
+      ],
+      "start": 106536,
+      "end": 169984,
+      "score": 18813576,
+      "confidence": "runtime capture"
+    }
+  },
+  "notes": [
+    "Battle HD sprites are BATLE/*.tpk, not PGR CPD or these packs.",
+    "Char blobs are pack-relative; c8a headers store offsets from c8a base.",
+    "Anim table entries < 0x8000 are relative to the table and often spill past the next character's mesh start (stock overlap). Slice end must include that spill or mid-pack donors are incomplete.",
+    "Justin/Feena/Sue/Rapp have multiple fingerprints across story packs (costume/era variants) \u2014 pick the donor matching the field era when possible.",
+    "Gadwin/Milda/Guido/Liete only appear as last slot in known packs."
+  ]
+}
