@@ -1,6 +1,7 @@
 #include "d3d_overlay.h"
 
 #include "log.h"
+#include "party_custom.h"
 #include "speed_turbo.h"
 
 #include <Windows.h>
@@ -514,6 +515,8 @@ HRESULT __stdcall PresentHook(IDXGISwapChain* swap, UINT sync_interval, UINT fla
             }
         }
         DrawOverlayText(swap);
+        // Pack custom-party bags on the render tick (sanitize only — no ITEM list rebuild).
+        PollPartyInventoryUiFix();
     }
 
     // Vsync Present caps time-warp turbo near ~2x (dt catch-up). Drop sync waits while turbo is on.

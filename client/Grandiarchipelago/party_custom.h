@@ -72,4 +72,7 @@ bool PartyUiApplyQuiet();
 // the replacement path into out_path and returns true.
 bool TryPartyAssetOverlay(const char* original_path, char* out_path, size_t out_size);
 
+// Called from D3D Present: pack custom-party bags only (no +1DD6B0 — unsafe in field pickup UI).
+void PollPartyInventoryUiFix();
+
 }  // namespace grandia_ap

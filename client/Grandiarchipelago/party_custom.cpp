@@ -65,6 +65,23 @@ void ApStatusCustomFaces();
 void ApStashCustomFaces();
 void ApItemCustomFaces();
 void ApFaceBankLoadDetour();
+void ApInvAddDetour();
+void ApInvRemoveDetour();
+void ApEquipAfterRemoveDetour();
+void ApItemGiveEquipADetour();
+void ApItemGiveEquipBDetour();
+void ApItemGiveEquipCDetour();
+void ApItemGiveEquipDDetour();
+void ApItemGiveEquipEDetour();
+void ApItemPaintDetour();
+void ApItemPaint2Detour();
+void ApSanitizePartyInventoriesFromHook();
+void ApRebuildItemUiAfterEquipRemove();
+void ApLogHookHit(const char* tag);
+void ApOnInvAddDone();
+void ApOnInvRemoveDone();
+void ApOnItemGiveDone(int which);
+void ApOnItemPaintDone();
 void* g_ap_party_count_resume = nullptr;
 void* g_ap_party_char_resume = nullptr;
 void* g_ap_battle_party_init_tramp = nullptr;
@@ -75,6 +92,23 @@ void* g_ap_stash_fill_skip = nullptr;     // +1E695C finalize
 void* g_ap_stash_fill_tramp = nullptr;
 void* g_ap_item_fill_skip = nullptr;      // +1DBF9C finalize
 void* g_ap_item_fill_tramp = nullptr;
+void* g_ap_inv_add_tramp = nullptr;       // +1E0BA0 bag write
+void* g_ap_inv_remove_tramp = nullptr;    // +1E0C30 bag remove/compact
+void* g_ap_inv_add_ret = nullptr;
+void* g_ap_inv_remove_ret = nullptr;
+void* g_ap_equip_after_remove_exit = nullptr;  // +1DDE97
+void* g_ap_item_give_a_tramp = nullptr;
+void* g_ap_item_give_b_tramp = nullptr;
+void* g_ap_item_give_c_tramp = nullptr;
+void* g_ap_item_give_d_tramp = nullptr;
+void* g_ap_item_give_e_tramp = nullptr;
+void* g_ap_item_give_a_ret = nullptr;
+void* g_ap_item_give_b_ret = nullptr;
+void* g_ap_item_give_c_ret = nullptr;
+void* g_ap_item_give_d_ret = nullptr;
+void* g_ap_item_give_e_ret = nullptr;
+void* g_ap_item_paint_tramp = nullptr;
+void* g_ap_item_paint2_tramp = nullptr;
 // When set, +56FF0 uses this arena as esi instead of [640E6C] (menu faces only).
 void* g_ap_face_bank_override = nullptr;
 void* g_ap_face_bank_resume = nullptr;  // +57016 after stolen mov esi,[640E6C]
@@ -255,7 +289,42 @@ constexpr std::uintptr_t kBattleSnapshotFnRva = 0x61940u;
 constexpr std::uintptr_t kBattleSnapshotOff = 0x9Cu;     // [MapObj]+0x9C party bytes for 461940
 constexpr std::uintptr_t kCharBlockOff = 0x10Cu;
 constexpr std::uintptr_t kCharStride = 0x80u;
+constexpr std::uintptr_t kCharEquipOff = 0x4Cu;  // 6×u16 equipped item ids
+constexpr unsigned kCharEquipSlots = 6u;
+constexpr std::uintptr_t kCharInvOff = 0x58u;  // 12×u16 packed bag (first 0 terminates)
+constexpr unsigned kCharInvSlots = 12u;
 constexpr unsigned kSlotExcludeBitBase = 0x8F5u;
+// Stock bag helpers — add zeros the next slot; remove should compact. Custom party can
+// leave mid-list zeros; UI then hides everything after the hole.
+constexpr std::uintptr_t kInvAddRva = 0x1E0BA0u;
+constexpr std::uintptr_t kInvRemoveRva = 0x1E0C30u;
+constexpr size_t kInvOpPatchSize = 6u;
+// ITEM-assign widget refresh (ecx = widget): paint only — does NOT rebuild rows from bags.
+constexpr std::uintptr_t kItemWidgetRefreshRva = 0x1DE380u;
+constexpr std::uintptr_t kItemWidgetARva = 0x308A00u;  // VA 0x708A00
+constexpr std::uintptr_t kItemWidgetBRva = 0x308A50u;  // VA 0x708A50
+constexpr std::uintptr_t kItemListRebuildRva = 0x1DD6B0u;
+constexpr std::uintptr_t kItemListModeObjRva = 0x308A24u;   // VA 0x708A24
+constexpr std::uintptr_t kItemUiCurrentRva = 0x30AA8Cu;     // VA 0x70AA8C
+constexpr std::uintptr_t kItemUiControllerRva = 0x30AA84u;  // VA 0x70AA84
+// After successful equip-from-party bag remove: paint A/B then `mov ecx,5; jmp exit`.
+// Stock never rebuilds the row list here — that only happens on leave/re-enter.
+constexpr std::uintptr_t kEquipAfterRemoveRva = 0x1DDD1Cu;
+constexpr std::uintptr_t kEquipAfterRemoveExitRva = 0x1DDE97u;
+constexpr size_t kEquipAfterRemovePatchSize = 10u;
+// Outer ITEM give/equip handlers (callback table). Wrap so we rebuild after they return —
+// +1DDD1C is only one branch and is often skipped.
+constexpr std::uintptr_t kItemGiveEquipARva = 0x1DDB70u;  // mode-4 equip-from-party
+constexpr std::uintptr_t kItemGiveEquipBRva = 0x1DE080u;  // give/move (add+remove)
+constexpr std::uintptr_t kItemGiveEquipCRva = 0x1DD1A0u;  // inventory shuffle (add+remove)
+constexpr std::uintptr_t kItemGiveEquipDRva = 0x1E3770u;  // alt callback in [708A94]
+constexpr std::uintptr_t kItemGiveEquipERva = 0x1E5710u;  // stash/equip alt (calls remove)
+constexpr size_t kItemGiveEquipPatchSize = 6u;
+// Widget paint — fires whenever ITEM panels redraw (covers unknown equip code paths).
+constexpr std::uintptr_t kItemPaintRva = 0x1DE380u;
+constexpr size_t kItemPaintPatchSize = 7u;  // push esi; mov esi,ecx; cmp word [esi],0
+constexpr std::uintptr_t kItemPaint2Rva = 0x1DE3D0u;
+constexpr size_t kItemPaint2PatchSize = 8u;  // push edi; xor edi,edi; cmp [ecx],di; jz
 
 const char* CharName(uint8_t id);
 void SyncBattlePartyActors(std::uintptr_t base, uint8_t count);
@@ -266,6 +335,8 @@ void PatchFormationTableForBattle(std::uintptr_t base);
 void PrepareBattlePartyAssets(std::uintptr_t base, const char* tag);
 void LogBattlePartyState(std::uintptr_t base, const char* tag);
 int SeedMissingCharacterBlocks(uint8_t* map_obj);
+int CompactCharInventory(uint8_t* char_block);
+int SanitizeCustomPartyInventories(uint8_t* map_obj);
 uint8_t* MapObject(std::uintptr_t base);
 
 // Menu/battle paths hard-reject ids > 8. Leen(11)/Rem(12) need extra patches later.
@@ -341,6 +412,38 @@ void* g_stash_fill_trampoline_mem = nullptr;
 void* g_item_fill_site = nullptr;
 uint8_t g_item_fill_original[6]{};
 void* g_item_fill_trampoline_mem = nullptr;
+void* g_inv_add_site = nullptr;
+uint8_t g_inv_add_original[6]{};
+void* g_inv_add_trampoline_mem = nullptr;
+void* g_inv_remove_site = nullptr;
+uint8_t g_inv_remove_original[6]{};
+void* g_inv_remove_trampoline_mem = nullptr;
+void* g_equip_after_remove_site = nullptr;
+uint8_t g_equip_after_remove_original[16]{};
+void* g_item_give_a_site = nullptr;
+uint8_t g_item_give_a_original[6]{};
+void* g_item_give_a_trampoline_mem = nullptr;
+void* g_item_give_b_site = nullptr;
+uint8_t g_item_give_b_original[6]{};
+void* g_item_give_b_trampoline_mem = nullptr;
+void* g_item_give_c_site = nullptr;
+uint8_t g_item_give_c_original[6]{};
+void* g_item_give_c_trampoline_mem = nullptr;
+void* g_item_give_d_site = nullptr;
+uint8_t g_item_give_d_original[6]{};
+void* g_item_give_d_trampoline_mem = nullptr;
+void* g_item_give_e_site = nullptr;
+uint8_t g_item_give_e_original[6]{};
+void* g_item_give_e_trampoline_mem = nullptr;
+void* g_item_paint_site = nullptr;
+uint8_t g_item_paint_original[8]{};
+void* g_item_paint_trampoline_mem = nullptr;
+void* g_item_paint2_site = nullptr;
+uint8_t g_item_paint2_original[8]{};
+void* g_item_paint2_trampoline_mem = nullptr;
+bool g_in_item_ui_fix = false;
+DWORD g_last_item_ui_rebuild_tick = 0;
+int g_item_paint_hit_logs_left = 8;
 void* g_face_bank_site = nullptr;
 uint8_t g_face_bank_original[6]{};
 uint8_t* g_fc_arenas[kMaxFcRow]{};
@@ -1232,6 +1335,154 @@ uint8_t* CharBlock(uint8_t* map_obj, uint8_t char_id) {
     return map_obj + kCharBlockOff + static_cast<std::uintptr_t>(char_id - 1) * kCharStride;
 }
 
+// Pack char+0x58 to a contiguous prefix of non-zero item ids (stock UI stops at first 0).
+// Returns 1 if the bag changed.
+int CompactCharInventory(uint8_t* char_block) {
+    if (!char_block) {
+        return 0;
+    }
+    auto* slots = reinterpret_cast<uint16_t*>(char_block + kCharInvOff);
+    uint16_t packed[kCharInvSlots]{};
+    unsigned n = 0;
+    for (unsigned i = 0; i < kCharInvSlots; ++i) {
+        if (slots[i] != 0) {
+            packed[n++] = slots[i];
+        }
+    }
+    bool dirty = false;
+    for (unsigned i = 0; i < kCharInvSlots; ++i) {
+        if (slots[i] != packed[i]) {
+            dirty = true;
+            break;
+        }
+    }
+    if (!dirty) {
+        return 0;
+    }
+    std::memcpy(slots, packed, sizeof(packed));
+    return 1;
+}
+
+int SanitizeCustomPartyInventories(uint8_t* map_obj) {
+    if (!map_obj || !g_enabled.load()) {
+        return 0;
+    }
+    int fixed = 0;
+    const uint8_t n = g_count.load();
+    for (uint8_t i = 0; i < n; ++i) {
+        const uint8_t id = g_ids[i];
+        auto* blk = CharBlock(map_obj, id);
+        if (!blk) {
+            continue;
+        }
+        if (CompactCharInventory(blk)) {
+            ++fixed;
+            grandia_ap::LogInfo("Party: compacted bag holes for id=%u (%s)", id, CharName(id));
+        }
+    }
+    return fixed;
+}
+
+// Re-draw ITEM-assign panels so an already-open inventory picks up compacted bags
+// without requiring the player to leave and re-enter the menu.
+void RefreshItemAssignWidgets(std::uintptr_t base) {
+    if (base == 0) {
+        return;
+    }
+    auto* refresh = reinterpret_cast<void(__fastcall*)(void*)>(base + kItemWidgetRefreshRva);
+    auto* widget_a = reinterpret_cast<void*>(base + kItemWidgetARva);
+    auto* widget_b = reinterpret_cast<void*>(base + kItemWidgetBRva);
+    __try {
+        // Skip if the ITEM UI widgets look inactive (first word 0 — same guard as stock).
+        if (*reinterpret_cast<uint16_t*>(widget_a) != 0) {
+            refresh(widget_a);
+        }
+        if (*reinterpret_cast<uint16_t*>(widget_b) != 0) {
+            refresh(widget_b);
+        }
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    }
+}
+
+// After +1DD6B0 AV, back off so Present/hooks don't spam the same bad UI state.
+DWORD g_item_rebuild_cooldown_until = 0;
+
+// Rebuild the merged party item rows from character bags (same path as leave/re-enter).
+// Only safe in real ITEM-assign mode (==4). Field pickup / other UIs reuse the same
+// widget words and crash inside +1DD6B0 if we force mode 4 (seen: mode 254 → AV @ +1DD700).
+void RebuildItemAssignList(std::uintptr_t base) {
+    if (base == 0) {
+        return;
+    }
+    const DWORD now = GetTickCount();
+    if (now < g_item_rebuild_cooldown_until) {
+        return;
+    }
+
+    uint16_t* mode_word = nullptr;
+    uint16_t saved_mode = 0;
+    auto** ui_current = reinterpret_cast<void**>(base + kItemUiCurrentRva);
+    void* saved_current = nullptr;
+    bool touched_current = false;
+
+    __try {
+        auto* widget_b = reinterpret_cast<uint8_t*>(base + kItemWidgetBRva);
+        auto* widget_a = reinterpret_cast<uint8_t*>(base + kItemWidgetARva);
+        void* arg = nullptr;
+        if (*reinterpret_cast<uint16_t*>(widget_b) != 0) {
+            arg = widget_b;
+        } else if (*reinterpret_cast<uint16_t*>(widget_a) != 0) {
+            arg = widget_a;
+        } else {
+            return;
+        }
+
+        auto* mode_obj = reinterpret_cast<uint8_t*>(base + kItemListModeObjRva);
+        mode_word = mode_obj ? reinterpret_cast<uint16_t*>(mode_obj + 2) : nullptr;
+        const uint16_t mode = mode_word ? *mode_word : 0;
+        if (mode != 4) {
+            static int skip_logs_left = 6;
+            if (skip_logs_left > 0) {
+                --skip_logs_left;
+                grandia_ap::LogInfo(
+                    "Party: ITEM list rebuild skipped (mode=%u, need 4 — field pickup?)",
+                    static_cast<unsigned>(mode));
+            }
+            return;
+        }
+        saved_mode = mode;
+
+        // +1DD6B0 early-outs when [70AA8C] == [70AA84]; force a mismatch like stock's
+        // post-equip path that writes 708A00 into 70AA8C.
+        auto** ui_controller = reinterpret_cast<void**>(base + kItemUiControllerRva);
+        saved_current = ui_current ? *ui_current : nullptr;
+        if (ui_current && ui_controller && *ui_current == *ui_controller) {
+            *ui_current = arg;
+            touched_current = true;
+        }
+
+        grandia_ap::LogInfo("Party: ITEM list rebuild via +0x%X arg=%p mode=4",
+                            static_cast<unsigned>(kItemListRebuildRva), arg);
+        using ListRebuildFn = void(__cdecl*)(void*);
+        reinterpret_cast<ListRebuildFn>(base + kItemListRebuildRva)(arg);
+        RefreshItemAssignWidgets(base);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        grandia_ap::LogWarn("Party: ITEM list rebuild faulted — cooling down 5s");
+        g_item_rebuild_cooldown_until = GetTickCount() + 5000u;
+    }
+
+    // Always restore — a fault mid-call previously left mode stuck at 4.
+    __try {
+        if (mode_word) {
+            *mode_word = saved_mode;
+        }
+        if (touched_current && ui_current) {
+            *ui_current = saved_current;
+        }
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    }
+}
+
 void ClearSlotExcludeBit(std::uintptr_t base, unsigned slot) {
     auto* bits = *reinterpret_cast<uint8_t**>(base + kEventBitsPtrRva);
     if (!bits || slot >= 4) {
@@ -1277,6 +1528,10 @@ int SeedMissingCharacterBlocks(uint8_t* map_obj) {
         }
         if (template_block && template_block != blk) {
             std::memcpy(blk, template_block, static_cast<size_t>(kCharStride));
+            // Don't inherit the template's equipped gear / bag (duplicates break the
+            // merged party item list when custom members are equip targets).
+            std::memset(blk + kCharEquipOff, 0,
+                        (kCharEquipSlots + kCharInvSlots) * sizeof(uint16_t));
         } else {
             std::memset(blk, 0, static_cast<size_t>(kCharStride));
             blk[3] = 1;                                        // level
@@ -3795,9 +4050,11 @@ int ApFillUiPartyCache(std::uintptr_t cache_rva) {
     }
     WriteUiPartyCache(base, cache_rva);
     // Seed unrecruited custom members so stash/shop equip targets exist (MapObj blocks,
-    // not MapObj+0A roster).
+    // not MapObj+0A roster). Pack bags so mid-list zeros (common after story dump +
+    // equip-to-custom-member) cannot hide trailing items in the merged party list.
     if (uint8_t* map_obj = MapObject(base)) {
         SeedMissingCharacterBlocks(map_obj);
+        SanitizeCustomPartyInventories(map_obj);
     }
     return 1;
 }
@@ -3994,6 +4251,217 @@ int ApMenuFillTryCustom() { return ApFillUiPartyCache(kMenuPartyCacheRva); }
 int ApStashFillTryCustom() { return ApFillUiPartyCache(kStashPartyCacheRva); }
 
 int ApItemFillTryCustom() { return ApFillUiPartyCache(kItemPartyCacheRva); }
+
+void ApSanitizePartyInventoriesFromHook() {
+    if (!g_enabled.load()) {
+        return;
+    }
+    const std::uintptr_t base = grandia_ap::GetGrandiaModuleBase();
+    if (base == 0) {
+        return;
+    }
+    if (uint8_t* map_obj = MapObject(base)) {
+        SanitizeCustomPartyInventories(map_obj);
+    }
+}
+
+void ApLogHookHit(const char* tag) {
+    grandia_ap::LogInfo("Party: hook-hit %s (custom_party=%d)", tag ? tag : "?",
+                        g_enabled.load() ? 1 : 0);
+}
+
+void ApRebuildItemUiAfterEquipRemove() {
+    grandia_ap::LogInfo("Party: post-remove ITEM UI rebuild (custom_party=%d)",
+                        g_enabled.load() ? 1 : 0);
+    if (!g_enabled.load()) {
+        return;
+    }
+    const std::uintptr_t base = grandia_ap::GetGrandiaModuleBase();
+    if (base == 0) {
+        grandia_ap::LogWarn("Party: post-remove rebuild skipped (no module base)");
+        return;
+    }
+    if (uint8_t* map_obj = MapObject(base)) {
+        SanitizeCustomPartyInventories(map_obj);
+    }
+    RebuildItemAssignList(base);
+}
+
+void ApOnInvAddDone() {
+    ApLogHookHit("inv-add");
+    ApSanitizePartyInventoriesFromHook();
+    ApRebuildItemUiAfterEquipRemove();
+}
+
+void ApOnInvRemoveDone() {
+    ApLogHookHit("inv-remove");
+    ApRebuildItemUiAfterEquipRemove();
+}
+
+void ApOnItemGiveDone(int which) {
+    char tag[32]{};
+    std::snprintf(tag, sizeof(tag), "item-give-%c", static_cast<char>('A' + which));
+    ApLogHookHit(tag);
+    ApRebuildItemUiAfterEquipRemove();
+}
+
+void ApOnItemPaintDone() {
+    if (g_item_paint_hit_logs_left > 0) {
+        --g_item_paint_hit_logs_left;
+        ApLogHookHit("item-paint");
+    }
+    if (!g_enabled.load() || g_in_item_ui_fix) {
+        return;
+    }
+    const std::uintptr_t base = grandia_ap::GetGrandiaModuleBase();
+    if (base == 0) {
+        return;
+    }
+    auto* widget_a = reinterpret_cast<uint8_t*>(base + kItemWidgetARva);
+    auto* widget_b = reinterpret_cast<uint8_t*>(base + kItemWidgetBRva);
+    bool active = false;
+    __try {
+        active = (*reinterpret_cast<uint16_t*>(widget_a) != 0) ||
+                 (*reinterpret_cast<uint16_t*>(widget_b) != 0);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return;
+    }
+    if (!active) {
+        return;
+    }
+    const DWORD now = GetTickCount();
+    // Debounce — paint can run often; leave/re-enter equivalent only needs to land once
+    // after the inventory-mutating action.
+    if (now - g_last_item_ui_rebuild_tick < 100u) {
+        return;
+    }
+    g_last_item_ui_rebuild_tick = now;
+    g_in_item_ui_fix = true;
+    grandia_ap::LogInfo("Party: ITEM paint-triggered UI rebuild");
+    if (uint8_t* map_obj = MapObject(base)) {
+        SanitizeCustomPartyInventories(map_obj);
+    }
+    RebuildItemAssignList(base);
+    g_in_item_ui_fix = false;
+}
+
+void __declspec(naked) ApInvAddDetour() {
+    __asm {
+        pop dword ptr [g_ap_inv_add_ret]
+        call dword ptr [g_ap_inv_add_tramp]
+        pushad
+        call ApOnInvAddDone
+        popad
+        jmp dword ptr [g_ap_inv_add_ret]
+    }
+}
+
+void __declspec(naked) ApInvRemoveDetour() {
+    __asm {
+        pop dword ptr [g_ap_inv_remove_ret]
+        call dword ptr [g_ap_inv_remove_tramp]
+        pushad
+        call ApOnInvRemoveDone
+        popad
+        jmp dword ptr [g_ap_inv_remove_ret]
+    }
+}
+
+void __declspec(naked) ApEquipAfterRemoveDetour() {
+    __asm {
+        pushad
+        call ApOnInvRemoveDone
+        popad
+        mov ecx, 5
+        jmp dword ptr [g_ap_equip_after_remove_exit]
+    }
+}
+
+void __declspec(naked) ApItemGiveEquipADetour() {
+    __asm {
+        pop dword ptr [g_ap_item_give_a_ret]
+        call dword ptr [g_ap_item_give_a_tramp]
+        pushad
+        push 0
+        call ApOnItemGiveDone
+        add esp, 4
+        popad
+        jmp dword ptr [g_ap_item_give_a_ret]
+    }
+}
+
+void __declspec(naked) ApItemGiveEquipBDetour() {
+    __asm {
+        pop dword ptr [g_ap_item_give_b_ret]
+        call dword ptr [g_ap_item_give_b_tramp]
+        pushad
+        push 1
+        call ApOnItemGiveDone
+        add esp, 4
+        popad
+        jmp dword ptr [g_ap_item_give_b_ret]
+    }
+}
+
+void __declspec(naked) ApItemGiveEquipCDetour() {
+    __asm {
+        pop dword ptr [g_ap_item_give_c_ret]
+        call dword ptr [g_ap_item_give_c_tramp]
+        pushad
+        push 2
+        call ApOnItemGiveDone
+        add esp, 4
+        popad
+        jmp dword ptr [g_ap_item_give_c_ret]
+    }
+}
+
+void __declspec(naked) ApItemGiveEquipDDetour() {
+    __asm {
+        pop dword ptr [g_ap_item_give_d_ret]
+        call dword ptr [g_ap_item_give_d_tramp]
+        pushad
+        push 3
+        call ApOnItemGiveDone
+        add esp, 4
+        popad
+        jmp dword ptr [g_ap_item_give_d_ret]
+    }
+}
+
+void __declspec(naked) ApItemGiveEquipEDetour() {
+    __asm {
+        pop dword ptr [g_ap_item_give_e_ret]
+        call dword ptr [g_ap_item_give_e_tramp]
+        pushad
+        push 4
+        call ApOnItemGiveDone
+        add esp, 4
+        popad
+        jmp dword ptr [g_ap_item_give_e_ret]
+    }
+}
+
+// thiscall paint helpers — no stack args; do not pop the return address.
+void __declspec(naked) ApItemPaintDetour() {
+    __asm {
+        call dword ptr [g_ap_item_paint_tramp]
+        pushad
+        call ApOnItemPaintDone
+        popad
+        ret
+    }
+}
+
+void __declspec(naked) ApItemPaint2Detour() {
+    __asm {
+        call dword ptr [g_ap_item_paint2_tramp]
+        pushad
+        call ApOnItemPaintDone
+        popad
+        ret
+    }
+}
 
 void __declspec(naked) ApBattlePartyInitDetour() {
     __asm {
@@ -4793,6 +5261,163 @@ bool InstallPartyCustomHook() {
                 static_cast<unsigned>(kItemFillLoopRva));
     }
 
+    // Bag add/remove — re-pack custom party inventories after stock ops (equip-to-Sue
+    // can leave mid-list zeros that hide trailing slots in the source bag).
+    auto* inv_add_site = reinterpret_cast<uint8_t*>(base + kInvAddRva);
+    if (inv_add_site[0] == 0x55 && inv_add_site[1] == 0x8B && inv_add_site[2] == 0xEC) {
+        g_inv_add_trampoline_mem =
+            MakeTrampoline(inv_add_site, kInvOpPatchSize, inv_add_site + kInvOpPatchSize);
+        if (g_inv_add_trampoline_mem) {
+            g_ap_inv_add_tramp = g_inv_add_trampoline_mem;
+            if (WriteJump(inv_add_site, reinterpret_cast<void*>(&ApInvAddDetour),
+                          g_inv_add_original, kInvOpPatchSize)) {
+                g_inv_add_site = inv_add_site;
+                LogInfo("Party inv-add sanitize hook @ +0x%X", static_cast<unsigned>(kInvAddRva));
+            } else {
+                VirtualFree(g_inv_add_trampoline_mem, 0, MEM_RELEASE);
+                g_inv_add_trampoline_mem = nullptr;
+                g_ap_inv_add_tramp = nullptr;
+                LogWarn("Party custom: failed to patch inv-add");
+            }
+        }
+    } else {
+        LogWarn("Party custom: inv-add site mismatch at +0x%X", static_cast<unsigned>(kInvAddRva));
+    }
+
+    auto* inv_remove_site = reinterpret_cast<uint8_t*>(base + kInvRemoveRva);
+    if (inv_remove_site[0] == 0x55 && inv_remove_site[1] == 0x8B &&
+        inv_remove_site[2] == 0xEC) {
+        g_inv_remove_trampoline_mem =
+            MakeTrampoline(inv_remove_site, kInvOpPatchSize, inv_remove_site + kInvOpPatchSize);
+        if (g_inv_remove_trampoline_mem) {
+            g_ap_inv_remove_tramp = g_inv_remove_trampoline_mem;
+            if (WriteJump(inv_remove_site, reinterpret_cast<void*>(&ApInvRemoveDetour),
+                          g_inv_remove_original, kInvOpPatchSize)) {
+                g_inv_remove_site = inv_remove_site;
+                LogInfo("Party inv-remove sanitize hook @ +0x%X",
+                        static_cast<unsigned>(kInvRemoveRva));
+            } else {
+                VirtualFree(g_inv_remove_trampoline_mem, 0, MEM_RELEASE);
+                g_inv_remove_trampoline_mem = nullptr;
+                g_ap_inv_remove_tramp = nullptr;
+                LogWarn("Party custom: failed to patch inv-remove");
+            }
+        }
+    } else {
+        LogWarn("Party custom: inv-remove site mismatch at +0x%X",
+                static_cast<unsigned>(kInvRemoveRva));
+    }
+
+    // After equip-from-party remove+paint: rebuild ITEM rows before the function returns.
+    auto* equip_after_remove = reinterpret_cast<uint8_t*>(base + kEquipAfterRemoveRva);
+    // Expected: mov ecx, 5; jmp +1DDE97
+    if (equip_after_remove[0] == 0xB9 && equip_after_remove[1] == 0x05 &&
+        equip_after_remove[2] == 0x00 && equip_after_remove[3] == 0x00 &&
+        equip_after_remove[4] == 0x00 && equip_after_remove[5] == 0xE9) {
+        g_ap_equip_after_remove_exit = reinterpret_cast<void*>(base + kEquipAfterRemoveExitRva);
+        if (WriteJump(equip_after_remove, reinterpret_cast<void*>(&ApEquipAfterRemoveDetour),
+                      g_equip_after_remove_original, kEquipAfterRemovePatchSize)) {
+            g_equip_after_remove_site = equip_after_remove;
+            LogInfo("Party equip-after-remove rebuild hook @ +0x%X → exit +0x%X",
+                    static_cast<unsigned>(kEquipAfterRemoveRva),
+                    static_cast<unsigned>(kEquipAfterRemoveExitRva));
+        } else {
+            g_ap_equip_after_remove_exit = nullptr;
+            LogWarn("Party custom: failed to patch equip-after-remove");
+        }
+    } else {
+        LogWarn("Party custom: equip-after-remove site mismatch at +0x%X",
+                static_cast<unsigned>(kEquipAfterRemoveRva));
+    }
+
+    auto install_give_wrap = [&](std::uintptr_t rva, void* detour, void** tramp_out,
+                                 void** site_out, uint8_t* original_out, void** tramp_mem_out,
+                                 const char* tag) {
+        auto* site = reinterpret_cast<uint8_t*>(base + rva);
+        if (!(site[0] == 0x55 && site[1] == 0x8B && site[2] == 0xEC)) {
+            LogWarn("Party custom: %s site mismatch at +0x%X", tag, static_cast<unsigned>(rva));
+            return;
+        }
+        void* mem = MakeTrampoline(site, kItemGiveEquipPatchSize, site + kItemGiveEquipPatchSize);
+        if (!mem) {
+            return;
+        }
+        *tramp_out = mem;
+        *tramp_mem_out = mem;
+        if (WriteJump(site, detour, original_out, kItemGiveEquipPatchSize)) {
+            *site_out = site;
+            LogInfo("Party %s wrap @ +0x%X (rebuild after return)", tag,
+                    static_cast<unsigned>(rva));
+        } else {
+            VirtualFree(mem, 0, MEM_RELEASE);
+            *tramp_out = nullptr;
+            *tramp_mem_out = nullptr;
+            LogWarn("Party custom: failed to patch %s", tag);
+        }
+    };
+    install_give_wrap(kItemGiveEquipARva, reinterpret_cast<void*>(&ApItemGiveEquipADetour),
+                      &g_ap_item_give_a_tramp, &g_item_give_a_site, g_item_give_a_original,
+                      &g_item_give_a_trampoline_mem, "item-give-A");
+    install_give_wrap(kItemGiveEquipBRva, reinterpret_cast<void*>(&ApItemGiveEquipBDetour),
+                      &g_ap_item_give_b_tramp, &g_item_give_b_site, g_item_give_b_original,
+                      &g_item_give_b_trampoline_mem, "item-give-B");
+    install_give_wrap(kItemGiveEquipCRva, reinterpret_cast<void*>(&ApItemGiveEquipCDetour),
+                      &g_ap_item_give_c_tramp, &g_item_give_c_site, g_item_give_c_original,
+                      &g_item_give_c_trampoline_mem, "item-give-C");
+    install_give_wrap(kItemGiveEquipDRva, reinterpret_cast<void*>(&ApItemGiveEquipDDetour),
+                      &g_ap_item_give_d_tramp, &g_item_give_d_site, g_item_give_d_original,
+                      &g_item_give_d_trampoline_mem, "item-give-D");
+    install_give_wrap(kItemGiveEquipERva, reinterpret_cast<void*>(&ApItemGiveEquipEDetour),
+                      &g_ap_item_give_e_tramp, &g_item_give_e_site, g_item_give_e_original,
+                      &g_item_give_e_trampoline_mem, "item-give-E");
+
+    // ITEM widget paint — unknown equip paths still redraw through these.
+    auto* paint_site = reinterpret_cast<uint8_t*>(base + kItemPaintRva);
+    if (paint_site[0] == 0x56 && paint_site[1] == 0x8B && paint_site[2] == 0xF1) {
+        g_item_paint_trampoline_mem =
+            MakeTrampoline(paint_site, kItemPaintPatchSize, paint_site + kItemPaintPatchSize);
+        if (g_item_paint_trampoline_mem) {
+            g_ap_item_paint_tramp = g_item_paint_trampoline_mem;
+            if (WriteJump(paint_site, reinterpret_cast<void*>(&ApItemPaintDetour),
+                          g_item_paint_original, kItemPaintPatchSize)) {
+                g_item_paint_site = paint_site;
+                LogInfo("Party ITEM paint rebuild hook @ +0x%X",
+                        static_cast<unsigned>(kItemPaintRva));
+            } else {
+                VirtualFree(g_item_paint_trampoline_mem, 0, MEM_RELEASE);
+                g_item_paint_trampoline_mem = nullptr;
+                g_ap_item_paint_tramp = nullptr;
+                LogWarn("Party custom: failed to patch ITEM paint");
+            }
+        }
+    } else {
+        LogWarn("Party custom: ITEM paint site mismatch at +0x%X",
+                static_cast<unsigned>(kItemPaintRva));
+    }
+
+    auto* paint2_site = reinterpret_cast<uint8_t*>(base + kItemPaint2Rva);
+    if (paint2_site[0] == 0x57 && paint2_site[1] == 0x33 && paint2_site[2] == 0xFF) {
+        g_item_paint2_trampoline_mem =
+            MakeTrampoline(paint2_site, kItemPaint2PatchSize, paint2_site + kItemPaint2PatchSize);
+        if (g_item_paint2_trampoline_mem) {
+            g_ap_item_paint2_tramp = g_item_paint2_trampoline_mem;
+            if (WriteJump(paint2_site, reinterpret_cast<void*>(&ApItemPaint2Detour),
+                          g_item_paint2_original, kItemPaint2PatchSize)) {
+                g_item_paint2_site = paint2_site;
+                LogInfo("Party ITEM paint2 rebuild hook @ +0x%X",
+                        static_cast<unsigned>(kItemPaint2Rva));
+            } else {
+                VirtualFree(g_item_paint2_trampoline_mem, 0, MEM_RELEASE);
+                g_item_paint2_trampoline_mem = nullptr;
+                g_ap_item_paint2_tramp = nullptr;
+                LogWarn("Party custom: failed to patch ITEM paint2");
+            }
+        }
+    } else {
+        LogWarn("Party custom: ITEM paint2 site mismatch at +0x%X",
+                static_cast<unsigned>(kItemPaint2Rva));
+    }
+
     // Face bank override: when g_ap_face_bank_override is set, +56FF0 uses private FC arena.
     // Field caller +72288 leaves override null → stock [640E6C]. Never uses +6900/+72C0.
     auto* face_bank_site = reinterpret_cast<uint8_t*>(base + kFaceBankLoadRva);
@@ -4857,6 +5482,83 @@ void RemovePartyCustomHook() {
     if (g_item_fill_trampoline_mem) {
         VirtualFree(g_item_fill_trampoline_mem, 0, MEM_RELEASE);
         g_item_fill_trampoline_mem = nullptr;
+    }
+    if (g_inv_add_site) {
+        RestoreBytes(g_inv_add_site, g_inv_add_original, kInvOpPatchSize);
+        g_inv_add_site = nullptr;
+    }
+    if (g_inv_add_trampoline_mem) {
+        VirtualFree(g_inv_add_trampoline_mem, 0, MEM_RELEASE);
+        g_inv_add_trampoline_mem = nullptr;
+    }
+    if (g_inv_remove_site) {
+        RestoreBytes(g_inv_remove_site, g_inv_remove_original, kInvOpPatchSize);
+        g_inv_remove_site = nullptr;
+    }
+    if (g_inv_remove_trampoline_mem) {
+        VirtualFree(g_inv_remove_trampoline_mem, 0, MEM_RELEASE);
+        g_inv_remove_trampoline_mem = nullptr;
+    }
+    if (g_equip_after_remove_site) {
+        RestoreBytes(g_equip_after_remove_site, g_equip_after_remove_original,
+                     kEquipAfterRemovePatchSize);
+        g_equip_after_remove_site = nullptr;
+    }
+    if (g_item_give_a_site) {
+        RestoreBytes(g_item_give_a_site, g_item_give_a_original, kItemGiveEquipPatchSize);
+        g_item_give_a_site = nullptr;
+    }
+    if (g_item_give_a_trampoline_mem) {
+        VirtualFree(g_item_give_a_trampoline_mem, 0, MEM_RELEASE);
+        g_item_give_a_trampoline_mem = nullptr;
+    }
+    if (g_item_give_b_site) {
+        RestoreBytes(g_item_give_b_site, g_item_give_b_original, kItemGiveEquipPatchSize);
+        g_item_give_b_site = nullptr;
+    }
+    if (g_item_give_b_trampoline_mem) {
+        VirtualFree(g_item_give_b_trampoline_mem, 0, MEM_RELEASE);
+        g_item_give_b_trampoline_mem = nullptr;
+    }
+    if (g_item_give_c_site) {
+        RestoreBytes(g_item_give_c_site, g_item_give_c_original, kItemGiveEquipPatchSize);
+        g_item_give_c_site = nullptr;
+    }
+    if (g_item_give_c_trampoline_mem) {
+        VirtualFree(g_item_give_c_trampoline_mem, 0, MEM_RELEASE);
+        g_item_give_c_trampoline_mem = nullptr;
+    }
+    if (g_item_give_d_site) {
+        RestoreBytes(g_item_give_d_site, g_item_give_d_original, kItemGiveEquipPatchSize);
+        g_item_give_d_site = nullptr;
+    }
+    if (g_item_give_d_trampoline_mem) {
+        VirtualFree(g_item_give_d_trampoline_mem, 0, MEM_RELEASE);
+        g_item_give_d_trampoline_mem = nullptr;
+    }
+    if (g_item_give_e_site) {
+        RestoreBytes(g_item_give_e_site, g_item_give_e_original, kItemGiveEquipPatchSize);
+        g_item_give_e_site = nullptr;
+    }
+    if (g_item_give_e_trampoline_mem) {
+        VirtualFree(g_item_give_e_trampoline_mem, 0, MEM_RELEASE);
+        g_item_give_e_trampoline_mem = nullptr;
+    }
+    if (g_item_paint_site) {
+        RestoreBytes(g_item_paint_site, g_item_paint_original, kItemPaintPatchSize);
+        g_item_paint_site = nullptr;
+    }
+    if (g_item_paint_trampoline_mem) {
+        VirtualFree(g_item_paint_trampoline_mem, 0, MEM_RELEASE);
+        g_item_paint_trampoline_mem = nullptr;
+    }
+    if (g_item_paint2_site) {
+        RestoreBytes(g_item_paint2_site, g_item_paint2_original, kItemPaint2PatchSize);
+        g_item_paint2_site = nullptr;
+    }
+    if (g_item_paint2_trampoline_mem) {
+        VirtualFree(g_item_paint2_trampoline_mem, 0, MEM_RELEASE);
+        g_item_paint2_trampoline_mem = nullptr;
     }
     if (g_face_bank_site) {
         RestoreBytes(g_face_bank_site, g_face_bank_original, kFaceBankLoadPatchSize);
@@ -4968,6 +5670,23 @@ void RemovePartyCustomHook() {
     g_ap_stash_fill_skip = nullptr;
     g_ap_item_fill_tramp = nullptr;
     g_ap_item_fill_skip = nullptr;
+    g_ap_inv_add_tramp = nullptr;
+    g_ap_inv_remove_tramp = nullptr;
+    g_ap_inv_add_ret = nullptr;
+    g_ap_inv_remove_ret = nullptr;
+    g_ap_equip_after_remove_exit = nullptr;
+    g_ap_item_give_a_tramp = nullptr;
+    g_ap_item_give_b_tramp = nullptr;
+    g_ap_item_give_c_tramp = nullptr;
+    g_ap_item_give_d_tramp = nullptr;
+    g_ap_item_give_e_tramp = nullptr;
+    g_ap_item_give_a_ret = nullptr;
+    g_ap_item_give_b_ret = nullptr;
+    g_ap_item_give_c_ret = nullptr;
+    g_ap_item_give_d_ret = nullptr;
+    g_ap_item_give_e_ret = nullptr;
+    g_ap_item_paint_tramp = nullptr;
+    g_ap_item_paint2_tramp = nullptr;
     g_ap_face_bank_override = nullptr;
     g_ap_face_bank_resume = nullptr;
     g_ap_face_bank_slot_abs = 0;
@@ -5105,6 +5824,42 @@ void PollPartyCustomHotkey() {
         PollBattleMode(base);
     }
     // F9/F10/F11 removed — edit via Save MC Party tab.
+}
+
+void PollPartyInventoryUiFix() {
+    if constexpr (!kPartyCustomEnabled) {
+        return;
+    }
+    if (!g_installed || !g_enabled.load() || g_in_item_ui_fix) {
+        return;
+    }
+
+    static DWORD last_tick = 0;
+    const DWORD now = GetTickCount();
+    // ~5 Hz bag pack only — do NOT call +1DD6B0 from Present. Field "who gets this
+    // item" UIs share widget words with menu ITEM and crash if we rebuild there.
+    if (now - last_tick < 200u) {
+        return;
+    }
+
+    const std::uintptr_t base = GetGrandiaModuleBase();
+    if (base == 0) {
+        return;
+    }
+    uint8_t* map_obj = MapObject(base);
+    if (!map_obj) {
+        return;
+    }
+
+    last_tick = now;
+    const int holes = SanitizeCustomPartyInventories(map_obj);
+    if (holes > 0) {
+        static int hole_logs_left = 8;
+        if (hole_logs_left > 0) {
+            --hole_logs_left;
+            LogInfo("Party: Present-poll compacted %d bag(s)", holes);
+        }
+    }
 }
 
 }  // namespace grandia_ap

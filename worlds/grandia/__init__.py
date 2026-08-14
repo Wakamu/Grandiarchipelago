@@ -1,6 +1,6 @@
 from BaseClasses import ItemClassification, Tutorial
 from worlds.AutoWorld import WebWorld, World
-from worlds.LauncherComponents import Component, Type, components, launch
+from worlds.LauncherComponents import Component, Type, components, launch, icon_paths
 
 from .Items import (
     GrandiaItem,
@@ -28,13 +28,14 @@ def run_grandia_client(*args: str) -> None:
     """Launch the Grandia client from the Archipelago Launcher."""
     launch(_grandia_client, name="Grandia Client", args=args)
 
-
+icon_paths["grandia"] = f"ap:{__name__}/icon.png"
 try:
     components.append(
         Component(
             "Grandia Client",
             func=run_grandia_client,
             component_type=Type.CLIENT,
+            icon="grandia",
             game_name="Grandia",
             supports_uri=True,
             description="Connect Archipelago to Grandia HD Remaster (injects native DLL).",
