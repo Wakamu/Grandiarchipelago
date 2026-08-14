@@ -569,7 +569,7 @@
   "3408": {
     "map_id": 13320,
     "map_hex": "3408",
-    "area_name": "Ghost Pantry",
+    "area_name": "Ghost Ship Pantry",
     "area_name_source": "scn",
     "mdp": "3408.mdp",
     "chest_count": 1,
@@ -626,49 +626,6 @@
         "name": "Gold (30)",
         "sub_index": 32,
         "file_offset": "0x49C4",
-        "gold_amount": 30
-      }
-    ],
-    "gold_small": 30,
-    "gold_big": 90
-  },
-  "340D": {
-    "map_id": 13325,
-    "map_hex": "340D",
-    "area_name": "Ghost Ship Hold",
-    "area_name_source": "scn",
-    "mdp": "340d.mdp",
-    "chest_count": 3,
-    "chests": [
-      {
-        "event_id": "0x0A33",
-        "event": 2611,
-        "kind": "item",
-        "item_id": 346,
-        "name": "Herbs",
-        "sub_index": 30,
-        "file_offset": "0x3CEA"
-      },
-      {
-        "event_id": "0x0A34",
-        "event": 2612,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (30)",
-        "sub_index": 31,
-        "file_offset": "0x3D0A",
-        "gold_amount": 30
-      },
-      {
-        "event_id": "0x0A35",
-        "event": 2613,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (30)",
-        "sub_index": 32,
-        "file_offset": "0x3D2A",
         "gold_amount": 30
       }
     ],
@@ -1146,7 +1103,7 @@
   "4400": {
     "map_id": 17408,
     "map_hex": "4400",
-    "area_name": "Dom (Vestibule)",
+    "area_name": "Dom Ruins (Vestibule)",
     "area_name_source": "scn",
     "mdp": "4400.mdp",
     "chest_count": 6,
@@ -2020,7 +1977,7 @@
   "4C0C": {
     "map_id": 19468,
     "map_hex": "4C0C",
-    "area_name": "Base Barracks",
+    "area_name": "Garlyle Base Barracks",
     "area_name_source": "scn",
     "mdp": "4c0c.mdp",
     "chest_count": 7,
@@ -2441,7 +2398,7 @@
   "5C04": {
     "map_id": 23556,
     "map_hex": "5C04",
-    "area_name": "East Rangle Mtn",
+    "area_name": "East Rangle Mountains",
     "area_name_source": "scn",
     "mdp": "5c04.mdp",
     "chest_count": 7,
@@ -2606,7 +2563,7 @@
   "600C": {
     "map_id": 24588,
     "map_hex": "600C",
-    "area_name": "End World (3)",
+    "area_name": "End of the World (3)",
     "area_name_source": "scn",
     "mdp": "600c.mdp",
     "chest_count": 1,
@@ -2652,7 +2609,7 @@
   "6014": {
     "map_id": 24596,
     "map_hex": "6014",
-    "area_name": "Map 6014",
+    "area_name": "End of the World (5)",
     "area_name_source": "fallback",
     "mdp": "6014.mdp",
     "chest_count": 2,
@@ -2684,7 +2641,7 @@
   "6018": {
     "map_id": 24600,
     "map_hex": "6018",
-    "area_name": "End World (6)",
+    "area_name": "End of the World (6)",
     "area_name_source": "scn",
     "mdp": "6018.mdp",
     "chest_count": 1,
@@ -3076,7 +3033,7 @@
   "6C00": {
     "map_id": 27648,
     "map_hex": "6C00",
-    "area_name": "Map 6C00",
+    "area_name": "Mt. Typhoon",
     "area_name_source": "fallback",
     "mdp": "6c00.mdp",
     "chest_count": 9,
@@ -3179,7 +3136,7 @@
   "6C04": {
     "map_id": 27652,
     "map_hex": "6C04",
-    "area_name": "Map 6C04",
+    "area_name": "Mt. Typhoon (Peak)",
     "area_name_source": "fallback",
     "mdp": "6c04.mdp",
     "chest_count": 12,
@@ -3479,7 +3436,7 @@
   "6C18": {
     "map_id": 27672,
     "map_hex": "6C18",
-    "area_name": "Map 6C18",
+    "area_name": "Mt. Typhoon (Peak)",
     "area_name_source": "fallback",
     "mdp": "6c18.mdp",
     "chest_count": 12,
@@ -3707,7 +3664,7 @@
   "7004": {
     "map_id": 28676,
     "map_hex": "7004",
-    "area_name": "South Lama Mtns",
+    "area_name": "South Lama Mountains",
     "area_name_source": "scn",
     "mdp": "7004.mdp",
     "chest_count": 10,
@@ -3823,7 +3780,7 @@
   "7800": {
     "map_id": 30720,
     "map_hex": "7800",
-    "area_name": "Volcano (1)",
+    "area_name": "Volcano Slope (1)",
     "area_name_source": "scn",
     "mdp": "7800.mdp",
     "chest_count": 8,
@@ -3980,80 +3937,6 @@
         "name": "Gold (150)",
         "sub_index": 18,
         "file_offset": "0x14150",
-        "gold_amount": 150
-      }
-    ],
-    "gold_small": 150,
-    "gold_big": 450
-  },
-  "7805": {
-    "map_id": 30725,
-    "map_hex": "7805",
-    "area_name": "Volcano Slope (2)",
-    "area_name_source": "scn",
-    "mdp": "7805.mdp",
-    "chest_count": 6,
-    "chests": [
-      {
-        "event_id": "0x0B3E",
-        "event": 2878,
-        "kind": "gold",
-        "item_id": 2,
-        "gold_tier": "big",
-        "name": "Gold (450)",
-        "sub_index": 13,
-        "file_offset": "0xEEC6",
-        "gold_amount": 450
-      },
-      {
-        "event_id": "0x0B3F",
-        "event": 2879,
-        "kind": "item",
-        "item_id": 284,
-        "name": "Fire Charm",
-        "sub_index": 14,
-        "file_offset": "0xEEE6"
-      },
-      {
-        "event_id": "0x0B40",
-        "event": 2880,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (150)",
-        "sub_index": 15,
-        "file_offset": "0xEF06",
-        "gold_amount": 150
-      },
-      {
-        "event_id": "0x0B41",
-        "event": 2881,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (150)",
-        "sub_index": 16,
-        "file_offset": "0xEF26",
-        "gold_amount": 150
-      },
-      {
-        "event_id": "0x0B42",
-        "event": 2882,
-        "kind": "item",
-        "item_id": 412,
-        "name": "Snooze Scroll",
-        "sub_index": 17,
-        "file_offset": "0xEF46"
-      },
-      {
-        "event_id": "0x0B43",
-        "event": 2883,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (150)",
-        "sub_index": 18,
-        "file_offset": "0xEF66",
         "gold_amount": 150
       }
     ],
@@ -4407,7 +4290,7 @@
   "7C10": {
     "map_id": 31760,
     "map_hex": "7C10",
-    "area_name": "Twrs (South)",
+    "area_name": "Twin Towers (South)",
     "area_name_source": "scn",
     "mdp": "7c10.mdp",
     "chest_count": 6,
@@ -4479,7 +4362,7 @@
   "7C18": {
     "map_id": 31768,
     "map_hex": "7C18",
-    "area_name": "Twrs (Sin Room)",
+    "area_name": "Twin Towers (Sin Room)",
     "area_name_source": "scn",
     "mdp": "7c18.mdp",
     "chest_count": 1,
@@ -4502,7 +4385,7 @@
   "7C44": {
     "map_id": 31812,
     "map_hex": "7C44",
-    "area_name": "Twrs (Coast)",
+    "area_name": "Twin Towers (Coast)",
     "area_name_source": "scn",
     "mdp": "7c44.mdp",
     "chest_count": 3,
@@ -4807,7 +4690,7 @@
   "9000": {
     "map_id": 36864,
     "map_hex": "9000",
-    "area_name": "Virgin Frst (1)",
+    "area_name": "Virgin Forest (1)",
     "area_name_source": "scn",
     "mdp": "9000.mdp",
     "chest_count": 9,
@@ -5015,7 +4898,7 @@
   "9008": {
     "map_id": 36872,
     "map_hex": "9008",
-    "area_name": "Virgin Frst (3)",
+    "area_name": "Virgin Forest (3)",
     "area_name_source": "scn",
     "mdp": "9008.mdp",
     "chest_count": 3,
@@ -5478,7 +5361,7 @@
   "9805": {
     "map_id": 38917,
     "map_hex": "9805",
-    "area_name": "Doom Warehouse",
+    "area_name": "Tower of Doom (Warehouse)",
     "area_name_source": "scn",
     "mdp": "9805.mdp",
     "chest_count": 2,
@@ -5510,7 +5393,7 @@
   "9808": {
     "map_id": 38920,
     "map_hex": "9808",
-    "area_name": "Doom, 1st Floor",
+    "area_name": "Tower of Doom (1)",
     "area_name_source": "scn",
     "mdp": "9808.mdp",
     "chest_count": 6,
@@ -5584,7 +5467,7 @@
   "980C": {
     "map_id": 38924,
     "map_hex": "980C",
-    "area_name": "Tower of Doom (2nd Floor)",
+    "area_name": "Tower of Doom (2)",
     "area_name_source": "scn",
     "mdp": "980c.mdp",
     "chest_count": 3,
@@ -5627,7 +5510,7 @@
   "9810": {
     "map_id": 38928,
     "map_hex": "9810",
-    "area_name": "Doom, 3rd Floor",
+    "area_name": "Tower of Doom (3)",
     "area_name_source": "scn",
     "mdp": "9810.mdp",
     "chest_count": 7,
@@ -6167,468 +6050,10 @@
     "gold_small": 220,
     "gold_big": 660
   },
-  "9C10": {
-    "map_id": 39952,
-    "map_hex": "9C10",
-    "area_name": "North Zil Desert",
-    "area_name_source": "scn",
-    "mdp": "9c10.mdp",
-    "chest_count": 10,
-    "chests": [
-      {
-        "event_id": "0x0BCC",
-        "event": 3020,
-        "kind": "gold",
-        "item_id": 2,
-        "gold_tier": "big",
-        "name": "Gold (660)",
-        "sub_index": 1,
-        "file_offset": "0x13478",
-        "gold_amount": 660
-      },
-      {
-        "event_id": "0x0BCD",
-        "event": 3021,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 2,
-        "file_offset": "0x13498",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BCE",
-        "event": 3022,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 3,
-        "file_offset": "0x134B8",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BCF",
-        "event": 3023,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 4,
-        "file_offset": "0x134D8",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BD0",
-        "event": 3024,
-        "kind": "item",
-        "item_id": 322,
-        "name": "Energy Ring",
-        "sub_index": 5,
-        "file_offset": "0x134F8"
-      },
-      {
-        "event_id": "0x0BD1",
-        "event": 3025,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 6,
-        "file_offset": "0x13518",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0D4D",
-        "event": 3405,
-        "kind": "item",
-        "item_id": 374,
-        "name": "Resurrect Potion",
-        "sub_index": 8,
-        "file_offset": "0x135F8"
-      },
-      {
-        "event_id": "0x0D4E",
-        "event": 3406,
-        "kind": "item",
-        "item_id": 168,
-        "name": "Cactus Armor",
-        "sub_index": 9,
-        "file_offset": "0x13618"
-      },
-      {
-        "event_id": "0x0D4F",
-        "event": 3407,
-        "kind": "item",
-        "item_id": 374,
-        "name": "Resurrect Potion",
-        "sub_index": 10,
-        "file_offset": "0x13638"
-      },
-      {
-        "event_id": "0x0D50",
-        "event": 3408,
-        "kind": "item",
-        "item_id": 149,
-        "name": "Cactus Thorns",
-        "sub_index": 11,
-        "file_offset": "0x13658"
-      }
-    ],
-    "gold_small": 220,
-    "gold_big": 660
-  },
-  "9C14": {
-    "map_id": 39956,
-    "map_hex": "9C14",
-    "area_name": "South Zil Desert",
-    "area_name_source": "scn",
-    "mdp": "9c14.mdp",
-    "chest_count": 8,
-    "chests": [
-      {
-        "event_id": "0x0BD2",
-        "event": 3026,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 1,
-        "file_offset": "0x106AC",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BD3",
-        "event": 3027,
-        "kind": "item",
-        "item_id": 321,
-        "name": "Anklet",
-        "sub_index": 2,
-        "file_offset": "0x106CC"
-      },
-      {
-        "event_id": "0x0BD4",
-        "event": 3028,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 3,
-        "file_offset": "0x106EC",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BD5",
-        "event": 3029,
-        "kind": "gold",
-        "item_id": 2,
-        "gold_tier": "big",
-        "name": "Gold (660)",
-        "sub_index": 4,
-        "file_offset": "0x1070C",
-        "gold_amount": 660
-      },
-      {
-        "event_id": "0x0BD6",
-        "event": 3030,
-        "kind": "item",
-        "item_id": 91,
-        "name": "Gil Sword",
-        "sub_index": 5,
-        "file_offset": "0x1072C"
-      },
-      {
-        "event_id": "0x0BD7",
-        "event": 3031,
-        "kind": "item",
-        "item_id": 378,
-        "name": "Seed of Defense",
-        "sub_index": 6,
-        "file_offset": "0x1074C"
-      },
-      {
-        "event_id": "0x0BD8",
-        "event": 3032,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 7,
-        "file_offset": "0x1076C",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BD9",
-        "event": 3033,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 8,
-        "file_offset": "0x1078C",
-        "gold_amount": 220
-      }
-    ],
-    "gold_small": 220,
-    "gold_big": 660
-  },
-  "9C18": {
-    "map_id": 39960,
-    "map_hex": "9C18",
-    "area_name": "West Savanna",
-    "area_name_source": "scn",
-    "mdp": "9c18.mdp",
-    "chest_count": 11,
-    "chests": [
-      {
-        "event_id": "0x0BDA",
-        "event": 3034,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 1,
-        "file_offset": "0x15BF8",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BDB",
-        "event": 3035,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 2,
-        "file_offset": "0x15C18",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BDC",
-        "event": 3036,
-        "kind": "item",
-        "item_id": 384,
-        "name": "Seed of Moves",
-        "sub_index": 3,
-        "file_offset": "0x15C38"
-      },
-      {
-        "event_id": "0x0BDD",
-        "event": 3037,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 4,
-        "file_offset": "0x15C58",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BDE",
-        "event": 3038,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 5,
-        "file_offset": "0x15C78",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BDF",
-        "event": 3039,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 6,
-        "file_offset": "0x15C98",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BE0",
-        "event": 3040,
-        "kind": "item",
-        "item_id": 364,
-        "name": "Deep Blue Potion",
-        "sub_index": 7,
-        "file_offset": "0x15CB8"
-      },
-      {
-        "event_id": "0x0BE1",
-        "event": 3041,
-        "kind": "item",
-        "item_id": 395,
-        "name": "Mana Egg",
-        "sub_index": 8,
-        "file_offset": "0x15CD8"
-      },
-      {
-        "event_id": "0x0BE2",
-        "event": 3042,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 9,
-        "file_offset": "0x15CF8",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BE3",
-        "event": 3043,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 10,
-        "file_offset": "0x15D38",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BE4",
-        "event": 3044,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 11,
-        "file_offset": "0x15D18",
-        "gold_amount": 220
-      }
-    ],
-    "gold_small": 220,
-    "gold_big": 660
-  },
-  "9C1C": {
-    "map_id": 39964,
-    "map_hex": "9C1C",
-    "area_name": "East Savanna",
-    "area_name_source": "scn",
-    "mdp": "9c1c.mdp",
-    "chest_count": 11,
-    "chests": [
-      {
-        "event_id": "0x0BE5",
-        "event": 3045,
-        "kind": "item",
-        "item_id": 384,
-        "name": "Seed of Moves",
-        "sub_index": 1,
-        "file_offset": "0x12052"
-      },
-      {
-        "event_id": "0x0BE6",
-        "event": 3046,
-        "kind": "item",
-        "item_id": 381,
-        "name": "All-Around Seed",
-        "sub_index": 2,
-        "file_offset": "0x12072"
-      },
-      {
-        "event_id": "0x0BE7",
-        "event": 3047,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 3,
-        "file_offset": "0x12092",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BE8",
-        "event": 3048,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 4,
-        "file_offset": "0x120B2",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BE9",
-        "event": 3049,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 5,
-        "file_offset": "0x120D2",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BEA",
-        "event": 3050,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 6,
-        "file_offset": "0x120F2",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BEB",
-        "event": 3051,
-        "kind": "item",
-        "item_id": 421,
-        "name": "Slouch Weed",
-        "sub_index": 7,
-        "file_offset": "0x12112"
-      },
-      {
-        "event_id": "0x0BEC",
-        "event": 3052,
-        "kind": "item",
-        "item_id": 395,
-        "name": "Mana Egg",
-        "sub_index": 8,
-        "file_offset": "0x12132"
-      },
-      {
-        "event_id": "0x0BED",
-        "event": 3053,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 9,
-        "file_offset": "0x12152",
-        "gold_amount": 220
-      },
-      {
-        "event_id": "0x0BEE",
-        "event": 3054,
-        "kind": "gold",
-        "item_id": 2,
-        "gold_tier": "big",
-        "name": "Gold (660)",
-        "sub_index": 10,
-        "file_offset": "0x12172",
-        "gold_amount": 660
-      },
-      {
-        "event_id": "0x0BEF",
-        "event": 3055,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (220)",
-        "sub_index": 11,
-        "file_offset": "0x12192",
-        "gold_amount": 220
-      }
-    ],
-    "gold_small": 220,
-    "gold_big": 660
-  },
   "A404": {
     "map_id": 41988,
     "map_hex": "A404",
-    "area_name": "Dreams Grt Hall",
+    "area_name": "Castle of Dreams(Great Hall)",
     "area_name_source": "scn",
     "mdp": "a404.mdp",
     "chest_count": 3,
@@ -6844,7 +6269,7 @@
   "A420": {
     "map_id": 42016,
     "map_hex": "A420",
-    "area_name": "Dreams Study",
+    "area_name": "Castle of Dreams (Study)",
     "area_name_source": "scn",
     "mdp": "a420.mdp",
     "chest_count": 3,
@@ -6887,7 +6312,7 @@
   "AC04": {
     "map_id": 44036,
     "map_hex": "AC04",
-    "area_name": "Graveyard (B1)",
+    "area_name": "Soldier's Graveyard (B1)",
     "area_name_source": "scn",
     "mdp": "ac04.mdp",
     "chest_count": 5,
@@ -7146,7 +6571,7 @@
   "B400": {
     "map_id": 46080,
     "map_hex": "B400",
-    "area_name": "Temptation Twr",
+    "area_name": "Tower of Temptation",
     "area_name_source": "scn",
     "mdp": "b400.mdp",
     "chest_count": 9,
@@ -7821,7 +7246,7 @@
   "B800": {
     "map_id": 47104,
     "map_hex": "B800",
-    "area_name": "Zil Ruins (1)",
+    "area_name": "Underground Ruins (1)",
     "area_name_source": "scn",
     "mdp": "b800.mdp",
     "chest_count": 8,
@@ -7915,7 +7340,7 @@
   "B804": {
     "map_id": 47108,
     "map_hex": "B804",
-    "area_name": "Zil Ruins (2)",
+    "area_name": "Underground Ruins (2)",
     "area_name_source": "scn",
     "mdp": "b804.mdp",
     "chest_count": 14,
@@ -8260,7 +7685,7 @@
   "B814": {
     "map_id": 47124,
     "map_hex": "B814",
-    "area_name": "Zil Ruins (B3)",
+    "area_name": "Underground Ruins (B3)",
     "area_name_source": "scn",
     "mdp": "b814.mdp",
     "chest_count": 5,
@@ -8597,7 +8022,7 @@
   "BC00": {
     "map_id": 48128,
     "map_hex": "BC00",
-    "area_name": "Rainbow Mt Peak",
+    "area_name": "Rainbow Mountain (Peak)",
     "area_name_source": "scn",
     "mdp": "bc00.mdp",
     "chest_count": 9,
@@ -9400,176 +8825,10 @@
     "gold_small": 300,
     "gold_big": 900
   },
-  "CA08": {
-    "map_id": 51720,
-    "map_hex": "CA08",
-    "area_name": "West Luzet",
-    "area_name_source": "scn",
-    "mdp": "ca08.mdp",
-    "chest_count": 7,
-    "chests": [
-      {
-        "event_id": "0x0C77",
-        "event": 3191,
-        "kind": "item",
-        "item_id": 380,
-        "name": "Seed of Running",
-        "sub_index": 2,
-        "file_offset": "0xC84E"
-      },
-      {
-        "event_id": "0x0C78",
-        "event": 3192,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (300)",
-        "sub_index": 3,
-        "file_offset": "0xC86E",
-        "gold_amount": 300
-      },
-      {
-        "event_id": "0x0C79",
-        "event": 3193,
-        "kind": "item",
-        "item_id": 380,
-        "name": "Seed of Running",
-        "sub_index": 4,
-        "file_offset": "0xC88E"
-      },
-      {
-        "event_id": "0x0C7A",
-        "event": 3194,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (300)",
-        "sub_index": 5,
-        "file_offset": "0xC8AE",
-        "gold_amount": 300
-      },
-      {
-        "event_id": "0x0C7B",
-        "event": 3195,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (300)",
-        "sub_index": 6,
-        "file_offset": "0xC8CE",
-        "gold_amount": 300
-      },
-      {
-        "event_id": "0x0C7C",
-        "event": 3196,
-        "kind": "gold",
-        "item_id": 2,
-        "gold_tier": "big",
-        "name": "Gold (900)",
-        "sub_index": 7,
-        "file_offset": "0xC8EE",
-        "gold_amount": 900
-      },
-      {
-        "event_id": "0x0C7D",
-        "event": 3197,
-        "kind": "item",
-        "item_id": 450,
-        "name": "Magic Lipstick",
-        "sub_index": 8,
-        "file_offset": "0xC90E"
-      }
-    ],
-    "gold_small": 300,
-    "gold_big": 900
-  },
-  "CA0C": {
-    "map_id": 51724,
-    "map_hex": "CA0C",
-    "area_name": "East Luzet",
-    "area_name_source": "scn",
-    "mdp": "ca0c.mdp",
-    "chest_count": 7,
-    "chests": [
-      {
-        "event_id": "0x0C7E",
-        "event": 3198,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (300)",
-        "sub_index": 8,
-        "file_offset": "0xD9F6",
-        "gold_amount": 300
-      },
-      {
-        "event_id": "0x0C7F",
-        "event": 3199,
-        "kind": "item",
-        "item_id": 364,
-        "name": "Deep Blue Potion",
-        "sub_index": 9,
-        "file_offset": "0xDA16"
-      },
-      {
-        "event_id": "0x0C80",
-        "event": 3200,
-        "kind": "gold",
-        "item_id": 2,
-        "gold_tier": "big",
-        "name": "Gold (900)",
-        "sub_index": 10,
-        "file_offset": "0xDA36",
-        "gold_amount": 900
-      },
-      {
-        "event_id": "0x0C81",
-        "event": 3201,
-        "kind": "item",
-        "item_id": 328,
-        "name": "Soul of Asura",
-        "sub_index": 11,
-        "file_offset": "0xDAB6"
-      },
-      {
-        "event_id": "0x0C82",
-        "event": 3202,
-        "kind": "gold",
-        "item_id": 1,
-        "gold_tier": "small",
-        "name": "Gold (300)",
-        "sub_index": 12,
-        "file_offset": "0xDA56",
-        "gold_amount": 300
-      },
-      {
-        "event_id": "0x0C83",
-        "event": 3203,
-        "kind": "item",
-        "item_id": 384,
-        "name": "Seed of Moves",
-        "sub_index": 13,
-        "file_offset": "0xDA76"
-      },
-      {
-        "event_id": "0x0C84",
-        "event": 3204,
-        "kind": "gold",
-        "item_id": 2,
-        "gold_tier": "big",
-        "name": "Gold (900)",
-        "sub_index": 14,
-        "file_offset": "0xDA96",
-        "gold_amount": 900
-      }
-    ],
-    "gold_small": 300,
-    "gold_big": 900
-  },
   "D000": {
     "map_id": 53248,
     "map_hex": "D000",
-    "area_name": "Railway Rns (1)",
+    "area_name": "Underground Railway Ruins (1)",
     "area_name_source": "scn",
     "mdp": "d000.mdp",
     "chest_count": 6,
@@ -9719,7 +8978,7 @@
   "D00C": {
     "map_id": 53260,
     "map_hex": "D00C",
-    "area_name": "Railway Rns (3)",
+    "area_name": "Underground Railway Ruins (3)",
     "area_name_source": "scn",
     "mdp": "d00c.mdp",
     "chest_count": 3,
