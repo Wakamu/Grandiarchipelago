@@ -25,6 +25,14 @@ Grandiarchipelago hooks the running **32-bit native** game and sends/receives ch
 - Select + R1 : Increment Speedhack
 - Select + L1 : Decrement Speedhack
 
+## Custom Party
+
+- Players can use a custom party system (see Yaml Options)
+- When using "unlocks", your party can be edited at any Save Screen by pressing **Select**:
+    - Up / Down : select a slot
+    - L1 / R1 : Change the current slot's character
+    - Back : Leave the menu
+
 ## Yaml Options
 
 - include_soldiers_graveyard : Include Soldier's Graveyard chest pickups as Archipelago locations.
@@ -34,6 +42,10 @@ Grandiarchipelago hooks the running **32-bit native** game and sends/receives ch
 - skill_xp_multiplier
 - level_xp_multiplier
 - gameplay_balance : Choose between the Vanilla or Redux gameplay tables (stats, enemies, items, shops, names).
+- custom_party : allows to play with a custom party with several rules:
+  - vanilla : Keep the vanilla party system.
+  - unlocks : Characters are AP Items and your party can be edited at any save point.
+  - roulette : A random roster of 4 is selected at generation and will be locked through the run.
 
 ## Engine facts (important)
 
