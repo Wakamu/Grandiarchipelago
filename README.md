@@ -24,6 +24,16 @@ Grandiarchipelago hooks the running **32-bit native** game and sends/receives ch
 - Backspace (Keyboard) / Select|Start (Controller) : Skip current video cinematic
 - Select + R1 : Increment Speedhack
 - Select + L1 : Decrement Speedhack
+- Select + Square : Open Stash (Get)
+- Select + Circle : Open Stash (Deposit)
+
+## Custom Party
+
+- Players can use a custom party system (see Yaml Options)
+- When using "unlocks", your party can be edited at any Save Screen by pressing **Select**:
+    - Up / Down : select a slot
+    - L1 / R1 : Change the current slot's character
+    - Back : Leave the menu
 
 ## Yaml Options
 
@@ -34,6 +44,10 @@ Grandiarchipelago hooks the running **32-bit native** game and sends/receives ch
 - skill_xp_multiplier
 - level_xp_multiplier
 - gameplay_balance : Choose between the Vanilla or Redux gameplay tables (stats, enemies, items, shops, names).
+- custom_party : allows to play with a custom party with several rules:
+  - vanilla : Keep the vanilla party system.
+  - unlocks : Characters are AP Items and your party can be edited at any save point.
+  - roulette : A random roster of 4 is selected at generation and will be locked through the run.
 
 ## Engine facts (important)
 
@@ -45,14 +59,12 @@ Grandia HD Remaster is a native port (Sickhead Games) built from PlayStation sou
 Grandiarchipelago/
 ├── worlds/grandia/                         # Archipelago APWorld (Python)
 ├── data/                                   # Extracted and mapped Chests / Events
-├── docs/ap_client_re.md                    # AP hooks / RVAs / memory (start here for RE)
 └── tools/
     ├── sync_apworld_from_mdp_catalog.py
     ├── sync_progressions.py
     └── build_grandia_apworld.py
 ```
 
-**RE index:** [docs/ap_client_re.md](docs/ap_client_re.md) — chest/gold/stash, map keys, save GAP1, custom party, and related hooks.
 ## Architecture
 
 ```mermaid
