@@ -24,6 +24,8 @@ Grandiarchipelago hooks the running **32-bit native** game and sends/receives ch
 - Backspace (Keyboard) / Select|Start (Controller) : Skip current video cinematic
 - Select + R1 : Increment Speedhack
 - Select + L1 : Decrement Speedhack
+- Select + Square : Open Stash (Get)
+- Select + Circle : Open Stash (Deposit)
 
 ## Custom Party
 
