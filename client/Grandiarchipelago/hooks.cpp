@@ -15,6 +15,7 @@
 #include "party_custom.h"
 #include "save_sync.h"
 #include "speed_turbo.h"
+#include "stash_access.h"
 #include "windt_balance.h"
 #include "shop_balance.h"
 #include "xp_multiplier.h"
@@ -31,6 +32,9 @@ bool InstallHooks() {
         LogWarn("Movie skip not installed — cinematics stay unskippable");
     } else {
         LogInfo("Movie skip active — Select/Backspace skips MP4 cinematics");
+    }
+    if (!InstallStashAccessHook()) {
+        LogWarn("Stash access not installed — Select+Square/Circle unavailable");
     }
     if (!InstallShopBalanceHooks()) {
         LogWarn("fopen overlay not installed — Redux content remap unavailable");
@@ -108,6 +112,7 @@ void RemoveHooks() {
     RemoveMenuFwinPartyTabHook();
     RemoveMenuSavePartyTabHook();
     RemoveMovieSkipHook();
+    RemoveStashAccessHook();
     RemoveSpeedTurbo();
     RemoveXpMultiplierHooks();
     RemoveMapTravelHook();

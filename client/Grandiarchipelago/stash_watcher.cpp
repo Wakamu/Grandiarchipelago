@@ -9,6 +9,7 @@
 #include "menu_save_party_tab.h"
 #include "save_sync.h"
 #include "speed_turbo.h"
+#include "stash_access.h"
 #include "windt_balance.h"
 
 #include <Windows.h>
@@ -100,6 +101,7 @@ DWORD WINAPI WatcherThread(LPVOID) {
         PollMapOverviewHotkey();
         PollMovieSkipHotkey();
         PollSpeedTurboHotkey();
+        PollStashAccessHotkey();
         PollPartyCustomHotkey();
         PollMenuSavePartyTab();
 
